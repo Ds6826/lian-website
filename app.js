@@ -12,7 +12,6 @@ const beginOnboarding = (provider) => {
   persist();
   show(onboardingPage);
 };
-document.querySelector('#email-form').addEventListener('submit', (event) => { event.preventDefault(); beginOnboarding(document.querySelector('#email').value); });
 document.querySelector('#back-to-auth').addEventListener('click', () => show(authPage));
 if (new URLSearchParams(window.location.search).get('auth') === 'success') show(onboardingPage);
 
