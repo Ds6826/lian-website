@@ -15,19 +15,7 @@ const beginOnboarding = (provider) => {
 document.querySelector('#back-to-auth').addEventListener('click', () => show(authPage));
 if (new URLSearchParams(window.location.search).get('auth') === 'success') show(onboardingPage);
 
-let onboardingStep = 1;
-const onboardingData = { team: '', usecase: '' };
-const stepContent = { 1: { title: 'Tell us about<br />your workspace.', copy: 'This helps Lian tailor a sensible starting point. You can change it anytime.', button: 'Continue' }, 2: { title: 'Where will Lian<br />power memory?', copy: 'Choose the job your first agent needs to do. This only changes the starter guide we show you.', button: 'Continue' }, 3: { title: 'Your workspace<br />is ready.', copy: '', button: 'Open Lian Console' } };
-const setOnboardingStep = (step) => {
-  onboardingStep = step;
-  const content = stepContent[step];
-  document.querySelector('#onboarding-step').textContent = `STEP ${step} OF 3`;
-  document.querySelector('#onboarding-title').innerHTML = content.title;
-  document.querySelector('#onboarding-copy').textContent = content.copy;
-  document.querySelector('#submit-text').textContent = content.button;
-  document.querySelectorAll('.onboarding-step').forEach((section) => { section.hidden = Number(section.dataset.step) !== step; });
-  document.querySelectorAll('.progress i').forEach((item, index) => item.classList.toggle('active', index < step));
-};
+const onboardingData = { usecase: '', source: '' };
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
   const group = button.parentElement;
   group.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
@@ -36,8 +24,7 @@ document.querySelectorAll('.choice-grid button').forEach((button) => button.addE
 }));
 document.querySelector('#onboarding-form').addEventListener('submit', (event) => {
   event.preventDefault();
-  if (onboardingStep === 1 && !document.querySelector('#workspace').value.trim()) { document.querySelector('#workspace').focus(); return; }
-  if (onboardingStep < 3) { setOnboardingStep(onboardingStep + 1); return; }
+  if (!document.querySelector('#workspace').value.trim()) { document.querySelector('#workspace').focus(); return; }
   appState.ready = true;
   appState.workspace = document.querySelector('#workspace').value.trim() || 'default-project';
   persist();
@@ -45,6 +32,7 @@ document.querySelector('#onboarding-form').addEventListener('submit', (event) =>
   document.querySelector('#settings-workspace').value = appState.workspace;
   show(consolePage);
 });
+document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
 
 const installContent = {
   python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> lian-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured financial metadata.', 'mem.<em>add</em>(agent_id="analyst-1", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="analyst-1", query="NVDA guidance", as_of=...)']],
