@@ -62,13 +62,53 @@
         <p>Numbers from Lian’s NVDA revision-chain benchmark.</p>
       </section>
 
+      <section class="problem-section section-shell">
+        <div class="problem-intro"><span class="section-number">01</span><div><p class="kicker">Why agent memory breaks in finance</p><h2>Similarity is not<br />the same as truth.</h2></div></div>
+        <div class="problem-grid">
+          <p class="problem-lede">A general-purpose memory system can find five highly relevant facts. But if four have been revised, an agent receives a very convincing version of the past.</p>
+          <div class="comparison-card old-memory"><p class="card-kicker">CONVENTIONAL MEMORY</p><h3>“Here are all five guidance updates.”</h3><ul><li><span>$28B</span> Jan 15 · relevant</li><li><span>$32B</span> Feb 20 · relevant</li><li><span>$36B</span> May 22 · relevant</li><li><span>$38B</span> Aug 27 · relevant</li><li class="current"><span>$40B</span> Nov 19 · relevant</li></ul><small>Five similar facts, no validity decision.</small></div>
+          <div class="comparison-card lian-memory"><p class="card-kicker">LIAN MEMORY · TODAY</p><h3>“$40B is the current guidance.”</h3><div class="answer-block"><strong>$40B</strong><span>Valid from Nov 19, 2025</span></div><p>Lian filters superseded records before ranking, so stale updates never reach the agent’s context.</p><small><i>✓</i> Provenance and every prior revision remain auditable.</small></div>
+        </div>
+      </section>
+
+      <section class="operations-section section-shell">
+        <div class="operations-heading"><p class="kicker">How Lian works</p><h2>A memory lifecycle<br />with receipts.</h2><p>From a new fact to a defensible answer, Lian makes each step explicit. Use it as local infrastructure or behind a hosted API.</p></div>
+        <div class="operations-grid">
+          <article><span>01</span><div class="op-glyph">+</div><h3>Remember</h3><p>Add a fact with its source, business timestamp, agent, subject, and structured metadata.</p></article>
+          <article><span>02</span><div class="op-glyph">↯</div><h3>Classify</h3><p>Detect whether it supersedes, confirms, adds to, or conflicts with an existing fact.</p></article>
+          <article><span>03</span><div class="op-glyph">◉</div><h3>Recall</h3><p>Retrieve hybrid-ranked memory, filtered to what was valid now or at a requested date.</p></article>
+          <article><span>04</span><div class="op-glyph">⌘</div><h3>Reconstruct</h3><p>Rebuild the context and event trail behind a past agent decision, with verifiable hashes.</p></article>
+        </div>
+      </section>
+
       <section id="how" class="how section-shell">
-        <div class="section-intro"><span class="section-number">01</span><div><p class="kicker">Memory for moving markets</p><h2>Every fact has a<br />history.</h2></div></div>
+        <div class="section-intro"><span class="section-number">02</span><div><p class="kicker">Memory for moving markets</p><h2>Every fact has a<br />history.</h2></div></div>
         <div class="feature-grid">
           <article class="feature feature-wide"><div class="feature-icon history-icon"><span></span><span></span><span></span></div><p class="feature-index">01 / BITEMPORAL</p><h3>Ask what was true,<br />not just what is stored.</h3><p>Track both when an event happened and when your system learned it. Recall exactly what an agent knew on a given date.</p></article>
           <article class="feature feature-dark"><div class="feature-icon chain-icon"># <i>→</i> # <i>→</i> #</div><p class="feature-index">02 / TAMPER-EVIDENT</p><h3>Proof built into every write.</h3><p>Each event enters an append-only SHA-256 hash chain. Auditors can verify the record, not merely trust it.</p></article>
           <article class="feature feature-accent"><div class="feature-icon key-icon">⌁</div><p class="feature-index">03 / CRYPTO-SHRED</p><h3>Erase data without erasing evidence.</h3><p>Destroy a subject’s encryption key for GDPR erasure while preserving the audit trail that proves it happened.</p></article>
         </div>
+      </section>
+
+      <section class="supersession-section section-shell">
+        <div class="supersession-copy"><p class="kicker">The hard problem</p><h2>Updates are not<br />all alike.</h2><p>“Guidance rose to $36B” may replace an earlier estimate. A same-day contradictory report may need human review. A new metric may simply belong alongside the old one. Lian treats those relationships differently.</p><p>It starts with structured metadata and broad candidate retrieval, applies deterministic financial rules where possible, then reserves LLM adjudication for ambiguous cases. Every decision carries confidence and a rationale that can be inspected later.</p></div>
+        <div class="relation-table" role="table" aria-label="Supersession relations">
+          <div class="relation-head" role="row"><span>RELATION</span><span>WHAT LIAN DOES</span></div>
+          <div role="row"><strong class="relation-super">Supersedes</strong><p>Closes the previous validity window and promotes the newer fact.</p></div>
+          <div role="row"><strong>Confirms</strong><p>Preserves both records and strengthens confidence in the fact.</p></div>
+          <div role="row"><strong>Adds</strong><p>Keeps both facts because they describe different attributes.</p></div>
+          <div role="row"><strong class="relation-alert">Contradicts</strong><p>Retains both records, lowers confidence, and flags the pair for review.</p></div>
+        </div>
+      </section>
+
+      <section class="architecture-section section-shell">
+        <div class="architecture-top"><p class="kicker">Designed for erasure and evidence</p><h2>Two stores.<br />One accountable memory.</h2></div>
+        <div class="architecture-diagram">
+          <div class="arch-input">Agent / SDK <span>→</span></div>
+          <div class="arch-engine"><span>LIAN MEMORY ENGINE</span><strong>Validates · encrypts · classifies · logs</strong></div>
+          <div class="arch-stores"><article><p>CONTENT STORE</p><h3>Encrypted,<br />erasable facts</h3><span>Personal or sensitive content can be rendered unreadable by destroying its per-subject key.</span></article><article><p>AUDIT LAYER</p><h3>Append-only<br />evidence</h3><span>References, hashes, and event metadata remain available to verify what happened and when.</span></article></div>
+        </div>
+        <p class="architecture-note">This split design lets teams honor a deletion request without quietly breaking the audit trail. Retention rules and legal overrides remain a policy decision for counsel.</p>
       </section>
 
       <section id="control" class="control-section section-shell">
