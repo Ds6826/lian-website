@@ -6,7 +6,7 @@ const show = (page) => { [authPage, onboardingPage, consolePage].forEach((item) 
 const persist = () => localStorage.setItem('lian-console-state', JSON.stringify(appState));
 
 const initialRoute = window.location.pathname;
-if (initialRoute === '/onboarding') show(onboardingPage);
+if (initialRoute === '/onboarding' || initialRoute.startsWith('/onboarding/')) show(onboardingPage);
 else if (initialRoute.startsWith('/console/')) show(consolePage);
 else show(authPage);
 if (appState.workspace) { document.querySelector('#project-name').textContent = appState.workspace; document.querySelector('#settings-workspace').value = appState.workspace; }
@@ -18,22 +18,38 @@ const beginOnboarding = (provider) => {
 };
 document.querySelector('#back-to-auth').addEventListener('click', () => show(authPage));
 
-const onboardingData = { usecase: '', source: '' };
+const onboardingData = JSON.parse(sessionStorage.getItem('lian-onboarding') || '{"workspace":"","usecase":"","source":"","context":""}');
+const onboardingRoute = () => window.location.pathname.match(/^\/onboarding\/([\w-]+)/)?.[1] || 'company';
+const renderOnboardingStep = () => {
+  const step = onboardingRoute();
+  document.querySelectorAll('.wizard-step').forEach((panel) => { panel.hidden = panel.dataset.step !== step; });
+  document.querySelectorAll('.wizard-progress i').forEach((item, index) => item.classList.toggle('active', index <= ['company', 'usecase', 'source', 'context'].indexOf(step)));
+  document.querySelector('#workspace').value = onboardingData.workspace || '';
+  document.querySelector('#context').value = onboardingData.context || '';
+  document.querySelector('#character-count').textContent = (onboardingData.context || '').length;
+  document.querySelectorAll('.choice-grid button').forEach((button) => button.classList.toggle('active', onboardingData[button.parentElement.dataset.field] === button.textContent));
+  const next = document.querySelector(`.wizard-step[data-step="${step}"] .step-next`);
+  if (next) next.hidden = step === 'company' ? !onboardingData.workspace : !onboardingData[step];
+};
+if (initialRoute === '/onboarding' || initialRoute.startsWith('/onboarding/')) renderOnboardingStep();
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
   const group = button.parentElement;
   group.querySelectorAll('button').forEach((item) => item.classList.remove('active'));
   button.classList.add('active');
   onboardingData[group.dataset.field] = button.textContent;
+  sessionStorage.setItem('lian-onboarding', JSON.stringify(onboardingData));
+  renderOnboardingStep();
 }));
-document.querySelector('#onboarding-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  if (!document.querySelector('#workspace').value.trim()) { document.querySelector('#workspace').focus(); return; }
-  const workspace = document.querySelector('#workspace').value.trim();
+document.querySelector('#workspace').addEventListener('input', (event) => { onboardingData.workspace = event.target.value; sessionStorage.setItem('lian-onboarding', JSON.stringify(onboardingData)); renderOnboardingStep(); });
+document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', () => window.location.assign(`/onboarding/${button.dataset.next}`)));
+document.querySelector('.onboarding-submit').addEventListener('click', async () => {
+  const workspace = onboardingData.workspace.trim();
+  if (!workspace) return window.location.assign('/onboarding/company');
   const submit = document.querySelector('.onboarding-submit');
   submit.disabled = true; submit.textContent = 'Creating workspace…';
-  try { const response = await fetch('/api/onboarding', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ workspace, usecase: onboardingData.usecase, source: onboardingData.source, context: document.querySelector('#context').value }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); appState.workspace = result.workspace; persist(); window.location.assign('/console/get-started'); } catch (error) { submit.disabled = false; submit.innerHTML = 'Continue <span>→</span>'; alert(error.message || 'Unable to create your workspace.'); }
+  try { const response = await fetch('/api/onboarding', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...onboardingData, workspace }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); appState.workspace = result.workspace; persist(); sessionStorage.removeItem('lian-onboarding'); window.location.assign('/console/get-started'); } catch (error) { submit.disabled = false; submit.innerHTML = 'Open Lian Console <span>→</span>'; alert(error.message || 'Unable to create your workspace.'); }
 });
-document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
+document.querySelector('#context').addEventListener('input', (event) => { onboardingData.context = event.target.value; sessionStorage.setItem('lian-onboarding', JSON.stringify(onboardingData)); document.querySelector('#character-count').textContent = event.target.value.length; });
 
 const installContent = {
   python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> lian-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured financial metadata.', 'mem.<em>add</em>(agent_id="analyst-1", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="analyst-1", query="NVDA guidance", as_of=...)']],
