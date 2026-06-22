@@ -5,7 +5,11 @@ const consolePage = document.querySelector('#console-page');
 const show = (page) => { [authPage, onboardingPage, consolePage].forEach((item) => { item.hidden = item !== page; }); };
 const persist = () => localStorage.setItem('lian-console-state', JSON.stringify(appState));
 
-if (appState.ready) show(consolePage);
+const initialRoute = window.location.pathname;
+if (initialRoute === '/onboarding') show(onboardingPage);
+else if (initialRoute.startsWith('/console/')) show(consolePage);
+else show(authPage);
+if (appState.workspace) { document.querySelector('#project-name').textContent = appState.workspace; document.querySelector('#settings-workspace').value = appState.workspace; }
 
 const beginOnboarding = (provider) => {
   appState.provider = provider;
@@ -13,7 +17,6 @@ const beginOnboarding = (provider) => {
   show(onboardingPage);
 };
 document.querySelector('#back-to-auth').addEventListener('click', () => show(authPage));
-if (new URLSearchParams(window.location.search).get('auth') === 'success') show(onboardingPage);
 
 const onboardingData = { usecase: '', source: '' };
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
@@ -22,15 +25,13 @@ document.querySelectorAll('.choice-grid button').forEach((button) => button.addE
   button.classList.add('active');
   onboardingData[group.dataset.field] = button.textContent;
 }));
-document.querySelector('#onboarding-form').addEventListener('submit', (event) => {
+document.querySelector('#onboarding-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!document.querySelector('#workspace').value.trim()) { document.querySelector('#workspace').focus(); return; }
-  appState.ready = true;
-  appState.workspace = document.querySelector('#workspace').value.trim() || 'default-project';
-  persist();
-  document.querySelector('#project-name').textContent = appState.workspace;
-  document.querySelector('#settings-workspace').value = appState.workspace;
-  show(consolePage);
+  const workspace = document.querySelector('#workspace').value.trim();
+  const submit = document.querySelector('.onboarding-submit');
+  submit.disabled = true; submit.textContent = 'Creating workspace…';
+  try { const response = await fetch('/api/onboarding', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ workspace, usecase: onboardingData.usecase, source: onboardingData.source, context: document.querySelector('#context').value }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); appState.workspace = result.workspace; persist(); window.location.assign('/console/get-started'); } catch (error) { submit.disabled = false; submit.innerHTML = 'Continue <span>→</span>'; alert(error.message || 'Unable to create your workspace.'); }
 });
 document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
 
@@ -74,5 +75,5 @@ async function loadKeys() { try { const response = await fetch('/api/keys'); if 
 document.querySelector('#key-form').addEventListener('submit', async (event) => { event.preventDefault(); const name = document.querySelector('#key-name').value; try { const response = await fetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); document.querySelector('#new-key-secret').textContent = result.secret; document.querySelector('#key-reveal').hidden = false; document.querySelector('#key-name').value = ''; loadKeys(); } catch (error) { backendNote.textContent = error.message || 'Unable to create a key. Start node server.js and try again.'; } });
 document.querySelector('#copy-key').addEventListener('click', async () => { const button = document.querySelector('#copy-key'); await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy'; }, 1600); });
 document.querySelector('#save-settings').addEventListener('click', () => { appState.workspace = document.querySelector('#settings-workspace').value || 'default-project'; document.querySelector('#project-name').textContent = appState.workspace; persist(); });
-document.querySelector('#sign-out').addEventListener('click', () => { localStorage.removeItem('lian-console-state'); window.location.reload(); });
+document.querySelector('#sign-out').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); localStorage.removeItem('lian-console-state'); window.location.assign('/login'); });
 document.querySelector('.mobile-menu').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
