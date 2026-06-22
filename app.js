@@ -12,9 +12,9 @@ const beginOnboarding = (provider) => {
   persist();
   show(onboardingPage);
 };
-document.querySelectorAll('.oauth-button').forEach((button) => button.addEventListener('click', () => beginOnboarding(button.dataset.provider)));
 document.querySelector('#email-form').addEventListener('submit', (event) => { event.preventDefault(); beginOnboarding(document.querySelector('#email').value); });
 document.querySelector('#back-to-auth').addEventListener('click', () => show(authPage));
+if (new URLSearchParams(window.location.search).get('auth') === 'success') show(onboardingPage);
 
 let onboardingStep = 1;
 const onboardingData = { team: '', usecase: '' };
@@ -57,10 +57,35 @@ renderSteps('python');
 document.querySelectorAll('.language-tabs button').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.language-tabs button').forEach((item) => item.classList.remove('active')); button.classList.add('active'); renderSteps(button.dataset.language); }));
 document.querySelectorAll('.path-card').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.path-card').forEach((item) => item.classList.remove('active')); button.classList.add('active'); }));
 
-const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], recalls: ['ACTIVITY', 'Recalls'], memories: ['ACTIVITY', 'Memories'], audit: ['ACTIVITY', 'Audit trail'], settings: ['ACCOUNT', 'Settings'] };
-document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => { const view = button.dataset.view; document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.remove('active')); button.classList.add('active'); document.querySelectorAll('.view').forEach((item) => item.classList.toggle('active', item.id === `view-${view}`)); document.querySelector('#view-label').textContent = viewMeta[view][0]; document.querySelector('#view-title').textContent = viewMeta[view][1]; document.querySelector('.sidebar').classList.remove('open'); }));
-document.querySelector('#run-recall').addEventListener('click', () => { document.querySelector('#playground-answer').hidden = false; });
-document.querySelector('#create-key').addEventListener('click', () => { document.querySelector('#key-state').innerHTML = '<i>✓</i><h3>Demo API key created</h3><p>This static prototype does not generate a real secret. Connect a Lian backend before issuing production credentials.</p>'; });
+const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], recalls: ['ACTIVITY', 'Recalls'], memories: ['ACTIVITY', 'Memories'], audit: ['ACTIVITY', 'Audit trail'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
+const activateView = (view, updateUrl = false) => {
+  if (!viewMeta[view]) view = 'get-started';
+  document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
+  document.querySelectorAll('.view').forEach((item) => item.classList.toggle('active', item.id === `view-${view}`));
+  document.querySelector('#view-label').textContent = viewMeta[view][0];
+  document.querySelector('#view-title').textContent = viewMeta[view][1];
+  document.querySelector('.sidebar').classList.remove('open');
+  if (updateUrl && window.location.protocol.startsWith('http')) window.history.pushState({}, '', `/console/${view}`);
+  if (view === 'api-keys') loadKeys();
+};
+document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.view, true)));
+const initialPath = window.location.pathname.match(/^\/console\/([\w-]+)/)?.[1];
+if (initialPath) activateView(initialPath, false);
+window.addEventListener('popstate', () => activateView(window.location.pathname.match(/^\/console\/([\w-]+)/)?.[1] || 'get-started', false));
+document.querySelector('#run-recall').addEventListener('click', async () => { const answer = document.querySelector('#playground-answer'); try { const response = await fetch('/api/demo/recall', { method: 'POST' }); const result = await response.json(); answer.querySelector('strong').textContent = result.value; answer.querySelector('p').textContent = result.content; answer.querySelector('small').textContent = `✓ ${result.audit}`; } catch { answer.querySelector('small').textContent = 'Demo result shown locally. Start node server.js to log this request.'; } answer.hidden = false; });
+
+const displayDate = (value) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const keyTable = document.querySelector('#key-table');
+const backendNote = document.querySelector('#backend-note');
+const renderKeys = (keys) => {
+  const existing = keyTable.querySelectorAll('.key-row'); existing.forEach((row) => row.remove());
+  const empty = document.querySelector('#key-state'); empty.hidden = keys.length > 0;
+  keys.forEach((key) => { const row = document.createElement('div'); row.className = 'key-row'; row.innerHTML = `<b>${key.name}</b><code>${key.prefix}</code><span>${displayDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button type="button" data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`; keyTable.append(row); });
+  document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => { await fetch(`/api/keys/${button.dataset.revoke}`, { method: 'DELETE' }); loadKeys(); }));
+};
+async function loadKeys() { try { const response = await fetch('/api/keys'); if (!response.ok) throw new Error(); const { keys } = await response.json(); renderKeys(keys); backendNote.textContent = 'Keys are stored by the local Lian Console server. Secrets are hashed before storage.'; } catch { backendNote.textContent = 'Start the server with node server.js to create and manage persistent local API keys.'; } }
+document.querySelector('#key-form').addEventListener('submit', async (event) => { event.preventDefault(); const name = document.querySelector('#key-name').value; try { const response = await fetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); document.querySelector('#new-key-secret').textContent = result.secret; document.querySelector('#key-reveal').hidden = false; document.querySelector('#key-name').value = ''; loadKeys(); } catch (error) { backendNote.textContent = error.message || 'Unable to create a key. Start node server.js and try again.'; } });
+document.querySelector('#copy-key').addEventListener('click', async () => { const button = document.querySelector('#copy-key'); await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); button.textContent = 'Copied'; setTimeout(() => { button.textContent = 'Copy'; }, 1600); });
 document.querySelector('#save-settings').addEventListener('click', () => { appState.workspace = document.querySelector('#settings-workspace').value || 'default-project'; document.querySelector('#project-name').textContent = appState.workspace; persist(); });
 document.querySelector('#sign-out').addEventListener('click', () => { localStorage.removeItem('lian-console-state'); window.location.reload(); });
 document.querySelector('.mobile-menu').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
