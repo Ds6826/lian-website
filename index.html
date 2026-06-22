@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Lian is the financial-grade memory layer for AI agents operating in regulated environments." />
+    <title>Lian — Financial-grade agent memory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Lian home"><span class="brand-mark">L</span> lian</a>
+      <button class="menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#how">How it works</a><a href="#control">Controls</a><a href="#developers">Developers</a>
+      </nav>
+      <a class="button button-small" href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">View on GitHub <span>↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="eyebrow"><span></span> Built for regulated intelligence</div>
+        <h1>Memory that knows<br />when it <em>changed.</em></h1>
+        <p class="hero-copy">Lian gives financial AI agents a memory layer built for the real world: facts expire, records need proof, and yesterday’s answer can become today’s risk.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#developers">Start building <span>→</span></a>
+          <a class="text-link" href="#how">See it in action <span>↓</span></a>
+        </div>
+        <div class="hero-footnote"><span class="pulse"></span> Open source · Apache 2.0 · Self-hostable</div>
+      </section>
+
+      <section class="memory-stage section-shell" aria-label="Lian memory timeline demonstration">
+        <div class="stage-topline"><span>LIVE MEMORY STATE</span><span>NVDA · FY2026 REVENUE GUIDANCE</span></div>
+        <div class="memory-layout">
+          <div class="timeline-pane">
+            <div class="timeline-heading"><span class="live-dot"></span> Truth, at any point in time</div>
+            <div class="timeline-track">
+              <button class="memory-node active" data-date="2025-01-15" data-value="$28B" data-label="Initial guidance" style="--x: 4%"><i></i><span>Jan 15</span></button>
+              <button class="memory-node" data-date="2025-02-20" data-value="$32B" data-label="Guidance revised" style="--x: 27%"><i></i><span>Feb 20</span></button>
+              <button class="memory-node" data-date="2025-05-22" data-value="$36B" data-label="Guidance raised" style="--x: 53%"><i></i><span>May 22</span></button>
+              <button class="memory-node" data-date="2025-11-19" data-value="$40B" data-label="Current guidance" style="--x: 91%"><i></i><span>Nov 19</span></button>
+            </div>
+            <p class="stage-caption">Click a revision. Lian returns the fact that was valid then—not every fact that has ever existed.</p>
+          </div>
+          <aside class="truth-card">
+            <div class="card-label">VALID ON <span id="selected-date">2025-01-15</span></div>
+            <strong id="selected-value">$28B</strong>
+            <p id="selected-label">Initial guidance</p>
+            <div class="verified"><span>✓</span> Validity verified at database layer</div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="proof-strip">
+        <div><strong>0 / 4</strong><span>stale facts in top-5 results</span></div>
+        <div><strong>100%</strong><span>supersession accuracy</span></div>
+        <div><strong>4 / 4</strong><span>point-in-time recall</span></div>
+        <p>Numbers from Lian’s NVDA revision-chain benchmark.</p>
+      </section>
+
+      <section id="how" class="how section-shell">
+        <div class="section-intro"><span class="section-number">01</span><div><p class="kicker">Memory for moving markets</p><h2>Every fact has a<br />history.</h2></div></div>
+        <div class="feature-grid">
+          <article class="feature feature-wide"><div class="feature-icon history-icon"><span></span><span></span><span></span></div><p class="feature-index">01 / BITEMPORAL</p><h3>Ask what was true,<br />not just what is stored.</h3><p>Track both when an event happened and when your system learned it. Recall exactly what an agent knew on a given date.</p></article>
+          <article class="feature feature-dark"><div class="feature-icon chain-icon"># <i>→</i> # <i>→</i> #</div><p class="feature-index">02 / TAMPER-EVIDENT</p><h3>Proof built into every write.</h3><p>Each event enters an append-only SHA-256 hash chain. Auditors can verify the record, not merely trust it.</p></article>
+          <article class="feature feature-accent"><div class="feature-icon key-icon">⌁</div><p class="feature-index">03 / CRYPTO-SHRED</p><h3>Erase data without erasing evidence.</h3><p>Destroy a subject’s encryption key for GDPR erasure while preserving the audit trail that proves it happened.</p></article>
+        </div>
+      </section>
+
+      <section id="control" class="control-section section-shell">
+        <div class="control-copy"><p class="kicker">Compliance is architecture</p><h2>Control where it counts.</h2><p>Policies that live only in application code are policies someone can bypass. Lian carries enforcement into the storage layer.</p><a class="text-link" href="https://github.com/ebeirne/Lian#compliance-features" target="_blank" rel="noreferrer">Explore the compliance model <span>↗</span></a></div>
+        <div class="control-list">
+          <div><span>01</span><h3>Information barriers</h3><p>PostgreSQL row-level security keeps agents inside their permitted group.</p></div>
+          <div><span>02</span><h3>Air-gapped ready</h3><p>Enforce local embeddings and prevent external LLM traffic at startup.</p></div>
+          <div><span>03</span><h3>Retention by namespace</h3><p>Set TTLs, preserve legal holds, and make the lifecycle explicit.</p></div>
+        </div>
+      </section>
+
+      <section id="developers" class="developer-section section-shell">
+        <div class="developer-copy"><p class="kicker">A small surface area</p><h2>Three verbs.<br />A defensible memory.</h2><p>Use Lian locally with SQLite or point the same interface at your hosted deployment. Framework integrations are available for LangChain, LangGraph, CrewAI, OpenAI Agents SDK, AutoGen, and Node.</p><a class="button button-primary" href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">Read the README <span>↗</span></a></div>
+        <div class="code-card"><div class="code-top"><span><i></i><i></i><i></i></span><b>memory.py</b><span>Python</span></div><pre><code><span class="code-fade">from lian import LocalLianClient</span>
+
+mem = LocalLianClient()
+
+<span class="code-blue">mem.remember</span>(
+  agent_id=<span class="code-string">"analyst-1"</span>,
+  content=<span class="code-string">"NVDA guidance raised to $40B"</span>,
+  event_time=<span class="code-pink">earnings_date</span>
+)
+
+<span class="code-blue">mem.recall_at</span>(
+  agent_id=<span class="code-string">"analyst-1"</span>,
+  query=<span class="code-string">"NVDA revenue guidance"</span>,
+  as_of=<span class="code-pink">march_1_2025</span>
+)</code></pre><div class="code-result"><span>↳</span> $32B — the guidance valid on March 1, 2025</div></div>
+      </section>
+
+      <section class="closing section-shell"><p class="eyebrow"><span></span> Agents make decisions. Memory needs receipts.</p><h2>Build on memory<br />you can <em>defend.</em></h2><a class="button button-light" href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">Get started with Lian <span>→</span></a></section>
+    </main>
+    <footer><a class="brand" href="#top"><span class="brand-mark">L</span> lian</a><p>Financial-grade agent memory.</p><a href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">GitHub ↗</a></footer>
+    <script src="script.js"></script>
+  </body>
+</html>
