@@ -71,14 +71,30 @@
         </div>
       </section>
 
+      <section class="recall-lab section-shell" aria-labelledby="recall-lab-title">
+        <div class="lab-heading"><div><p class="kicker">Try point-in-time recall</p><h2 id="recall-lab-title">Ask Lian<br />a better question.</h2></div><p>Choose a moment, then inspect what an analyst agent would receive. The answer changes because the validity window changes—not because the query changed.</p></div>
+        <div class="lab-shell">
+          <div class="lab-controls" role="tablist" aria-label="Recall time">
+            <button class="recall-tab active" role="tab" aria-selected="true" data-recall="now">Today <small>Current view</small></button>
+            <button class="recall-tab" role="tab" aria-selected="false" data-recall="march">Mar 1, 2025 <small>Historical view</small></button>
+            <button class="recall-tab" role="tab" aria-selected="false" data-recall="june">Jun 1, 2025 <small>Historical view</small></button>
+          </div>
+          <div class="lab-query"><span>QUERY</span><code>What is NVDA’s FY2026 revenue guidance?</code><span class="query-status"><i></i> Recall complete</span></div>
+          <div class="lab-result" aria-live="polite"><div class="result-main"><span class="result-label" id="result-label">VALID TODAY</span><strong id="result-value">$40B</strong><p id="result-copy">The most recent guidance is active. Four prior revisions are excluded from agent context.</p></div><div class="result-meta"><div><span>EVENT TIME</span><b id="result-event">Nov 19, 2025</b></div><div><span>VALIDITY</span><b id="result-validity">Open · current</b></div><div><span>PROVENANCE</span><b id="result-source">Earnings update</b></div></div></div>
+          <button class="audit-toggle" type="button" aria-expanded="false">Show the decision trail <span>+</span></button>
+          <div class="audit-drawer" hidden><div><i>01</i><p>Candidate retrieval finds prior facts with ticker <code>NVDA</code> and metric <code>revenue_guidance</code>.</p></div><div><i>02</i><p>Temporal validity filters facts that were not active at the selected moment.</p></div><div><i>03</i><p>Hybrid ranking returns the highest-quality eligible fact and logs the recall.</p></div></div>
+        </div>
+      </section>
+
       <section class="operations-section section-shell">
         <div class="operations-heading"><p class="kicker">How Lian works</p><h2>A memory lifecycle<br />with receipts.</h2><p>From a new fact to a defensible answer, Lian makes each step explicit. Use it as local infrastructure or behind a hosted API.</p></div>
-        <div class="operations-grid">
-          <article><span>01</span><div class="op-glyph">+</div><h3>Remember</h3><p>Add a fact with its source, business timestamp, agent, subject, and structured metadata.</p></article>
-          <article><span>02</span><div class="op-glyph">↯</div><h3>Classify</h3><p>Detect whether it supersedes, confirms, adds to, or conflicts with an existing fact.</p></article>
-          <article><span>03</span><div class="op-glyph">◉</div><h3>Recall</h3><p>Retrieve hybrid-ranked memory, filtered to what was valid now or at a requested date.</p></article>
-          <article><span>04</span><div class="op-glyph">⌘</div><h3>Reconstruct</h3><p>Rebuild the context and event trail behind a past agent decision, with verifiable hashes.</p></article>
+        <div class="operations-grid" role="tablist" aria-label="Memory lifecycle">
+          <button class="operation-card active" role="tab" aria-selected="true" data-operation="remember"><span>01</span><div class="op-glyph">+</div><h3>Remember</h3><p>Add a fact with its source, business timestamp, agent, subject, and structured metadata.</p></button>
+          <button class="operation-card" role="tab" aria-selected="false" data-operation="classify"><span>02</span><div class="op-glyph">↯</div><h3>Classify</h3><p>Detect whether it supersedes, confirms, adds to, or conflicts with an existing fact.</p></button>
+          <button class="operation-card" role="tab" aria-selected="false" data-operation="recall"><span>03</span><div class="op-glyph">◉</div><h3>Recall</h3><p>Retrieve hybrid-ranked memory, filtered to what was valid now or at a requested date.</p></button>
+          <button class="operation-card" role="tab" aria-selected="false" data-operation="reconstruct"><span>04</span><div class="op-glyph">⌘</div><h3>Reconstruct</h3><p>Rebuild the context and event trail behind a past agent decision, with verifiable hashes.</p></button>
         </div>
+        <div class="operation-detail" aria-live="polite"><span id="operation-step">01 / REMEMBER</span><strong id="operation-title">A fact enters with context.</strong><p id="operation-copy">Record the event timestamp separately from the moment it was ingested. That distinction makes later point-in-time recall possible.</p><code id="operation-code">POST /v1/memories</code></div>
       </section>
 
       <section id="how" class="how section-shell">
@@ -94,10 +110,10 @@
         <div class="supersession-copy"><p class="kicker">The hard problem</p><h2>Updates are not<br />all alike.</h2><p>“Guidance rose to $36B” may replace an earlier estimate. A same-day contradictory report may need human review. A new metric may simply belong alongside the old one. Lian treats those relationships differently.</p><p>It starts with structured metadata and broad candidate retrieval, applies deterministic financial rules where possible, then reserves LLM adjudication for ambiguous cases. Every decision carries confidence and a rationale that can be inspected later.</p></div>
         <div class="relation-table" role="table" aria-label="Supersession relations">
           <div class="relation-head" role="row"><span>RELATION</span><span>WHAT LIAN DOES</span></div>
-          <div role="row"><strong class="relation-super">Supersedes</strong><p>Closes the previous validity window and promotes the newer fact.</p></div>
-          <div role="row"><strong>Confirms</strong><p>Preserves both records and strengthens confidence in the fact.</p></div>
-          <div role="row"><strong>Adds</strong><p>Keeps both facts because they describe different attributes.</p></div>
-          <div role="row"><strong class="relation-alert">Contradicts</strong><p>Retains both records, lowers confidence, and flags the pair for review.</p></div>
+          <button class="relation-row active" type="button" aria-expanded="true" data-relation="supersedes"><strong class="relation-super">Supersedes</strong><p>Closes the previous validity window and promotes the newer fact.<span class="relation-more">Example: an earnings update raises the same company’s same metric from $32B to $36B. The $32B fact receives a <code>valid_to</code> timestamp.</span></p><i>+</i></button>
+          <button class="relation-row" type="button" aria-expanded="false" data-relation="confirms"><strong>Confirms</strong><p>Preserves both records and strengthens confidence in the fact.<span class="relation-more">Example: a second source repeats the $36B guidance. The value remains active; provenance and confidence improve.</span></p><i>+</i></button>
+          <button class="relation-row" type="button" aria-expanded="false" data-relation="adds"><strong>Adds</strong><p>Keeps both facts because they describe different attributes.<span class="relation-more">Example: an update adds gross-margin guidance. It is related to revenue guidance, but it does not replace it.</span></p><i>+</i></button>
+          <button class="relation-row" type="button" aria-expanded="false" data-relation="contradicts"><strong class="relation-alert">Contradicts</strong><p>Retains both records, lowers confidence, and flags the pair for review.<span class="relation-more">Example: two same-time sources report conflicting numbers. Lian avoids silently discarding either record.</span></p><i>+</i></button>
         </div>
       </section>
 
