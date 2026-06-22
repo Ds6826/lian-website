@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Set up and explore Lian, financial-grade memory for AI agents." />
+    <title>Lian Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <main class="auth-page" id="auth-page">
+      <section class="auth-panel">
+        <a class="console-brand" href="index.html"><span>L</span> lian</a>
+        <div class="auth-box" id="auth-box">
+          <p class="console-eyebrow">LIAN CONSOLE</p>
+          <h1>Memory you can<br />defend.</h1>
+          <p>Set up your Lian workspace and give your agents an auditable source of truth.</p>
+          <div class="oauth-stack">
+            <button class="oauth-button" data-provider="Google"><b class="google-icon">G</b> Continue with Google</button>
+            <button class="oauth-button" data-provider="GitHub"><b class="github-icon">◖</b> Continue with GitHub</button>
+          </div>
+          <div class="auth-divider"><span>or continue with email</span></div>
+          <form id="email-form"><label for="email">Work email</label><input id="email" type="email" placeholder="you@company.com" required /><button class="console-button" type="submit">Continue <span>→</span></button></form>
+          <p class="auth-note">By continuing, you agree to Lian's Terms and Privacy Policy.</p>
+        </div>
+      </section>
+      <aside class="auth-aside"><div class="aside-grid"></div><div class="aside-content"><p class="console-eyebrow">BUILT FOR REGULATED INTELLIGENCE</p><blockquote>“The important question is not just what the agent knows. It is what the agent knew when it made the decision.”</blockquote><div class="aside-proof"><span>✓</span><p><b>Bitemporal memory</b><br />Event time and ingestion time, kept distinct.</p></div><div class="aside-proof"><span>#</span><p><b>Verifiable trail</b><br />Every memory operation is accounted for.</p></div></div></aside>
+    </main>
+
+    <main class="onboarding-page" id="onboarding-page" hidden>
+      <div class="onboarding-top"><a class="console-brand" href="index.html"><span>L</span> lian</a><div class="progress"><i class="active"></i><i></i><i></i></div><button class="quiet-button" id="back-to-auth">Sign out</button></div>
+      <section class="onboarding-card">
+        <p class="console-eyebrow" id="onboarding-step">STEP 1 OF 3</p>
+        <h1 id="onboarding-title">Tell us about<br />your workspace.</h1>
+        <p class="onboarding-copy" id="onboarding-copy">This helps Lian tailor a sensible starting point. You can change it anytime.</p>
+        <form id="onboarding-form">
+          <div class="onboarding-step step-active" data-step="1"><label for="workspace">Workspace name</label><input id="workspace" placeholder="e.g. Northstar Research" required /><label class="field-label">What best describes your team?</label><div class="choice-grid" data-field="team"><button type="button">Financial services</button><button type="button">Fintech</button><button type="button">Enterprise AI</button><button type="button">Research</button><button type="button">Other</button></div></div>
+          <div class="onboarding-step" data-step="2" hidden><label class="field-label">Where will Lian power memory?</label><div class="choice-grid choice-grid-wide" data-field="usecase"><button type="button">Research agent</button><button type="button">Investment copilot</button><button type="button">Customer operations</button><button type="button">Internal knowledge</button><button type="button">Developer tool</button><button type="button">Other</button></div><label for="data-level">What kind of data will your agents handle?</label><select id="data-level"><option>Market and company data</option><option>Customer information</option><option>Internal business information</option><option>A mix of sensitive data</option></select></div>
+          <div class="onboarding-step" data-step="3" hidden><p class="ready-icon">✓</p><h2>Your workspace is ready.</h2><p class="onboarding-copy">We created a starter project with a local-first setup path and a financial-memory walkthrough.</p><div class="ready-list"><span>✓ Project: <b id="workspace-preview">Your workspace</b></span><span>✓ Environment: Local development</span><span>✓ Guide: Financial agent quickstart</span></div></div>
+          <button class="console-button onboarding-submit" type="submit"><span id="submit-text">Continue</span> <span>→</span></button>
+        </form>
+      </section>
+    </main>
+
+    <main class="console-page" id="console-page" hidden>
+      <aside class="sidebar"><a class="console-brand" href="index.html"><span>L</span> lian</a><button class="project-switcher"><i>▣</i><span id="project-name">default-project</span><b>⌄</b></button><nav class="sidebar-nav"><p>SETUP</p><button class="nav-item active" data-view="get-started"><i>◇</i> Get started</button><button class="nav-item" data-view="playground"><i>◌</i> Playground</button><button class="nav-item" data-view="api-keys"><i>⌘</i> API keys</button><p>ACTIVITY</p><button class="nav-item" data-view="dashboard"><i>▦</i> Dashboard</button><button class="nav-item" data-view="recalls"><i>⌁</i> Recalls</button><button class="nav-item" data-view="memories"><i>▤</i> Memories</button><button class="nav-item" data-view="audit"><i>#</i> Audit trail</button><p>ACCOUNT</p><button class="nav-item" data-view="settings"><i>⚙</i> Settings</button><a class="nav-item" href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer"><i>↗</i> Documentation</a></nav><div class="sidebar-footer"><div class="usage"><span>Developer plan</span><p>Memories <b>0 / 10K</b></p><div><i></i></div><p>Recall <b>0 / 1K</b></p><div><i></i></div></div><button id="sign-out">Sign out</button></div></aside>
+      <section class="console-main"><header class="console-header"><button class="mobile-menu" aria-label="Open navigation">☰</button><div class="breadcrumb"><span id="view-label">SETUP</span><b id="view-title">Get started</b></div><div class="header-actions"><button class="upgrade-button">↗ Upgrade</button><button class="avatar">L</button></div></header>
+        <div class="view active" id="view-get-started"><div class="view-wrap"><p class="console-eyebrow">GET STARTED</p><h1>Install Lian</h1><p class="view-lede">Start with local, zero-credential agent memory. Move to a self-hosted environment when you are ready for your own PostgreSQL, KMS, and policy controls.</p><div class="setup-paths"><button class="path-card active" data-path="sdk"><i>⌘</i><span><b>SDK integration</b><small>Drop into your existing agent stack</small></span></button><button class="path-card" data-path="docker"><i>▣</i><span><b>Self-hosted</b><small>Run the full Lian stack</small></span></button><button class="path-card" data-path="mcp"><i>⌁</i><span><b>Agent tools</b><small>Connect via MCP or framework tools</small></span></button></div><div class="language-tabs"><button class="active" data-language="python">Python</button><button data-language="node">Node.js</button><button data-language="curl">cURL API</button></div><div class="install-steps" id="install-steps"></div></div></div>
+        <div class="view" id="view-playground"><div class="view-wrap"><p class="console-eyebrow">PLAYGROUND</p><h1>Try a recall.</h1><p class="view-lede">A safe local simulation of Lian’s point-in-time memory retrieval.</p><div class="playground-card"><label for="playground-query">Ask your agent memory</label><div class="query-line"><input id="playground-query" value="What was NVDA guidance on March 1, 2025?" /><button id="run-recall">Run recall →</button></div><div class="playground-answer" id="playground-answer" hidden><span>RECALL RESULT · VALID ON MAR 1, 2025</span><strong>$32B</strong><p>NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.</p><small>✓ Validity window verified · ✓ Audit event logged</small></div></div></div></div>
+        <div class="view" id="view-api-keys"><div class="view-wrap"><p class="console-eyebrow">DEVELOPER ACCESS</p><h1>API keys</h1><p class="view-lede">Create scoped API keys for your agents. Keys are shown once and should be stored securely.</p><button class="console-button" id="create-key">Create API key <span>+</span></button><div class="empty-state" id="key-state"><i>⌘</i><h3>No API keys yet</h3><p>Create a key for a local agent, a staging environment, or your production service.</p></div></div></div>
+        <div class="view" id="view-dashboard"><div class="view-wrap"><p class="console-eyebrow">ACTIVITY</p><h1>Workspace overview</h1><div class="metric-grid"><article><span>MEMORIES</span><strong>0</strong><small>Stored this month</small></article><article><span>RECALLS</span><strong>0</strong><small>Retrieved this month</small></article><article><span>AUDIT EVENTS</span><strong>0</strong><small>Verified operations</small></article></div><div class="empty-state"><i>◌</i><h3>Waiting for your first memory</h3><p>Follow the setup guide, then return here to inspect memory activity.</p></div></div></div>
+        <div class="view" id="view-recalls"><div class="view-wrap"><p class="console-eyebrow">ACTIVITY</p><h1>Recalls</h1><div class="empty-state"><i>⌁</i><h3>No recalls yet</h3><p>Every memory retrieval will be recorded here with its time filter and provenance.</p></div></div></div>
+        <div class="view" id="view-memories"><div class="view-wrap"><p class="console-eyebrow">ACTIVITY</p><h1>Memories</h1><div class="empty-state"><i>▤</i><h3>No memories yet</h3><p>When agents write facts, their current validity and source will appear here.</p></div></div></div>
+        <div class="view" id="view-audit"><div class="view-wrap"><p class="console-eyebrow">ACTIVITY</p><h1>Audit trail</h1><div class="empty-state"><i>#</i><h3>Nothing to verify yet</h3><p>Each add, recall, supersession, and erasure event will contribute to the audit chain.</p></div></div></div>
+        <div class="view" id="view-settings"><div class="view-wrap"><p class="console-eyebrow">ACCOUNT</p><h1>Settings</h1><div class="settings-card"><label>Workspace name<input id="settings-workspace" /></label><label>Default retention<select><option>Customer defined</option><option>90 days</option><option>1 year</option></select></label><button class="console-button" id="save-settings">Save changes</button></div></div></div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
