@@ -3,7 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { Redis } = require('@upstash/redis');
-const kv = Redis.fromEnv();
+const kv = new Redis({
+  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 const root = path.join(__dirname, '..', 'public');
 const baseUrl = process.env.BASE_URL || 'https://lians.ai';
