@@ -1,80 +1,142 @@
 const http = require('node:http');
-const https = require('node:https');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { createClerkClient, verifyToken } = require('@clerk/backend');
 
 const root = __dirname;
 const envFile = path.join(root, '.env');
 if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forEach((line) => { const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/); if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, ''); });
+
 const port = Number(process.env.PORT || 8000);
 const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 const dataDir = path.join(root, 'data');
 const dataFile = path.join(dataDir, 'lian-console.json');
-const sessions = new Map();
-const oauthStates = new Map();
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 const validSteps = [...requiredSteps, 'context'];
-const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '' });
+
+// ── helpers ──────────────────────────────────────────────────────────────────
 
 const log = (event, req, user, metadata = {}) => console.log(JSON.stringify({ timestamp: new Date().toISOString(), event, userId: user?.id || null, route: req?.url || null, ...metadata }));
 const defaultStore = () => ({ users: [], onboarding: {}, apiKeys: [] });
 const readStore = () => { try { return { ...defaultStore(), ...JSON.parse(fs.readFileSync(dataFile, 'utf8')) }; } catch { return defaultStore(); } };
 const writeStore = (store) => { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(dataFile, JSON.stringify(store, null, 2)); };
-const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(body)); };
 const readBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Invalid JSON')); } }); });
-const readForm = (req) => new Promise((resolve) => { let body = ''; req.on('data', (chunk) => { body += chunk; }); req.on('end', () => resolve(Object.fromEntries(new URLSearchParams(body)))); });
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
-const sessionSignature = (id) => crypto.createHmac('sha256', sessionSecret).update(id).digest('hex');
-const sessionFor = (req) => { const [id, signature] = (cookies(req).lian_session || '').split('.'); if (!id || !signature || signature.length !== 64 || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(sessionSignature(id)))) return null; return sessions.get(id); };
-const setSession = (res, userId) => { const id = crypto.randomBytes(32).toString('hex'); sessions.set(id, { userId, createdAt: new Date().toISOString() }); res.setHeader('set-cookie', `lian_session=${id}.${sessionSignature(id)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800`); };
-const userFor = (req) => { const session = sessionFor(req); if (!session) return null; return readStore().users.find((user) => user.id === session.userId) || null; };
+const redirect = (res, location) => { res.writeHead(302, { location }); res.end(); };
+const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.writeHead(200, { 'content-type': types[path.extname(filename)] || 'application/octet-stream' }); res.end(content); }); };
+
+// ── auth (Clerk) ──────────────────────────────────────────────────────────────
+
+const verifyClerkToken = async (req) => {
+  const token = cookies(req).__session;
+  if (!token) return null;
+  try { return await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY }); } catch { return null; }
+};
+
+const userFor = async (req) => {
+  const payload = await verifyClerkToken(req);
+  if (!payload) return null;
+  const clerkUserId = payload.sub;
+  const store = readStore();
+  let user = store.users.find((u) => u.clerkUserId === clerkUserId);
+  if (!user) {
+    let clerkUser;
+    try { clerkUser = await clerk.users.getUser(clerkUserId); } catch { return null; }
+    const email = clerkUser.emailAddresses?.[0]?.emailAddress || '';
+    const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || clerkUser.username || 'Lian user';
+    user = { id: crypto.randomUUID(), clerkUserId, email, name, avatarUrl: clerkUser.imageUrl || '', createdAt: new Date().toISOString(), onboardingComplete: false };
+    store.users.push(user);
+    writeStore(store);
+    log('user_created', req, user, { provider: 'clerk' });
+  }
+  return user;
+};
+
 const firstIncomplete = (user) => { const answers = readStore().onboarding[user.id] || {}; return requiredSteps.find((step) => !answers[step]) || 'context'; };
 const nextStep = (step) => ({ company: 'role', role: 'use-case', 'use-case': 'tools', tools: 'memory-needs', 'memory-needs': 'context', context: 'review' }[step]);
-const redirect = (res, location) => { res.writeHead(302, { location }); res.end(); };
-const requireAuth = (req, res) => { const user = userFor(req); if (!user) { log('onboarding_redirect_guard', req, null, { reason: 'unauthenticated' }); redirect(res, '/login'); return null; } return user; };
-const requireOnboarding = (req, res) => { const user = requireAuth(req, res); if (!user) return null; if (!user.onboardingComplete) { const step = firstIncomplete(user); log('console_access_denied', req, user, { next: step }); redirect(res, `/onboarding/${step}`); return null; } log('console_access_granted', req, user); return user; };
-const apiAuth = (req, res) => { const user = userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } return user; };
-const apiOnboarding = (req, res) => { const user = apiAuth(req, res); if (!user) return null; if (!user.onboardingComplete) { json(res, 403, { error: 'Complete onboarding before accessing this resource.' }); return null; } return user; };
-const fetchJson = (url, options = {}) => new Promise((resolve, reject) => { const request = https.request(url, options, (response) => { let body = ''; response.on('data', (chunk) => { body += chunk; }); response.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('Invalid OAuth response')); } }); }); request.on('error', reject); if (options.body) request.write(options.body); request.end(); });
-const providerConfig = (provider) => provider === 'github' ? { id: process.env.GITHUB_CLIENT_ID, secret: process.env.GITHUB_CLIENT_SECRET, callback: process.env.GITHUB_CALLBACK_URL || `${baseUrl}/auth/github/callback`, authorize: 'https://github.com/login/oauth/authorize', token: 'https://github.com/login/oauth/access_token', profile: 'https://api.github.com/user', scope: 'read:user user:email' } : { id: process.env.GOOGLE_CLIENT_ID, secret: process.env.GOOGLE_CLIENT_SECRET, callback: process.env.GOOGLE_CALLBACK_URL || `${baseUrl}/auth/google/callback`, authorize: 'https://accounts.google.com/o/oauth2/v2/auth', token: 'https://oauth2.googleapis.com/token', profile: 'https://openidconnect.googleapis.com/v1/userinfo', scope: 'openid email profile' };
-const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.writeHead(200, { 'content-type': types[path.extname(filename)] || 'application/octet-stream' }); res.end(content); }); };
-const errorPage = (res, title, message) => { res.writeHead(503, { 'content-type': 'text/html; charset=utf-8' }); res.end(`<!doctype html><title>${title}</title><style>body{background:#10201f;color:#f7f5ef;font:16px system-ui;display:grid;place-items:center;min-height:100vh;margin:0}main{max-width:540px;padding:36px}a{color:#d7ff3f}</style><main><h1>${title}</h1><p>${message}</p><a href="/login">Return to Lian login</a></main>`); };
-const sendPage = (res, title, body, script = '') => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/app.css"></head><body>${body}${script}</body></html>`); };
-const loginPage = () => `<main class="auth-page"><section class="auth-panel"><a class="console-brand" href="/"><span>L</span> lian</a><div class="auth-box"><p class="console-eyebrow">LIAN CONSOLE</p><h1>Memory you can<br>defend.</h1><p>Set up your Lian workspace and give your agents an auditable source of truth.</p><div class="oauth-stack"><a class="oauth-button" href="/auth/google"><b class="google-icon">G</b> Continue with Google</a><a class="oauth-button" href="/auth/github"><b class="github-icon">◖</b> Continue with GitHub</a>${process.env.NODE_ENV === 'production' ? '' : '<a class="oauth-button" href="/auth/dev"><b>◇</b> Continue with local dev</a>'}</div><p class="auth-note">Sign in securely with Google or GitHub to create your workspace.</p></div></section><aside class="auth-aside"><div class="aside-grid"></div><div class="aside-content"><p class="console-eyebrow">BUILT FOR REGULATED INTELLIGENCE</p><blockquote>“The important question is not just what the agent knows. It is what the agent knew when it made the decision.”</blockquote><div class="aside-proof"><span>✓</span><p><b>Bitemporal memory</b><br>Event time and ingestion time, kept distinct.</p></div></div></aside></main>`;
-const optionButton = (field, value) => `<button type="submit" name="value" value="${value}">${value}</button>`;
-const stepQuestion = { company: ['What are you building with Lian?', ['Personal AI assistant', 'Startup or product', 'Enterprise/internal tool', 'Research project', 'Other']], role: ['What best describes your role?', ['Founder', 'Software engineer', 'Product lead', 'AI researcher', 'Student', 'Other']], 'use-case': ['What do you want Lian to remember?', ['User preferences', 'Conversations', 'Product usage patterns', 'Support/customer context', 'Code/project context', 'Business workflows', 'Other']], tools: ['Which tools do you want to connect first?', ['Gmail', 'GitHub', 'Slack', 'Notion', 'Linear', 'CRM', 'I am not sure yet']], 'memory-needs': ['What kind of memory behavior do you need?', ['Long-term user memory', 'Agent memory', 'Team/company memory', 'Searchable knowledge memory', 'Compliance-aware memory', 'Not sure yet']] };
-const onboardingPage = (step, answers) => { const index = onboardingSteps.indexOf(step) + 1; const progress = onboardingSteps.map((_, i) => `<i class="${i < index ? 'active' : ''}"></i>`).join(''); let content = ''; if (stepQuestion[step]) { const [question, options] = stepQuestion[step]; content = `<p class="console-eyebrow">STEP ${index} OF 7</p><h1>${question}</h1><p class="onboarding-copy">Choose one option to continue.</p><form method="POST" action="/onboarding/${step}"><div class="choice-grid choice-grid-wide">${options.map((option) => optionButton(step, option)).join('')}</div></form>`; } else if (step === 'context') { content = `<p class="console-eyebrow">STEP 6 OF 7</p><h1>Anything else Lian should know?</h1><p class="onboarding-copy">Optional, but it helps us tailor your workspace.</p><form method="POST" action="/onboarding/context"><textarea name="value" maxlength="20000" placeholder="Tell us about your agent or memory use case">${answers.context || ''}</textarea><button class="console-button onboarding-submit" type="submit">Continue <span>→</span></button></form>`; } else { content = `<p class="console-eyebrow">STEP 7 OF 7</p><h1>Review your workspace setup.</h1><p class="onboarding-copy">You can change these later in Settings.</p><div class="review-list">${Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '—'}</b></div>`).join('')}</div><form method="POST" action="/onboarding/complete"><button class="console-button onboarding-submit" type="submit">Proceed to Console <span>→</span></button></form>`; } return `<main class="onboarding-page"><section class="onboarding-form-panel"><header class="onboarding-top"><a class="console-brand" href="/"><span>L</span> lian</a><div class="wizard-progress">${progress}</div><form method="POST" action="/logout"><button class="quiet-button">Sign out</button></form></header><section class="onboarding-card">${content}</section></section><aside class="onboarding-aside"><div class="aside-grid"></div><div class="aside-content"><p class="console-eyebrow">BUILT FOR REGULATED INTELLIGENCE</p><blockquote>“The important question is not just what the agent knows. It is what the agent knew when it made the decision.”</blockquote></div></aside></main>`; };
-const consolePage = (view, user) => { const pages = { dashboard: ['Dashboard', 'Your Lian workspace is ready.'], 'api-keys': ['API Keys', 'Create scoped server-generated keys for your agents.'], connections: ['Connections', 'Connect Gmail, GitHub, Slack, Notion, and Linear.'], 'memory-logs': ['Memory Logs', 'Review memory writes, recalls, and supersession events.'], docs: ['Documentation', 'Read the Lian SDK and deployment guides.'], settings: ['Settings', 'Manage your workspace preferences.'] }; const [title, text] = pages[view] || ['Dashboard', 'Your Lian workspace is ready.']; const nav = Object.keys(pages).map((key) => `<a class="nav-item ${key === view ? 'active' : ''}" href="/console/${key}">${pages[key][0]}</a>`).join(''); const api = view === 'api-keys' ? `<form id="key-form" class="key-form"><label>Key name</label><div><input id="key-name" required placeholder="e.g. research-agent"><button class="console-button">Create key <span>+</span></button></div></form><div class="key-reveal" id="key-reveal" hidden><p>Copy this key now. You will not be able to see it again.</p><code id="new-key-secret"></code><button id="copy-key">Copy</button></div><div class="key-table" id="key-table"></div>` : `<div class="empty-state"><i>◌</i><h3>${title}</h3><p>${text}</p></div>`; return `<main class="console-page"><aside class="sidebar"><a class="console-brand" href="/"><span>L</span> lian</a><nav class="sidebar-nav">${nav}</nav><form method="POST" action="/logout"><button id="sign-out">Sign out</button></form></aside><section class="console-main"><header class="console-header"><div class="breadcrumb"><span>CONSOLE</span><b>${title}</b></div></header><div class="view active"><div class="view-wrap"><p class="console-eyebrow">${user.name || 'WORKSPACE'}</p><h1>${title}</h1><p class="view-lede">${text}</p>${api}</div></div></section></main>`; };
-const onboardingSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs', 'context', 'review'];
-const labels = { company: 'What you are building', role: 'Your role', 'use-case': 'Memory use case', tools: 'First connection', 'memory-needs': 'Memory behavior', context: 'Additional context' };
+
+const requireAuth = async (req, res) => { const user = await userFor(req); if (!user) { log('redirect_guard', req, null, { reason: 'unauthenticated' }); redirect(res, '/login'); return null; } return user; };
+const requireOnboarding = async (req, res) => { const user = await requireAuth(req, res); if (!user) return null; if (!user.onboardingComplete) { log('console_access_denied', req, user, { next: firstIncomplete(user) }); redirect(res, `/onboarding/${firstIncomplete(user)}`); return null; } return user; };
+const apiAuth = async (req, res) => { const user = await userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } return user; };
+const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res); if (!user) return null; if (!user.onboardingComplete) { json(res, 403, { error: 'Complete onboarding before accessing this resource.' }); return null; } return user; };
+
+// ── server ────────────────────────────────────────────────────────────────────
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
-    if (pathname === '/logout' && req.method === 'POST') { sessions.delete((cookies(req).lian_session || '').split('.')[0]); res.setHeader('set-cookie', 'lian_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'); return redirect(res, '/login'); }
-    if (pathname === '/login' && req.method === 'GET') { const user = userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return sendPage(res, 'Lian login', loginPage()); }
-    if (pathname === '/auth/dev' && req.method === 'GET') { if (process.env.NODE_ENV === 'production') return errorPage(res, 'Unavailable', 'Local developer sign-in is disabled in production.'); const store = readStore(); let user = store.users.find((item) => item.provider === 'dev' && item.providerUserId === 'local'); if (!user) { user = { id: crypto.randomUUID(), provider: 'dev', providerUserId: 'local', email: 'local@lian.dev', name: 'Local developer', avatarUrl: '', createdAt: new Date().toISOString(), onboardingComplete: false }; store.users.push(user); writeStore(store); } setSession(res, user.id); log('session_created', req, user, { provider: 'dev' }); return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); }
-    if (pathname.startsWith('/onboarding/') && req.method === 'GET') { const user = requireAuth(req, res); if (!user) return; const step = pathname.split('/')[2]; const expected = firstIncomplete(user); if (!onboardingSteps.includes(step) || (step !== expected && !(step === 'review' && expected === 'context'))) { log('onboarding_redirect_guard', req, user, { requested: step, expected }); return redirect(res, `/onboarding/${expected}`); } log('onboarding_step_viewed', req, user, { step }); return sendPage(res, `Lian onboarding: ${step}`, onboardingPage(step, readStore().onboarding[user.id] || {})); }
-    if (pathname.startsWith('/onboarding/') && pathname !== '/onboarding/complete' && req.method === 'POST') { const user = requireAuth(req, res); if (!user) return; const step = pathname.split('/')[2]; const expected = firstIncomplete(user); if (!validSteps.includes(step) || step !== expected) return redirect(res, `/onboarding/${expected}`); const form = await readForm(req); const value = step === 'context' ? String(form.value || '') : String(form.value || '').trim(); if (requiredSteps.includes(step) && !value) return redirect(res, `/onboarding/${step}`); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); return redirect(res, `/onboarding/${next}`); }
-    if (pathname === '/onboarding/complete' && req.method === 'POST') { const user = requireAuth(req, res); if (!user) return; const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return redirect(res, `/onboarding/${firstIncomplete(user)}`); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; store.onboarding[user.id] = { ...answers, completedAt: new Date().toISOString() }; writeStore(store); log('onboarding_completed', req, target); return redirect(res, '/console'); }
-    if ((pathname === '/console' || pathname.startsWith('/console/')) && req.method === 'GET') { const user = requireOnboarding(req, res); if (!user) return; const view = pathname.split('/')[2] || 'dashboard'; return sendPage(res, `Lian Console: ${view}`, consolePage(view, user), view === 'api-keys' ? '<script src="/console-api.js"></script>' : ''); }
-    if (pathname === '/api/session') { const user = userFor(req); return json(res, 200, { authenticated: Boolean(user), user: user && { id: user.id, name: user.name, email: user.email, onboardingComplete: user.onboardingComplete } }); }
-    if (pathname === '/api/logout' && req.method === 'POST') { sessions.delete((cookies(req).lian_session || '').split('.')[0]); res.setHeader('set-cookie', 'lian_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'); return json(res, 200, { ok: true }); }
-    if (pathname === '/api/onboarding' && req.method === 'GET') { const user = apiAuth(req, res); if (!user) return; return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: user.onboardingComplete, nextStep: user.onboardingComplete ? null : firstIncomplete(user) }); }
-    if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected && !(step === 'context' && expected === 'context')) { log('onboarding_redirect_guard', req, user, { reason: 'out_of_order', expected, received: step }); return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); } const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); return json(res, 200, { next: `/onboarding/${next}` }); }
-    if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'context') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; store.onboarding[user.id] = { ...answers, completedAt: new Date().toISOString() }; writeStore(store); log('onboarding_completed', req, target); return json(res, 200, { next: '/console' }); }
-    if (pathname === '/api/keys' && req.method === 'GET') { const user = apiOnboarding(req, res); if (!user) return; return json(res, 200, { keys: readStore().apiKeys.filter((key) => key.userId === user.id).map(({ hashedKey, ...key }) => key) }); }
-    if (pathname === '/api/keys' && req.method === 'POST') { const user = apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' }); const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
-    if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop(); const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
-    if (pathname === '/api/demo/recall' && req.method === 'POST') { const user = requireOnboarding(req, res); if (!user) return; return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' }); }
-    if (pathname.startsWith('/auth/') && !pathname.endsWith('/callback')) { const provider = pathname.split('/').pop(); const config = providerConfig(provider); if (!config.id || !config.secret) { log('auth_failure', req, null, { provider, reason: 'missing_credentials' }); return errorPage(res, `${provider === 'github' ? 'GitHub' : 'Google'} sign-in is not configured`, `Missing required server environment variables for ${provider} OAuth.`); } const state = crypto.randomBytes(24).toString('hex'); oauthStates.set(state, { provider, expires: Date.now() + 600_000 }); log('auth_start', req, null, { provider }); const params = new URLSearchParams({ client_id: config.id, redirect_uri: config.callback, response_type: 'code', scope: config.scope, state }); return redirect(res, `${config.authorize}?${params}`); }
-    if (pathname.startsWith('/auth/') && pathname.endsWith('/callback')) { const provider = pathname.split('/')[2]; const config = providerConfig(provider); const state = url.searchParams.get('state'); const code = url.searchParams.get('code'); const saved = oauthStates.get(state); oauthStates.delete(state); if (!saved || saved.provider !== provider || saved.expires < Date.now() || !code) { log('auth_failure', req, null, { provider, reason: 'invalid_state' }); return errorPage(res, 'Sign-in could not be verified', 'Please return to login and try again.'); } const tokenBody = new URLSearchParams({ client_id: config.id, client_secret: config.secret, code, redirect_uri: config.callback, grant_type: 'authorization_code' }).toString(); const token = await fetchJson(config.token, { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/x-www-form-urlencoded', 'content-length': Buffer.byteLength(tokenBody) }, body: tokenBody }); const profile = await fetchJson(config.profile, { headers: { authorization: `Bearer ${token.access_token}`, 'user-agent': 'Lian-Console' } }); const providerUserId = String(profile.sub || profile.id); const store = readStore(); let user = store.users.find((item) => item.provider === provider && item.providerUserId === providerUserId); if (!user) { user = { id: crypto.randomUUID(), provider, providerUserId, email: profile.email || '', name: profile.name || profile.login || 'Lian user', avatarUrl: profile.picture || profile.avatar_url || '', createdAt: new Date().toISOString(), onboardingComplete: false }; store.users.push(user); writeStore(store); } setSession(res, user.id); log('auth_success', req, user, { provider }); return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); }
-    if (pathname === '/login') { const user = userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
-    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) { const user = requireAuth(req, res); if (!user) return; const requested = pathname.split('/')[2] || 'company'; const expected = firstIncomplete(user); if (requested !== expected && !(requested === 'review' && expected === 'context')) { log('onboarding_redirect_guard', req, user, { reason: 'direct_navigation', requested, expected }); return redirect(res, `/onboarding/${expected}`); } log('onboarding_step_viewed', req, user, { step: requested }); return serveFile(res, path.join(root, 'app.html')); }
-    if (pathname === '/console' || pathname.startsWith('/console/')) { if (!requireOnboarding(req, res)) return; return serveFile(res, path.join(root, 'app.html')); }
-    if (pathname === '/memory-governor' && req.method === 'GET') return serveFile(res, path.join(root, 'memory-governor.html'));
-    const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\//, ''); const file = path.resolve(root, relative); if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' }); return serveFile(res, file);
-  } catch (error) { log('server_error', req, userFor(req), { message: error.message }); return json(res, 500, { error: 'Unexpected server error.' }); }
-}).listen(port, () => console.log(`Lian website and local API running at ${baseUrl}`));
+    // Public config for client-side SDK initialisation (publishable keys only)
+    if (pathname === '/config.js') {
+      res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8' });
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkBillingPlanId: process.env.CLERK_BILLING_PLAN_ID || '' })};`);
+      return;
+    }
+
+    // Page routes — serve the SPA shell for every app route
+    if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) { const user = await requireAuth(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/console' || pathname.startsWith('/console/')) { const user = await requireOnboarding(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
+
+    // Logout (Clerk handles the actual session; this just redirects)
+    if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }
+
+    // ── JSON API ──────────────────────────────────────────────────────────────
+
+    if (pathname === '/api/logout' && req.method === 'POST') { return json(res, 200, { ok: true }); }
+
+    if (pathname === '/api/session') {
+      const user = await userFor(req);
+      return json(res, 200, { authenticated: Boolean(user), user: user && { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, onboardingComplete: user.onboardingComplete } });
+    }
+
+    // Onboarding
+    if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: user.onboardingComplete, nextStep: user.onboardingComplete ? null : firstIncomplete(user) }); }
+    if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected && !(step === 'context' && expected === 'context')) return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); return json(res, 200, { next: `/onboarding/${next}` }); }
+    if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'context') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; store.onboarding[user.id] = { ...answers, completedAt: new Date().toISOString() }; writeStore(store); log('onboarding_completed', req, target); return json(res, 200, { next: '/console' }); }
+
+    // API keys
+    if (pathname === '/api/keys' && req.method === 'GET') { const user = await apiOnboarding(req, res); if (!user) return; return json(res, 200, { keys: readStore().apiKeys.filter((key) => key.userId === user.id).map(({ hashedKey, ...key }) => key) }); }
+    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' }); const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
+    if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop(); const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
+
+    // Playground demo (uses lian-sdk when available, falls back to fixture)
+    if (pathname === '/api/demo/recall' && req.method === 'POST') {
+      const user = await userFor(req); if (!user) return json(res, 401, { error: 'Authentication required.' });
+      try {
+        const { LianClient } = require('lian-sdk');
+        const client = new LianClient({ apiKey: process.env.LIAN_API_KEY, baseUrl });
+        const result = await client.recall({ agentId: 'demo', query: 'NVDA guidance', asOf: '2025-03-01' });
+        return json(res, 200, result);
+      } catch {
+        return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' });
+      }
+    }
+
+    // ── Billing (Clerk) ───────────────────────────────────────────────────────
+    // Plan state lives in Clerk's publicMetadata. Checkout and portal are
+    // handled entirely on the client via the Clerk JS SDK.
+
+    if (pathname === '/api/billing' && req.method === 'GET') {
+      const user = await apiAuth(req, res); if (!user) return;
+      try {
+        const clerkUser = await clerk.users.getUser(user.clerkUserId);
+        const plan = clerkUser.publicMetadata?.plan || 'free';
+        return json(res, 200, { plan, email: user.email });
+      } catch (err) {
+        log('clerk_billing_fetch_failed', req, user, { error: err.message });
+        return json(res, 200, { plan: 'free', email: user.email });
+      }
+    }
+
+    // Static files
+    const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+    const file = path.resolve(root, relative);
+    if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
+    return serveFile(res, file);
+  } catch (error) { log('server_error', req, null, { message: error.message }); return json(res, 500, { error: 'Unexpected server error.' }); }
+}).listen(port, () => console.log(`Lian server running at ${baseUrl}`));
