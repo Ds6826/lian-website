@@ -16,6 +16,49 @@ const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 const validSteps = [...requiredSteps, 'context'];
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '' });
+const isProd = process.env.NODE_ENV === 'production';
+
+// ── security headers ──────────────────────────────────────────────────────────
+
+// Derive Clerk's frontend API hostname from the publishable key for a tight CSP
+const clerkHost = (() => {
+  try { return `https://${Buffer.from((process.env.CLERK_PUBLISHABLE_KEY || '').split('_')[2] || '', 'base64').toString().replace(/\$$/, '')}`; }
+  catch { return ''; }
+})();
+
+const SEC_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  ...(isProd ? { 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload' } : {}),
+  'content-security-policy': [
+    "default-src 'self'",
+    `script-src 'self'${clerkHost ? ` ${clerkHost}` : ''}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: https:",
+    `connect-src 'self'${clerkHost ? ` ${clerkHost} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
+    `frame-src${clerkHost ? ` ${clerkHost}` : " 'none'"}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; '),
+};
+
+// ── rate limiting ─────────────────────────────────────────────────────────────
+
+const rateLimits = new Map();
+const rateLimit = (req, res, { max = 60, windowMs = 60_000 } = {}) => {
+  const ip = req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  let e = rateLimits.get(ip);
+  if (!e || now > e.resetAt) { e = { count: 0, resetAt: now + windowMs }; rateLimits.set(ip, e); }
+  e.count++;
+  if (e.count > max) { res.setHeader('retry-after', Math.ceil((e.resetAt - now) / 1000)); json(res, 429, { error: 'Too many requests.' }); return false; }
+  return true;
+};
+setInterval(() => { const now = Date.now(); for (const [ip, e] of rateLimits) if (now > e.resetAt) rateLimits.delete(ip); }, 5 * 60_000).unref();
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -24,11 +67,12 @@ const defaultStore = () => ({ users: [], onboarding: {}, apiKeys: [] });
 const readStore = () => { try { return { ...defaultStore(), ...JSON.parse(fs.readFileSync(dataFile, 'utf8')) }; } catch { return defaultStore(); } };
 const writeStore = (store) => { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(dataFile, JSON.stringify(store, null, 2)); };
 const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
-const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(body)); };
+// Helpers use res.setHeader so security headers set at request start are preserved
+const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.writeHead(status); res.end(JSON.stringify(body)); };
 const readBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Invalid JSON')); } }); });
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
-const redirect = (res, location) => { res.writeHead(302, { location }); res.end(); };
-const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.writeHead(200, { 'content-type': types[path.extname(filename)] || 'application/octet-stream' }); res.end(content); }); };
+const redirect = (res, location) => { res.setHeader('location', location); res.writeHead(302); res.end(); };
+const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
 
 // ── auth (Clerk) ──────────────────────────────────────────────────────────────
 
@@ -68,11 +112,22 @@ const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res)
 // ── server ────────────────────────────────────────────────────────────────────
 
 http.createServer(async (req, res) => {
+  // Apply security headers to every response before any writeHead call
+  for (const [k, v] of Object.entries(SEC_HEADERS)) res.setHeader(k, v);
+
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
+    // Block cross-origin requests to the API
+    if (pathname.startsWith('/api/')) {
+      const origin = req.headers.origin;
+      if (origin && origin !== baseUrl) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
+      if (!rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
+    }
+
     // Public config for client-side SDK initialisation (publishable keys only)
     if (pathname === '/config.js') {
-      res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8' });
+      res.setHeader('content-type', 'application/javascript; charset=utf-8');
+      res.writeHead(200);
       res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkBillingPlanId: process.env.CLERK_BILLING_PLAN_ID || '' })};`);
       return;
     }
@@ -89,7 +144,7 @@ http.createServer(async (req, res) => {
 
     if (pathname === '/api/logout' && req.method === 'POST') { return json(res, 200, { ok: true }); }
 
-    if (pathname === '/api/session') {
+    if (pathname === '/api/session' && req.method === 'GET') {
       const user = await userFor(req);
       return json(res, 200, { authenticated: Boolean(user), user: user && { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, onboardingComplete: user.onboardingComplete } });
     }
@@ -138,5 +193,5 @@ http.createServer(async (req, res) => {
     const file = path.resolve(root, relative);
     if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
     return serveFile(res, file);
-  } catch (error) { log('server_error', req, null, { message: error.message }); return json(res, 500, { error: 'Unexpected server error.' }); }
+  } catch (error) { log('server_error', req, null, { message: error.message, stack: error.stack }); return json(res, 500, { error: 'Unexpected server error.' }); }
 }).listen(port, () => console.log(`Lian server running at ${baseUrl}`));
