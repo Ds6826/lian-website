@@ -1,0 +1,4 @@
+server.js
+Dockerfile
+fly.toml
+data/

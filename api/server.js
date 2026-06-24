@@ -8,7 +8,7 @@ const kv = new Redis({
   token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-const root = path.join(__dirname, '..', 'public');
+const root = path.join(__dirname, '..');
 const baseUrl = process.env.BASE_URL || 'https://lians.ai';
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 const validSteps = [...requiredSteps, 'context'];
