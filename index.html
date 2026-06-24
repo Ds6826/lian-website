@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Lian is the financial-grade memory layer for AI agents operating in regulated environments." />
+    <title>Lian — Financial-grade agent memory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Lian home"><span class="brand-mark">L</span> lian</a>
+      <button class="menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#how">How it works</a><a href="/memory-governor">Memory Governor</a><a href="#control">Controls</a><a href="#developers">Developers</a>
+      </nav>
+      <a class="button button-small" href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">View on GitHub <span>↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero section-shell">
+        <div class="eyebrow"><span></span> Built for regulated intelligence</div>
+        <h1>Memory that knows<br />when it <em>changed.</em></h1>
+        <p class="hero-copy">Lian gives financial AI agents a memory layer built for the real world: facts expire, records need proof, and yesterday’s answer can become today’s risk.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="/login">Get started <span>→</span></a>
+          <a class="text-link" href="#how">See it in action <span>↓</span></a>
+        </div>
+        <div class="hero-footnote"><span class="pulse"></span> Open source · Apache 2.0 · Self-hostable</div>
+      </section>
+
+      <section class="memory-stage section-shell" aria-label="Lian memory timeline demonstration">
+        <div class="stage-topline"><span>LIVE MEMORY STATE</span><span>NVDA · FY2026 REVENUE GUIDANCE</span></div>
+        <div class="memory-layout">
+          <div class="timeline-pane">
+            <div class="timeline-heading"><span class="live-dot"></span> Truth, at any point in time</div>
+            <div class="timeline-track">
+              <button class="memory-node active" data-date="2025-01-15" data-value="$28B" data-label="Initial guidance" style="--x: 4%"><i></i><span>Jan 15</span></button>
+              <button class="memory-node" data-date="2025-02-20" data-value="$32B" data-label="Guidance revised" style="--x: 27%"><i></i><span>Feb 20</span></button>
+              <button class="memory-node" data-date="2025-05-22" data-value="$36B" data-label="Guidance raised" style="--x: 53%"><i></i><span>May 22</span></button>
+              <button class="memory-node" data-date="2025-11-19" data-value="$40B" data-label="Current guidance" style="--x: 91%"><i></i><span>Nov 19</span></button>
+            </div>
+            <p class="stage-caption">Click a revision. Lian returns the fact that was valid then—not every fact that has ever existed.</p>
+          </div>
+          <aside class="truth-card">
+            <div class="card-label">VALID ON <span id="selected-date">2025-01-15</span></div>
+            <strong id="selected-value">$28B</strong>
+            <p id="selected-label">Initial guidance</p>
+            <div class="verified"><span>✓</span> Validity verified at database layer</div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="proof-strip">
+        <div><strong>0 / 4</strong><span>stale facts in top-5 results</span></div>
+        <div><strong>100%</strong><span>supersession accuracy</span></div>
+        <div><strong>4 / 4</strong><span>point-in-time recall</span></div>
+        <p>Numbers from Lian’s NVDA revision-chain benchmark.</p>
+      </section>
+
+      <section class="governor-teaser section-shell"><div><p class="kicker">Lian Memory Governor</p><h2>Memory that improves without<br />blindly rewriting itself.</h2></div><div><p>Lian Memory Governor helps AI agents learn across sessions while keeping memory changes proposed, versioned, audited, and reversible. Instead of silently overwriting facts, it treats memory updates like governed infrastructure.</p><a class="button button-primary" href="/memory-governor">Explore Memory Governor <span>→</span></a></div></section>
+
+      <section class="problem-section section-shell">
+        <div class="problem-intro"><span class="section-number">01</span><div><p class="kicker">Why agent memory breaks in finance</p><h2>Similarity is not<br />the same as truth.</h2></div></div>
+        <div class="problem-grid">
+          <p class="problem-lede">A general-purpose memory system can find five highly relevant facts. But if four have been revised, an agent receives a very convincing version of the past.</p>
+          <div class="comparison-card old-memory"><p class="card-kicker">CONVENTIONAL MEMORY</p><h3>“Here are all five guidance updates.”</h3><ul><li><span>$28B</span> Jan 15 · relevant</li><li><span>$32B</span> Feb 20 · relevant</li><li><span>$36B</span> May 22 · relevant</li><li><span>$38B</span> Aug 27 · relevant</li><li class="current"><span>$40B</span> Nov 19 · relevant</li></ul><small>Five similar facts, no validity decision.</small></div>
+          <div class="comparison-card lian-memory"><p class="card-kicker">LIAN MEMORY · TODAY</p><h3>“$40B is the current guidance.”</h3><div class="answer-block"><strong>$40B</strong><span>Valid from Nov 19, 2025</span></div><p>Lian filters superseded records before ranking, so stale updates never reach the agent’s context.</p><small><i>✓</i> Provenance and every prior revision remain auditable.</small></div>
+        </div>
+      </section>
+
+      <section class="recall-lab section-shell" aria-labelledby="recall-lab-title">
+        <div class="lab-heading"><div><p class="kicker">Try point-in-time recall</p><h2 id="recall-lab-title">Ask Lian<br />a better question.</h2></div><p>Choose a moment, then inspect what an analyst agent would receive. The answer changes because the validity window changes—not because the query changed.</p></div>
+        <div class="lab-shell">
+          <div class="lab-controls" role="tablist" aria-label="Recall time">
+            <button class="recall-tab active" role="tab" aria-selected="true" data-recall="now">Today <small>Current view</small></button>
+            <button class="recall-tab" role="tab" aria-selected="false" data-recall="march">Mar 1, 2025 <small>Historical view</small></button>
+            <button class="recall-tab" role="tab" aria-selected="false" data-recall="june">Jun 1, 2025 <small>Historical view</small></button>
+          </div>
+          <div class="lab-query"><span>QUERY</span><code>What is NVDA’s FY2026 revenue guidance?</code><span class="query-status"><i></i> Recall complete</span></div>
+          <div class="lab-result" aria-live="polite"><div class="result-main"><span class="result-label" id="result-label">VALID TODAY</span><strong id="result-value">$40B</strong><p id="result-copy">The most recent guidance is active. Four prior revisions are excluded from agent context.</p></div><div class="result-meta"><div><span>EVENT TIME</span><b id="result-event">Nov 19, 2025</b></div><div><span>VALIDITY</span><b id="result-validity">Open · current</b></div><div><span>PROVENANCE</span><b id="result-source">Earnings update</b></div></div></div>
+          <button class="audit-toggle" type="button" aria-expanded="false">Show the decision trail <span>+</span></button>
+          <div class="audit-drawer" hidden><div><i>01</i><p>Candidate retrieval finds prior facts with ticker <code>NVDA</code> and metric <code>revenue_guidance</code>.</p></div><div><i>02</i><p>Temporal validity filters facts that were not active at the selected moment.</p></div><div><i>03</i><p>Hybrid ranking returns the highest-quality eligible fact and logs the recall.</p></div></div>
+        </div>
+      </section>
+
+      <section class="operations-section section-shell">
+        <div class="operations-heading"><p class="kicker">How Lian works</p><h2>A memory lifecycle<br />with receipts.</h2><p>From a new fact to a defensible answer, Lian makes each step explicit. Use it as local infrastructure or behind a hosted API.</p></div>
+        <div class="operations-grid" role="tablist" aria-label="Memory lifecycle">
+          <button class="operation-card active" role="tab" aria-selected="true" data-operation="remember"><span>01</span><div class="op-glyph">+</div><h3>Remember</h3><p>Add a fact with its source, business timestamp, agent, subject, and structured metadata.</p></button>
+          <button class="operation-card" role="tab" aria-selected="false" data-operation="classify"><span>02</span><div class="op-glyph">↯</div><h3>Classify</h3><p>Detect whether it supersedes, confirms, adds to, or conflicts with an existing fact.</p></button>
+          <button class="operation-card" role="tab" aria-selected="false" data-operation="recall"><span>03</span><div class="op-glyph">◉</div><h3>Recall</h3><p>Retrieve hybrid-ranked memory, filtered to what was valid now or at a requested date.</p></button>
+          <button class="operation-card" role="tab" aria-selected="false" data-operation="reconstruct"><span>04</span><div class="op-glyph">⌘</div><h3>Reconstruct</h3><p>Rebuild the context and event trail behind a past agent decision, with verifiable hashes.</p></button>
+        </div>
+        <div class="operation-detail" aria-live="polite"><span id="operation-step">01 / REMEMBER</span><strong id="operation-title">A fact enters with context.</strong><p id="operation-copy">Record the event timestamp separately from the moment it was ingested. That distinction makes later point-in-time recall possible.</p><code id="operation-code">POST /v1/memories</code></div>
+      </section>
+
+      <section id="how" class="how section-shell">
+        <div class="section-intro"><span class="section-number">02</span><div><p class="kicker">Memory for moving markets</p><h2>Every fact has a<br />history.</h2></div></div>
+        <div class="feature-grid">
+          <article class="feature feature-wide"><div class="feature-icon history-icon"><span></span><span></span><span></span></div><p class="feature-index">01 / BITEMPORAL</p><h3>Ask what was true,<br />not just what is stored.</h3><p>Track both when an event happened and when your system learned it. Recall exactly what an agent knew on a given date.</p></article>
+          <article class="feature feature-dark"><div class="feature-icon chain-icon"># <i>→</i> # <i>→</i> #</div><p class="feature-index">02 / TAMPER-EVIDENT</p><h3>Proof built into every write.</h3><p>Each event enters an append-only SHA-256 hash chain. Auditors can verify the record, not merely trust it.</p></article>
+          <article class="feature feature-accent"><div class="feature-icon key-icon">⌁</div><p class="feature-index">03 / CRYPTO-SHRED</p><h3>Erase data without erasing evidence.</h3><p>Destroy a subject’s encryption key for GDPR erasure while preserving the audit trail that proves it happened.</p></article>
+        </div>
+      </section>
+
+      <section class="supersession-section section-shell">
+        <div class="supersession-copy"><p class="kicker">The hard problem</p><h2>Updates are not<br />all alike.</h2><p>“Guidance rose to $36B” may replace an earlier estimate. A same-day contradictory report may need human review. A new metric may simply belong alongside the old one. Lian treats those relationships differently.</p><p>It starts with structured metadata and broad candidate retrieval, applies deterministic financial rules where possible, then reserves LLM adjudication for ambiguous cases. Every decision carries confidence and a rationale that can be inspected later.</p></div>
+        <div class="relation-table" role="table" aria-label="Supersession relations">
+          <div class="relation-head" role="row"><span>RELATION</span><span>WHAT LIAN DOES</span></div>
+          <button class="relation-row active" type="button" aria-expanded="true" data-relation="supersedes"><strong class="relation-super">Supersedes</strong><p>Closes the previous validity window and promotes the newer fact.<span class="relation-more">Example: an earnings update raises the same company’s same metric from $32B to $36B. The $32B fact receives a <code>valid_to</code> timestamp.</span></p><i>+</i></button>
+          <button class="relation-row" type="button" aria-expanded="false" data-relation="confirms"><strong>Confirms</strong><p>Preserves both records and strengthens confidence in the fact.<span class="relation-more">Example: a second source repeats the $36B guidance. The value remains active; provenance and confidence improve.</span></p><i>+</i></button>
+          <button class="relation-row" type="button" aria-expanded="false" data-relation="adds"><strong>Adds</strong><p>Keeps both facts because they describe different attributes.<span class="relation-more">Example: an update adds gross-margin guidance. It is related to revenue guidance, but it does not replace it.</span></p><i>+</i></button>
+          <button class="relation-row" type="button" aria-expanded="false" data-relation="contradicts"><strong class="relation-alert">Contradicts</strong><p>Retains both records, lowers confidence, and flags the pair for review.<span class="relation-more">Example: two same-time sources report conflicting numbers. Lian avoids silently discarding either record.</span></p><i>+</i></button>
+        </div>
+      </section>
+
+      <section class="architecture-section section-shell">
+        <div class="architecture-top"><p class="kicker">Designed for erasure and evidence</p><h2>Two stores.<br />One accountable memory.</h2></div>
+        <div class="architecture-diagram">
+          <div class="arch-input">Agent / SDK <span>→</span></div>
+          <div class="arch-engine"><span>LIAN MEMORY ENGINE</span><strong>Validates · encrypts · classifies · logs</strong></div>
+          <div class="arch-stores"><article><p>CONTENT STORE</p><h3>Encrypted,<br />erasable facts</h3><span>Personal or sensitive content can be rendered unreadable by destroying its per-subject key.</span></article><article><p>AUDIT LAYER</p><h3>Append-only<br />evidence</h3><span>References, hashes, and event metadata remain available to verify what happened and when.</span></article></div>
+        </div>
+        <p class="architecture-note">This split design lets teams honor a deletion request without quietly breaking the audit trail. Retention rules and legal overrides remain a policy decision for counsel.</p>
+      </section>
+
+      <section id="control" class="control-section section-shell">
+        <div class="control-copy"><p class="kicker">Compliance is architecture</p><h2>Control where it counts.</h2><p>Policies that live only in application code are policies someone can bypass. Lian carries enforcement into the storage layer.</p><a class="text-link" href="https://github.com/ebeirne/Lian#compliance-features" target="_blank" rel="noreferrer">Explore the compliance model <span>↗</span></a></div>
+        <div class="control-list">
+          <div><span>01</span><h3>Information barriers</h3><p>PostgreSQL row-level security keeps agents inside their permitted group.</p></div>
+          <div><span>02</span><h3>Air-gapped ready</h3><p>Enforce local embeddings and prevent external LLM traffic at startup.</p></div>
+          <div><span>03</span><h3>Retention by namespace</h3><p>Set TTLs, preserve legal holds, and make the lifecycle explicit.</p></div>
+        </div>
+      </section>
+
+      <section id="developers" class="developer-section section-shell">
+        <div class="developer-copy"><p class="kicker">A small surface area</p><h2>Three verbs.<br />A defensible memory.</h2><p>Use Lian locally with SQLite or point the same interface at your hosted deployment. Framework integrations are available for LangChain, LangGraph, CrewAI, OpenAI Agents SDK, AutoGen, and Node.</p><a class="button button-primary" href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">Read the README <span>↗</span></a></div>
+        <div class="code-card"><div class="code-top"><span><i></i><i></i><i></i></span><b>memory.py</b><span>Python</span></div><pre><code><span class="code-fade">from lian import LocalLianClient</span>
+
+mem = LocalLianClient()
+
+<span class="code-blue">mem.remember</span>(
+  agent_id=<span class="code-string">"analyst-1"</span>,
+  content=<span class="code-string">"NVDA guidance raised to $40B"</span>,
+  event_time=<span class="code-pink">earnings_date</span>
+)
+
+<span class="code-blue">mem.recall_at</span>(
+  agent_id=<span class="code-string">"analyst-1"</span>,
+  query=<span class="code-string">"NVDA revenue guidance"</span>,
+  as_of=<span class="code-pink">march_1_2025</span>
+)</code></pre><div class="code-result"><span>↳</span> $32B — the guidance valid on March 1, 2025</div></div>
+      </section>
+
+      <section class="closing section-shell"><p class="eyebrow"><span></span> Agents make decisions. Memory needs receipts.</p><h2>Build on memory<br />you can <em>defend.</em></h2><a class="button button-light" href="/login">Get started with Lian <span>→</span></a></section>
+    </main>
+    <footer><a class="brand" href="#top"><span class="brand-mark">L</span> lian</a><p>Financial-grade agent memory.</p><a href="https://github.com/ebeirne/Lian" target="_blank" rel="noreferrer">GitHub ↗</a></footer>
+    <script src="script.js"></script>
+  </body>
+</html>
