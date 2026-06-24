@@ -10,7 +10,7 @@ if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forE
 
 const port = Number(process.env.PORT || 8000);
 const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
-const dataDir = path.join(root, 'data');
+const dataDir = process.env.DATA_DIR || path.join(root, 'data');
 const dataFile = path.join(dataDir, 'lian-console.json');
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 const validSteps = [...requiredSteps, 'context'];
