@@ -5,7 +5,7 @@ const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { Redis } = require('@upstash/redis');
 const kv = Redis.fromEnv();
 
-const root = path.join(__dirname, '..');
+const root = path.join(__dirname, '..', 'public');
 const baseUrl = process.env.BASE_URL || 'https://lians.ai';
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 const validSteps = [...requiredSteps, 'context'];
