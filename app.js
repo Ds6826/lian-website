@@ -1,4 +1,6 @@
-﻿const authPage = document.querySelector('#auth-page');
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v2';
+console.info('Lians client build:', LIANS_CLIENT_BUILD);
+const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
 const consolePage = document.querySelector('#console-page');
 const show = (page) => [authPage, onboardingPage, consolePage].forEach((item) => {

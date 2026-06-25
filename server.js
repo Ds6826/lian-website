@@ -22,6 +22,7 @@ const TIER_SCOPES = {
   enterprise: ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance', 'barriers', 'hipaa', 'erasure', 'backtest', 'metrics', 'airgap', 'kms'],
 };
 const validSteps = [...requiredSteps, 'context'];
+const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-20260625-v2';
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
@@ -239,6 +240,17 @@ const app = async (req, res) => {
     // ── JSON API ──────────────────────────────────────────────────────────────
 
     if (pathname === '/api/logout' && req.method === 'POST') { return json(res, 200, { ok: true }); }
+
+    if (pathname === '/api/health' && req.method === 'GET') {
+      return json(res, 200, {
+        ok: true,
+        build: APP_BUILD,
+        environment: process.env.VERCEL ? 'vercel' : (process.env.NODE_ENV || 'local'),
+        clerkPublishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
+        clerkSecretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
+        workflow: 'login->onboarding->console',
+      });
+    }
 
     if (pathname === '/api/session' && req.method === 'GET') {
       const user = await userFor(req);
