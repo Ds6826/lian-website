@@ -126,12 +126,26 @@ const completeClerkCallback = async () => {
     setCallbackMessage(friendly);
   }
 };
+const onClerkReady = () => {
+  setAuthButtonsDisabled(false);
+  completeClerkCallback();
+  // If the user lands on /login with an active Clerk session (e.g. after a cookie race
+  // condition sent them here from /console), route them straight to the console.
+  if (route === '/login' && (window.Clerk?.user || window.Clerk?.session)) {
+    routeAfterSignIn();
+  }
+  // If the user landed directly on /console without a server session (cookie race after
+  // OAuth), confirm via Bearer token; if genuinely unauthenticated, send to /login.
+  if (route.startsWith('/console') && !window.Clerk?.user && !window.Clerk?.session) {
+    window.location.replace('/login');
+  }
+};
 window.addEventListener('lians:clerk-error', (event) => handleClerkError(event.detail));
 window.addEventListener('lians:clerk-loading', () => setAuthButtonsDisabled(true));
-window.addEventListener('lians:clerk-ready', () => { setAuthButtonsDisabled(false); completeClerkCallback(); });
+window.addEventListener('lians:clerk-ready', onClerkReady);
 if (window.__liansClerkStatus?.state === 'error') handleClerkError(window.__liansClerkStatus.detail);
 if (window.__liansClerkStatus?.state === 'loading') setAuthButtonsDisabled(true);
-if (window.__liansClerkStatus?.state === 'ready') { setAuthButtonsDisabled(false); completeClerkCallback(); }
+if (window.__liansClerkStatus?.state === 'ready') onClerkReady();
 
 const installContent = { python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> Lians-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'mem.<em>add</em>(agent_id="analyst-1", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="analyst-1", query="NVDA guidance", as_of=...)']], node: [['Install the SDK', 'Add the Node package to your existing agent application.', 'npm <em>install</em> Lians'], ['Create the client', 'Use your local or hosted Lians endpoint.', 'import { <em>LianClient</em> } from "Lians"'], ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'await client.<em>recall</em>({ query: "NVDA guidance" })']], curl: [['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl -X <em>POST</em> /v1/memories'], ['Recall it', 'Use the optional as_of field for historical recall.', 'curl -X <em>POST</em> /v1/recall'], ['Verify the trail', 'Reconstruct the memory state behind an agent decision.', 'curl /v1/audit/<em>reconstruct</em>']] };
 const renderSteps = (language) => { document.querySelector('#install-steps').innerHTML = installContent[language].map((step, index) => `<article class="install-step"><span class="step-number">${index + 1}</span><div><h3>${step[0]}</h3><p>${step[1]}</p></div><div class="code-block"><header>${language}</header><pre>${step[2]}</pre></div></article>`).join(''); };

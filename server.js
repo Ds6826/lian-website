@@ -93,7 +93,9 @@ const serveFile = (res, filename) => { const types = { '.html': 'text/html; char
 // ── auth (Clerk) ──────────────────────────────────────────────────────────────
 
 const verifyClerkToken = async (req) => {
-  const token = cookies(req).__session;
+  const authHeader = req.headers.authorization || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = bearerToken || cookies(req).__session;
   if (!token) return null;
   try { return await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY }); } catch { return null; }
 };
@@ -233,7 +235,7 @@ const app = async (req, res) => {
       }
       return serveFile(res, path.join(root, 'app.html'));
     }
-    if (pathname === '/console' || pathname.startsWith('/console/')) { const user = await requireOnboarding(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/console' || pathname.startsWith('/console/')) { return serveFile(res, path.join(root, 'app.html')); }
 
     // Logout (Clerk handles the actual session; this just redirects)
     if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }
