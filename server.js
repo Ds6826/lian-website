@@ -210,6 +210,8 @@ const app = async (req, res) => {
 
     // Page routes — serve the SPA shell for every app route
     if (pathname === '/auth/google' || pathname === '/auth/github') return redirect(res, '/login');
+    if (pathname === '/memory-governor') return serveFile(res, path.join(root, 'memory-governor.html'));
+    if (pathname === '/memory-governor.html') return redirect(res, '/memory-governor');
     if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
     if (pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
     if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) {
