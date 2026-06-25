@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v6';
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v7';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -35,15 +35,34 @@ const renderShellForRoute = (pathname = window.location.pathname) => {
 };
 renderShellForRoute(route);
 
-const clerkAuthHeaders = async () => {
+const clerkAuthHeaders = async ({ fresh = false } = {}) => {
   try {
-    const token = await window.Clerk?.session?.getToken();
-    return token ? { authorization: `Bearer ${token}` } : {};
+    const token = await window.Clerk?.session?.getToken?.(fresh ? { skipCache: true } : undefined);
+    return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
     return {};
   }
 };
-const authedFetch = async (url, options = {}) => fetch(url, { ...options, credentials: 'include', headers: { ...(options.headers || {}), ...(await clerkAuthHeaders()) } });
+const authedFetch = async (url, options = {}) => {
+  const method = String(options.method || 'GET').toUpperCase();
+  const shouldFreshen = method !== 'GET' && method !== 'HEAD';
+  const buildRequest = async (fresh = false) => ({
+    ...options,
+    credentials: 'include',
+    headers: { ...(options.headers || {}), ...(await clerkAuthHeaders({ fresh })) },
+  });
+  let response = await fetch(url, await buildRequest(shouldFreshen));
+  if (response.status === 401 && shouldFreshen) {
+    console.info('[Lians auth] Retrying mutating request with a fresh Clerk token.', {
+      url,
+      method,
+      clerkLoaded: window.__liansClerkStatus?.state === 'ready',
+      signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
+    });
+    response = await fetch(url, await buildRequest(true));
+  }
+  return response;
+};
 const pathStep = () => route.split('/')[2] || 'company';
 const redirectOnce = (destination, reason = 'workflow') => {
   if (!destination) return false;

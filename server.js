@@ -105,6 +105,19 @@ const allowedApiOrigins = (req) => {
 // ── auth (Clerk) ──────────────────────────────────────────────────────────────
 
 const verifyClerkToken = async (req) => {
+  const bearer = (req.headers.authorization || '').match(/^Bearer\s+(.+)$/i)?.[1];
+  if (bearer) {
+    try {
+      const { data, errors } = await verifyToken(bearer, {
+        secretKey: process.env.CLERK_SECRET_KEY,
+        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+      });
+      if (!errors && data?.sub) return { userId: data.sub, sessionId: data.sid || null, source: 'bearer' };
+      log('clerk_bearer_verify_failed', req, null, { reason: errors?.[0]?.reason || errors?.[0]?.message || 'unknown' });
+    } catch (err) {
+      log('clerk_bearer_verify_error', req, null, { message: err.message });
+    }
+  }
   try {
     const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
     const host = req.headers.host || 'localhost';
@@ -117,8 +130,12 @@ const verifyClerkToken = async (req) => {
       new Request(`${proto}://${host}${req.url}`, { headers })
     );
     if (!state.isSignedIn) return null;
-    return state.toAuth();
-  } catch { return null; }
+    const auth = state.toAuth();
+    return { ...auth, source: 'request' };
+  } catch (err) {
+    log('clerk_request_auth_error', req, null, { method: req.method, message: err.message });
+    return null;
+  }
 };
 
 const userFor = async (req) => {
