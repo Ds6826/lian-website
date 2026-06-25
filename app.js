@@ -1,7 +1,13 @@
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
 const consolePage = document.querySelector('#console-page');
-const show = (page) => [authPage, onboardingPage, consolePage].forEach((item) => { item.hidden = item !== page; });
+const show = (page) => [authPage, onboardingPage, consolePage].forEach((item) => {
+  const active = item === page;
+  item.hidden = !active;
+  // These route shells live in one HTML document. The inline display guard keeps
+  // inactive shells from appearing even if older CSS overrides `[hidden]`.
+  item.style.display = active ? '' : 'none';
+});
 const onboardingSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs', 'context', 'review'];
 const labels = { company: 'What you are building', role: 'Your role', 'use-case': 'Memory use case', tools: 'First connection', 'memory-needs': 'Memory behavior', context: 'Additional context' };
 const route = window.location.pathname;
