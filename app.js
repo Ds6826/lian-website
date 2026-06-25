@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v3';
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v4';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
