@@ -138,6 +138,14 @@ const app = async (req, res) => {
   // Apply security headers to every response before any writeHead call
   for (const [k, v] of Object.entries(SEC_HEADERS)) res.setHeader(k, v);
 
+  // Canonical domain: redirect bare apex (lians.ai) → www.lians.ai, preserving full path + query.
+  // Clerk session cookies are scoped to www.lians.ai so auth must stay on one host.
+  const reqHost = (req.headers.host || '').split(':')[0];
+  if (reqHost === 'lians.ai') {
+    const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+    return redirect(res, `${proto}://www.lians.ai${req.url}`, 301);
+  }
+
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
     // Clerk webhook — must be before CORS/rate-limit (server-to-server, no origin header)
@@ -204,7 +212,7 @@ const app = async (req, res) => {
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, canonicalOrigin: baseUrl, billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
       return;
     }
 

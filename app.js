@@ -53,13 +53,13 @@ const beginSocialSignIn = async (provider) => {
   const status = window.__liansClerkStatus?.state;
   if (status === 'error') return setAuthMessage(window.__liansClerkStatus.detail);
   if (!window.Clerk || status !== 'ready') return setAuthMessage('Secure sign-in is loading. Please wait a moment.');
+  // Use the server-supplied canonical origin so OAuth always starts and returns on the same host.
+  const origin = window.__lian_config?.canonicalOrigin || window.location.origin;
   try {
     await window.Clerk.client.signIn.authenticateWithRedirect({
       strategy: `oauth_${provider}`,
-      redirectUrl: `${window.location.origin}/sso-callback`,
-      redirectUrlComplete: `${window.location.origin}/onboarding/company`,
-      continueSignIn: true,
-      continueSignUp: true,
+      redirectUrl: `${origin}/sso-callback`,
+      redirectUrlComplete: `${origin}/onboarding/company`,
     });
   } catch (error) {
     const clerkError = error?.errors?.[0]?.longMessage || error?.errors?.[0]?.message || error?.message;
@@ -80,6 +80,14 @@ const routeAfterSignIn = async () => {
 };
 const completeClerkCallback = async () => {
   if (route !== '/sso-callback') return;
+  // Quick sanity check: warn if the current origin doesn't match the canonical origin.
+  const canonicalOrigin = window.__lian_config?.canonicalOrigin;
+  if (canonicalOrigin && !canonicalOrigin.includes(window.location.hostname)) {
+    console.warn('[sso-callback] Origin mismatch: page is on', window.location.hostname, 'but BASE_URL is', canonicalOrigin, '— session cookies may not apply.');
+  }
+  // Check that Clerk got redirect params — if the URL has no Clerk markers, something went wrong upstream.
+  const hasClerkParams = window.location.href.includes('__clerk') || window.location.hash.includes('__clerk');
+  if (!hasClerkParams) console.warn('[sso-callback] No Clerk redirect parameters found in URL — OAuth may not have completed.');
   try {
     // Clerk JS v5 processes the OAuth callback inside Clerk.load() and sets Clerk.user before
     // the ready event fires. Calling handleRedirectCallback after that throws "no pending redirect".
@@ -87,13 +95,14 @@ const completeClerkCallback = async () => {
     if (window.Clerk.user || window.Clerk.session) { await routeAfterSignIn(); return; }
     await window.Clerk.handleRedirectCallback({ signInForceRedirectUrl: '/onboarding/company', signUpForceRedirectUrl: '/onboarding/company' });
     // handleRedirectCallback may navigate on its own; if still here, route manually.
-    if (!await routeAfterSignIn()) setCallbackMessage('We could not complete secure sign-in. Please try again.');
+    if (!await routeAfterSignIn()) setCallbackMessage('Sign-in completed but no session was found. Please try again.');
   } catch (err) {
     const detail = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || String(err);
-    console.error('[sso-callback]', detail);
+    console.error('[sso-callback] Clerk callback error:', detail);
     // Clerk v5 may throw AND have already signed the user in — check before showing error.
     if (window.Clerk?.user || window.Clerk?.session) { if (await routeAfterSignIn()) return; }
-    setCallbackMessage('We could not complete secure sign-in. Please try again.');
+    const friendly = /no pending/i.test(detail) ? 'Sign-in session was not found after redirect — try signing in again.' : detail || 'We could not complete secure sign-in. Please try again.';
+    setCallbackMessage(friendly);
   }
 };
 window.addEventListener('lians:clerk-error', (event) => handleClerkError(event.detail));
