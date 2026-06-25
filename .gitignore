@@ -3,3 +3,5 @@ data/
 .env.local
 node_modules/
 lian-memory-governor/
+.vercel
+.env*
