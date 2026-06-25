@@ -111,10 +111,14 @@ const userFor = async (req) => {
     try { clerkUser = await clerk.users.getUser(clerkUserId); } catch { return null; }
     const email = clerkUser.emailAddresses?.[0]?.emailAddress || '';
     const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || clerkUser.username || 'Lians user';
-    user = { id: crypto.randomUUID(), clerkUserId, email, name, avatarUrl: clerkUser.imageUrl || '', createdAt: new Date().toISOString(), onboardingComplete: true };
+    user = { id: crypto.randomUUID(), clerkUserId, email, name, avatarUrl: clerkUser.imageUrl || '', createdAt: new Date().toISOString(), onboardingComplete: false };
     store.users.push(user);
     writeStore(store);
     log('user_created', req, user, { provider: 'clerk' });
+  } else if (user.onboardingComplete && !store.onboarding[user.id]?.completedAt) {
+    user.onboardingComplete = false;
+    writeStore(store);
+    log('onboarding_completion_repaired', req, user, { reason: 'missing_completed_at' });
   }
   return user;
 };
@@ -130,9 +134,9 @@ const firstIncomplete = (user) => {
 const nextStep = (step) => ({ company: 'role', role: 'use-case', 'use-case': 'tools', tools: 'memory-needs', 'memory-needs': 'context', context: 'review' }[step]);
 
 const requireAuth = async (req, res) => { const user = await userFor(req); if (!user) { log('redirect_guard', req, null, { reason: 'unauthenticated' }); redirect(res, '/login'); return null; } return user; };
-const requireOnboarding = async (req, res) => { return requireAuth(req, res); };
+const requireOnboarding = async (req, res) => { const user = await requireAuth(req, res); if (!user) return null; if (!user.onboardingComplete) { log('console_access_denied', req, user, { next: firstIncomplete(user) }); redirect(res, `/onboarding/${firstIncomplete(user)}`); return null; } return user; };
 const apiAuth = async (req, res) => { const user = await userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } return user; };
-const apiOnboarding = async (req, res) => { return apiAuth(req, res); };
+const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res); if (!user) return null; if (!user.onboardingComplete) { json(res, 403, { error: 'Complete onboarding before accessing this resource.' }); return null; } return user; };
 
 // ── server ────────────────────────────────────────────────────────────────────
 
@@ -222,7 +226,7 @@ const app = async (req, res) => {
     if (pathname === '/auth/google' || pathname === '/auth/github') return redirect(res, '/login');
     if (pathname === '/memory-governor') return serveFile(res, path.join(root, 'memory-governor.html'));
     if (pathname === '/memory-governor.html') return redirect(res, '/memory-governor');
-    if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, '/console'); return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
     if (pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
     if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) {
       const user = await requireAuth(req, res); if (!user) return;
@@ -235,7 +239,7 @@ const app = async (req, res) => {
       }
       return serveFile(res, path.join(root, 'app.html'));
     }
-    if (pathname === '/console' || pathname.startsWith('/console/')) { return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/console' || pathname.startsWith('/console/')) { const user = await requireOnboarding(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
 
     // Logout (Clerk handles the actual session; this just redirects)
     if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }
@@ -246,7 +250,11 @@ const app = async (req, res) => {
 
     if (pathname === '/api/session' && req.method === 'GET') {
       const user = await userFor(req);
-      return json(res, 200, { authenticated: Boolean(user), user: user && { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, onboardingComplete: user.onboardingComplete } });
+      return json(res, 200, {
+        authenticated: Boolean(user),
+        user: user && { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, onboardingComplete: user.onboardingComplete },
+        next: user ? (user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`) : '/login',
+      });
     }
 
     // Onboarding

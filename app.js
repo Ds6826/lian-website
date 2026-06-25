@@ -59,7 +59,9 @@ const beginSocialSignIn = async (provider) => {
     await window.Clerk.client.signIn.authenticateWithRedirect({
       strategy: `oauth_${provider}`,
       redirectUrl: `${window.location.origin}/sso-callback`,
-      redirectUrlComplete: `${window.location.origin}/console`,
+      redirectUrlComplete: `${window.location.origin}/sso-callback`,
+      continueSignIn: true,
+      continueSignUp: true,
     });
   } catch (error) {
     const clerkError = error?.errors?.[0]?.longMessage || error?.errors?.[0]?.message || error?.message;
@@ -76,7 +78,7 @@ const routeAfterSignIn = async () => {
   // Try cookie-based session first (normal path once Clerk has written the cookie).
   const res = await fetch('/api/session');
   const data = await res.json();
-  if (data.authenticated) { window.location.replace('/console'); return true; }
+  if (data.authenticated) { window.location.replace(data.next || (data.user?.onboardingComplete ? '/console' : '/onboarding/company')); return true; }
   // Cookie may not be written yet (Clerk v5 sets it asynchronously after load()).
   // Retry once with an explicit Bearer token from Clerk's in-memory session.
   try {
@@ -84,7 +86,7 @@ const routeAfterSignIn = async () => {
     if (token) {
       const res2 = await fetch('/api/session', { headers: { authorization: `Bearer ${token}` } });
       const data2 = await res2.json();
-      if (data2.authenticated) { window.location.replace('/console'); return true; }
+      if (data2.authenticated) { window.location.replace(data2.next || (data2.user?.onboardingComplete ? '/console' : '/onboarding/company')); return true; }
     }
   } catch (e) { console.warn('[sso-callback] Bearer token fallback failed:', e?.message); }
   return false;
@@ -105,16 +107,19 @@ const completeClerkCallback = async () => {
     // Check for a live session first; only fall back to handleRedirectCallback if not yet signed in.
     if (window.Clerk.user || window.Clerk.session) {
       if (!await routeAfterSignIn()) {
-        // Session API failed both ways — Clerk says signed in so go to onboarding as safe default.
+        // Session API failed both ways — Clerk says signed in, so go to onboarding as the safe default.
         console.warn('[sso-callback] Session API returned unauthenticated despite Clerk.user being set — routing to onboarding.');
-        window.location.replace('/console');
+        window.location.replace('/onboarding/company');
       }
       return;
     }
-    await window.Clerk.handleRedirectCallback({ signInForceRedirectUrl: '/console', signUpForceRedirectUrl: '/console' });
+    await window.Clerk.handleRedirectCallback({
+      signInFallbackRedirectUrl: '/sso-callback',
+      signUpFallbackRedirectUrl: '/sso-callback',
+    }, async () => {});
     // handleRedirectCallback may navigate on its own; if still here, route manually.
     if (!await routeAfterSignIn()) {
-      if (window.Clerk.user || window.Clerk.session) { window.location.replace('/console'); }
+      if (window.Clerk.user || window.Clerk.session) { window.location.replace('/onboarding/company'); }
       else { setCallbackMessage('Sign-in completed but no session was found. Please try again.'); }
     }
   } catch (err) {
