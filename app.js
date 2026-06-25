@@ -76,11 +76,17 @@ const beginSocialSignIn = async (provider) => {
 authButtons.forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); beginSocialSignIn(button.dataset.authProvider); }));
 const setCallbackMessage = (msg) => { const el = document.querySelector('#callback-note'); if (el) el.textContent = msg; };
 const handleClerkError = (message) => { setAuthButtonsDisabled(true); setAuthMessage(message); if (route === '/sso-callback') setCallbackMessage(message); };
+const navigateToWorkflowDestination = (destination) => {
+  const next = destination || '/onboarding/company';
+  if (next === window.location.pathname) return true;
+  window.location.replace(next);
+  return true;
+};
 const routeAfterSignIn = async () => {
   // Try cookie-based session first (normal path once Clerk has written the cookie).
   const res = await fetch('/api/session');
   const data = await res.json();
-  if (data.authenticated) { window.location.replace(data.next || (data.user?.onboardingComplete ? '/console' : '/onboarding/company')); return true; }
+  if (data.authenticated) return navigateToWorkflowDestination(data.next || (data.user?.onboardingComplete ? '/console' : '/onboarding/company'));
   // Cookie may not be written yet (Clerk v5 sets it asynchronously after load()).
   // Retry once with an explicit Bearer token from Clerk's in-memory session.
   try {
@@ -88,7 +94,7 @@ const routeAfterSignIn = async () => {
     if (token) {
       const res2 = await fetch('/api/session', { headers: { authorization: `Bearer ${token}` } });
       const data2 = await res2.json();
-      if (data2.authenticated) { window.location.replace(data2.next || (data2.user?.onboardingComplete ? '/console' : '/onboarding/company')); return true; }
+      if (data2.authenticated) return navigateToWorkflowDestination(data2.next || (data2.user?.onboardingComplete ? '/console' : '/onboarding/company'));
     }
   } catch (e) { console.warn('[sso-callback] Bearer token fallback failed:', e?.message); }
   return false;
@@ -137,8 +143,9 @@ const onClerkReady = () => {
   setAuthButtonsDisabled(false);
   completeClerkCallback();
   const signedIn = Boolean(window.Clerk?.user || window.Clerk?.session);
-  // /login or /onboarding/* while already signed in → route to correct destination
-  if ((route === '/login' || route.startsWith('/onboarding')) && signedIn) {
+  // /login, /onboarding/*, or /console while signed in → ask the server for
+  // the right workflow destination. If already there, routeAfterSignIn is a no-op.
+  if ((route === '/login' || route.startsWith('/onboarding') || route.startsWith('/console')) && signedIn) {
     routeAfterSignIn();
     return;
   }
