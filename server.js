@@ -222,24 +222,16 @@ const app = async (req, res) => {
       return;
     }
 
-    // Page routes — serve the SPA shell for every app route
+    // Page routes — serve the SPA shell; client-side Clerk drives all routing.
+    // Never gate HTML delivery on the session cookie: Clerk sets the cookie
+    // asynchronously after OAuth and a cookie-miss here causes a redirect loop.
+    // Auth is enforced on every /api/* route instead.
     if (pathname === '/auth/google' || pathname === '/auth/github') return redirect(res, '/login');
     if (pathname === '/memory-governor') return serveFile(res, path.join(root, 'memory-governor.html'));
     if (pathname === '/memory-governor.html') return redirect(res, '/memory-governor');
-    if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
-    if (pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
-    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) {
-      const user = await requireAuth(req, res); if (!user) return;
-      if (user.onboardingComplete) return redirect(res, '/console');
-      const requestedStep = pathname.split('/')[2] || firstIncomplete(user);
-      const expectedStep = firstIncomplete(user);
-      if (!['company', 'role', 'use-case', 'tools', 'memory-needs', 'context', 'review'].includes(requestedStep) || requestedStep !== expectedStep) {
-        log('onboarding_redirect_guard', req, user, { requestedStep, expectedStep });
-        return redirect(res, `/onboarding/${expectedStep}`);
-      }
-      return serveFile(res, path.join(root, 'app.html'));
-    }
-    if (pathname === '/console' || pathname.startsWith('/console/')) { const user = await requireOnboarding(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/login' || pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
+    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) return serveFile(res, path.join(root, 'app.html'));
+    if (pathname === '/console' || pathname.startsWith('/console/')) return serveFile(res, path.join(root, 'app.html'));
 
     // Logout (Clerk handles the actual session; this just redirects)
     if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }

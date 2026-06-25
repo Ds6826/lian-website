@@ -134,14 +134,14 @@ const completeClerkCallback = async () => {
 const onClerkReady = () => {
   setAuthButtonsDisabled(false);
   completeClerkCallback();
-  // If the user lands on /login with an active Clerk session (e.g. after a cookie race
-  // condition sent them here from /console), route them straight to the console.
-  if (route === '/login' && (window.Clerk?.user || window.Clerk?.session)) {
+  const signedIn = Boolean(window.Clerk?.user || window.Clerk?.session);
+  // /login or /onboarding/* while already signed in → route to correct destination
+  if ((route === '/login' || route.startsWith('/onboarding')) && signedIn) {
     routeAfterSignIn();
+    return;
   }
-  // If the user landed directly on /console without a server session (cookie race after
-  // OAuth), confirm via Bearer token; if genuinely unauthenticated, send to /login.
-  if (route.startsWith('/console') && !window.Clerk?.user && !window.Clerk?.session) {
+  // /console or /onboarding/* while NOT signed in → send to login
+  if ((route.startsWith('/console') || route.startsWith('/onboarding')) && !signedIn) {
     window.location.replace('/login');
   }
 };
