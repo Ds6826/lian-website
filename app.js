@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v2';
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v3';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -17,10 +17,19 @@ const selectedAnswers = {};
 if (route.startsWith('/onboarding')) show(onboardingPage); else if (route.startsWith('/console')) show(consolePage); else show(authPage);
 if (route === '/sso-callback') { const authBox = document.querySelector('#auth-box'); const callbackBox = document.querySelector('#callback-box'); if (authBox) authBox.hidden = true; if (callbackBox) callbackBox.hidden = false; }
 
-const session = async () => (await fetch('/api/session')).json();
+const clerkAuthHeaders = async () => {
+  try {
+    const token = await window.Clerk?.session?.getToken();
+    return token ? { authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
+  }
+};
+const authedFetch = async (url, options = {}) => fetch(url, { ...options, headers: { ...(options.headers || {}), ...(await clerkAuthHeaders()) } });
+const session = async () => (await authedFetch('/api/session')).json();
 const pathStep = () => route.split('/')[2] || 'company';
 const setWizard = async () => {
-  const step = pathStep(); const response = await fetch('/api/onboarding'); if (!response.ok) throw new Error('Unable to load onboarding.'); const data = await response.json(); const answers = data.answers || {};
+  const step = pathStep(); const response = await authedFetch('/api/onboarding'); if (!response.ok) throw new Error('Unable to load onboarding.'); const data = await response.json(); const answers = data.answers || {};
   Object.assign(selectedAnswers, answers);
   document.querySelectorAll('.wizard-step').forEach((panel) => { panel.hidden = panel.dataset.step !== step; });
   document.querySelectorAll('.wizard-progress i').forEach((item, index) => item.classList.toggle('active', index <= onboardingSteps.indexOf(step)));
@@ -40,8 +49,8 @@ document.querySelectorAll('.choice-grid button').forEach((button) => button.addE
   if (continueButton) continueButton.hidden = false;
 }));
 document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
-document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => { const step = pathStep(); const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step]; if (step !== 'context' && !value) return; button.disabled = true; const response = await fetch(`/api/onboarding/${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) }); const result = await response.json(); if (!response.ok) { button.disabled = false; return alert(result.error || 'Unable to continue.'); } window.location.assign(result.next); }));
-document.querySelector('.onboarding-submit').addEventListener('click', async () => { const button = document.querySelector('.onboarding-submit'); button.disabled = true; button.textContent = 'Creating workspace…'; const response = await fetch('/api/onboarding/complete', { method: 'POST' }); const result = await response.json(); if (!response.ok) { button.disabled = false; button.innerHTML = 'Proceed to Console <span>→</span>'; return alert(result.error || 'Unable to complete onboarding.'); } window.location.assign(result.next); });
+document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => { const step = pathStep(); const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step]; if (step !== 'context' && !value) return; button.disabled = true; const response = await authedFetch(`/api/onboarding/${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) }); const result = await response.json(); if (!response.ok) { button.disabled = false; return alert(result.error || 'Unable to continue.'); } window.location.assign(result.next); }));
+document.querySelector('.onboarding-submit').addEventListener('click', async () => { const button = document.querySelector('.onboarding-submit'); button.disabled = true; button.textContent = 'Creating workspace…'; const response = await authedFetch('/api/onboarding/complete', { method: 'POST' }); const result = await response.json(); if (!response.ok) { button.disabled = false; button.innerHTML = 'Proceed to Console <span>→</span>'; return alert(result.error || 'Unable to complete onboarding.'); } window.location.assign(result.next); });
 document.querySelector('#back-to-auth').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); window.location.assign('/login'); });
 
 const authButtons = document.querySelectorAll('[data-auth-provider]');
@@ -146,7 +155,12 @@ const onClerkReady = () => {
   // /login, /onboarding/*, or /console while signed in → ask the server for
   // the right workflow destination. If already there, routeAfterSignIn is a no-op.
   if ((route === '/login' || route.startsWith('/onboarding') || route.startsWith('/console')) && signedIn) {
-    routeAfterSignIn();
+    routeAfterSignIn().then((routed) => {
+      if (!routed && (route === '/login' || route === '/sso-callback' || route.startsWith('/console'))) {
+        setAuthMessage('You are signed in. Opening onboarding…');
+        window.location.replace('/onboarding/company');
+      }
+    });
     return;
   }
   // /console or /onboarding/* while NOT signed in → send to login
@@ -171,11 +185,11 @@ const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP'
 const activateView = (view, updateUrl = false) => { if (!viewMeta[view]) view = 'get-started'; document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view)); document.querySelectorAll('.view').forEach((item) => item.classList.toggle('active', item.id === `view-${view}`)); document.querySelector('#view-label').textContent = viewMeta[view][0]; document.querySelector('#view-title').textContent = viewMeta[view][1]; if (updateUrl) window.location.assign(`/console/${view}`); if (view === 'api-keys') loadKeys(); };
 document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.view, true)));
 if (route.startsWith('/console')) activateView(route.split('/')[2] || 'get-started');
-document.querySelector('#run-recall').addEventListener('click', async () => { const answer = document.querySelector('#playground-answer'); const result = await (await fetch('/api/demo/recall', { method: 'POST' })).json(); answer.querySelector('strong').textContent = result.value; answer.querySelector('p').textContent = result.content; answer.querySelector('small').textContent = `✓ ${result.audit}`; answer.hidden = false; });
+document.querySelector('#run-recall').addEventListener('click', async () => { const answer = document.querySelector('#playground-answer'); const result = await (await authedFetch('/api/demo/recall', { method: 'POST' })).json(); answer.querySelector('strong').textContent = result.value; answer.querySelector('p').textContent = result.content; answer.querySelector('small').textContent = `✓ ${result.audit}`; answer.hidden = false; });
 const formatDate = (value) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
-const renderKeys = (keys) => { const table = document.querySelector('#key-table'); table.querySelectorAll('.key-row').forEach((row) => row.remove()); document.querySelector('#key-state').hidden = keys.length > 0; keys.forEach((key) => { const row = document.createElement('div'); row.className = 'key-row'; row.innerHTML = `<b>${key.label}</b><code>${key.prefix}</code><span>${formatDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${key.id}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`; table.append(row); }); document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => { await fetch(`/api/keys/${button.dataset.revoke}`, { method: 'DELETE' }); loadKeys(); })); document.querySelectorAll('[data-rotate]').forEach((button) => button.addEventListener('click', async () => { if (!confirm('Rotate this key? The current key will stop working immediately.')) return; const res = await fetch(`/api/keys/${button.dataset.rotate}/rotate`, { method: 'POST' }); if (!res.ok) return; const { rawKey } = await res.json(); document.querySelector('#new-key-secret').textContent = rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#copy-key').textContent = 'Copy'; loadKeys(); })); };
-async function loadKeys() { const response = await fetch('/api/keys'); if (!response.ok) return; const { keys, freshKey } = await response.json(); renderKeys(keys); if (freshKey) { document.querySelector('#new-key-secret').textContent = freshKey.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#copy-key').textContent = 'Copy'; } }
-document.querySelector('#key-form').addEventListener('submit', async (event) => { event.preventDefault(); const label = document.querySelector('#key-name').value; const response = await fetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label }) }); const result = await response.json(); if (!response.ok) return document.querySelector('#backend-note').textContent = result.error || 'Unable to create key.'; document.querySelector('#new-key-secret').textContent = result.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#key-name').value = ''; loadKeys(); });
+const renderKeys = (keys) => { const table = document.querySelector('#key-table'); table.querySelectorAll('.key-row').forEach((row) => row.remove()); document.querySelector('#key-state').hidden = keys.length > 0; keys.forEach((key) => { const row = document.createElement('div'); row.className = 'key-row'; row.innerHTML = `<b>${key.label}</b><code>${key.prefix}</code><span>${formatDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${key.id}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`; table.append(row); }); document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => { await authedFetch(`/api/keys/${button.dataset.revoke}`, { method: 'DELETE' }); loadKeys(); })); document.querySelectorAll('[data-rotate]').forEach((button) => button.addEventListener('click', async () => { if (!confirm('Rotate this key? The current key will stop working immediately.')) return; const res = await authedFetch(`/api/keys/${button.dataset.rotate}/rotate`, { method: 'POST' }); if (!res.ok) return; const { rawKey } = await res.json(); document.querySelector('#new-key-secret').textContent = rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#copy-key').textContent = 'Copy'; loadKeys(); })); };
+async function loadKeys() { const response = await authedFetch('/api/keys'); if (!response.ok) return; const { keys, freshKey } = await response.json(); renderKeys(keys); if (freshKey) { document.querySelector('#new-key-secret').textContent = freshKey.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#copy-key').textContent = 'Copy'; } }
+document.querySelector('#key-form').addEventListener('submit', async (event) => { event.preventDefault(); const label = document.querySelector('#key-name').value; const response = await authedFetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label }) }); const result = await response.json(); if (!response.ok) return document.querySelector('#backend-note').textContent = result.error || 'Unable to create key.'; document.querySelector('#new-key-secret').textContent = result.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#key-name').value = ''; loadKeys(); });
 document.querySelector('#copy-key').addEventListener('click', async () => { await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); document.querySelector('#copy-key').textContent = 'Copied'; });
 document.querySelector('#save-settings').addEventListener('click', () => alert('Settings saved.'));
 document.querySelector('#sign-out').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); window.location.assign('/login'); });
