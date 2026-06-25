@@ -53,13 +53,13 @@ const beginSocialSignIn = async (provider) => {
   const status = window.__liansClerkStatus?.state;
   if (status === 'error') return setAuthMessage(window.__liansClerkStatus.detail);
   if (!window.Clerk || status !== 'ready') return setAuthMessage('Secure sign-in is loading. Please wait a moment.');
-  // Use the server-supplied canonical origin so OAuth always starts and returns on the same host.
-  const origin = window.__lian_config?.canonicalOrigin || window.location.origin;
+  // window.location.origin is always the right host here — the server-side 301 ensures the user
+  // is already on www.lians.ai (or localhost) before this code runs.
   try {
     await window.Clerk.client.signIn.authenticateWithRedirect({
       strategy: `oauth_${provider}`,
-      redirectUrl: `${origin}/sso-callback`,
-      redirectUrlComplete: `${origin}/onboarding/company`,
+      redirectUrl: `${window.location.origin}/sso-callback`,
+      redirectUrlComplete: `${window.location.origin}/onboarding/company`,
     });
   } catch (error) {
     const clerkError = error?.errors?.[0]?.longMessage || error?.errors?.[0]?.message || error?.message;
