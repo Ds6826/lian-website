@@ -1,8 +1,8 @@
-(() => {
+﻿(() => {
   const config = window.__lian_config || {};
   const setStatus = (state, detail = '') => {
-    window.__lianClerkStatus = { state, detail };
-    window.dispatchEvent(new CustomEvent(`lian:clerk-${state}`, { detail }));
+    window.__liansClerkStatus = { state, detail };
+    window.dispatchEvent(new CustomEvent(`lians:clerk-${state}`, { detail }));
   };
   if (!config.clerkPublishableKey || !config.clerkJsUrl) {
     setStatus('error', 'Clerk is not configured. Add CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY to .env, then restart the server.');

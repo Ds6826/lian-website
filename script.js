@@ -1,4 +1,4 @@
-const menuButton = document.querySelector('.menu-button');
+﻿const menuButton = document.querySelector('.menu-button');
 const nav = document.querySelector('.nav-links');
 menuButton?.addEventListener('click', () => {
   const open = nav.classList.toggle('open');
@@ -56,7 +56,7 @@ auditToggle?.addEventListener('click', () => {
 
 const operationStates = {
   remember: { step: '01 / REMEMBER', title: 'A fact enters with context.', copy: 'Record the event timestamp separately from the moment it was ingested. That distinction makes later point-in-time recall possible.', code: 'POST /v1/memories' },
-  classify: { step: '02 / CLASSIFY', title: 'The relationship gets a name.', copy: 'Lian uses structured keys and deterministic rules before escalating ambiguous updates to an LLM adjudicator.', code: 'SUPERSEDES · CONFIRMS · ADDS · CONTRADICTS' },
+  classify: { step: '02 / CLASSIFY', title: 'The relationship gets a name.', copy: 'Lians uses structured keys and deterministic rules before escalating ambiguous updates to an LLM adjudicator.', code: 'SUPERSEDES · CONFIRMS · ADDS · CONTRADICTS' },
   recall: { step: '03 / RECALL', title: 'Validity comes before ranking.', copy: 'The engine filters for eligible facts at the requested moment, then ranks with semantic, lexical, recency, and importance signals.', code: 'POST /v1/recall?as_of=…' },
   reconstruct: { step: '04 / RECONSTRUCT', title: 'A past decision becomes inspectable.', copy: 'Rebuild the memory set behind an agent response and follow its append-only event trail, including the records that changed it.', code: 'GET /v1/audit/reconstruct' },
 };
