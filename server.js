@@ -90,6 +90,17 @@ const readRawBody = (req) => new Promise((resolve, reject) => { let body = ''; r
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
 const redirect = (res, location) => { res.setHeader('location', location); res.writeHead(302); res.end(); };
 const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
+const allowedApiOrigins = (req) => {
+  const proto = (req.headers['x-forwarded-proto'] || (req.headers.host?.startsWith('localhost') ? 'http' : 'https')).split(',')[0].trim();
+  const host = req.headers.host || '';
+  const origins = new Set([baseUrl, `${proto}://${host}`]);
+  try {
+    const configured = new URL(baseUrl);
+    if (configured.hostname === 'lians.ai') origins.add(`${configured.protocol}//www.lians.ai`);
+    if (configured.hostname === 'www.lians.ai') origins.add(`${configured.protocol}//lians.ai`);
+  } catch {}
+  return origins;
+};
 
 // ── auth (Clerk) ──────────────────────────────────────────────────────────────
 
@@ -220,7 +231,7 @@ const app = async (req, res) => {
     // Block cross-origin requests to the API
     if (pathname.startsWith('/api/')) {
       const origin = req.headers.origin;
-      if (origin && origin !== baseUrl) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
+      if (origin && !allowedApiOrigins(req).has(origin)) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
       if (!rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
     }
 

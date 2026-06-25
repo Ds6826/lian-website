@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v5';
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v6';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -88,6 +88,25 @@ const waitForClerkSession = async ({ timeoutMs = 8000 } = {}) => {
   }
   return Boolean(window.Clerk?.session || window.Clerk?.user);
 };
+const setOnboardingError = (message, detail = {}) => {
+  const activeStep = document.querySelector(`.wizard-step[data-step="${pathStep()}"]`);
+  if (!activeStep) return;
+  let error = activeStep.querySelector('.onboarding-error');
+  if (!error) {
+    error = document.createElement('p');
+    error.className = 'onboarding-error';
+    error.setAttribute('role', 'alert');
+    activeStep.append(error);
+  }
+  error.textContent = message;
+  console.warn('[Lians onboarding]', {
+    route,
+    clerkLoaded: window.__liansClerkStatus?.state === 'ready',
+    signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
+    ...detail,
+  });
+};
+const clearOnboardingError = () => document.querySelectorAll('.onboarding-error').forEach((error) => error.remove());
 const setWizard = async () => {
   const step = pathStep(); const response = await authedFetch('/api/onboarding'); if (!response.ok) throw new Error('Unable to load onboarding.'); const data = await response.json(); const answers = data.answers || {};
   if (data.onboardingComplete) return redirectOnce('/console', 'onboarding_already_complete');
@@ -103,6 +122,7 @@ const setWizard = async () => {
 };
 
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
+  clearOnboardingError();
   const field = button.parentElement.dataset.field;
   selectedAnswers[field] = button.textContent;
   button.parentElement.querySelectorAll('button').forEach((item) => item.classList.toggle('active', item === button));
@@ -110,8 +130,48 @@ document.querySelectorAll('.choice-grid button').forEach((button) => button.addE
   if (continueButton) continueButton.hidden = false;
 }));
 document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
-document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => { const step = pathStep(); const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step]; if (step !== 'context' && !value) return; button.disabled = true; const response = await authedFetch(`/api/onboarding/${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) }); const result = await response.json(); if (!response.ok) { button.disabled = false; return alert(result.error || 'Unable to continue.'); } window.location.assign(result.next); }));
-document.querySelector('.onboarding-submit').addEventListener('click', async () => { const button = document.querySelector('.onboarding-submit'); button.disabled = true; button.textContent = 'Creating workspace…'; const response = await authedFetch('/api/onboarding/complete', { method: 'POST' }); const result = await response.json(); if (!response.ok) { button.disabled = false; button.innerHTML = 'Proceed to Console <span>→</span>'; return alert(result.error || 'Unable to complete onboarding.'); } window.location.assign(result.next); });
+document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => {
+  const step = pathStep();
+  const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step];
+  if (step !== 'context' && !value) return;
+  clearOnboardingError();
+  button.disabled = true;
+  const endpoint = `/api/onboarding/${step}`;
+  const response = await authedFetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    button.disabled = false;
+    if (result.next) redirectOnce(result.next, 'onboarding_save_server_next');
+    return setOnboardingError('We could not save this onboarding step. Please refresh and try again.', {
+      endpoint,
+      status: response.status,
+      message: result.error || response.statusText,
+      tokenPresent: Boolean(await clerkAuthHeaders().then((headers) => headers.authorization)),
+    });
+  }
+  window.location.assign(result.next);
+}));
+document.querySelector('.onboarding-submit').addEventListener('click', async () => {
+  const button = document.querySelector('.onboarding-submit');
+  clearOnboardingError();
+  button.disabled = true;
+  button.textContent = 'Creating workspace…';
+  const endpoint = '/api/onboarding/complete';
+  const response = await authedFetch(endpoint, { method: 'POST' });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    button.disabled = false;
+    button.innerHTML = 'Proceed to Console <span>→</span>';
+    if (result.next) redirectOnce(result.next, 'onboarding_complete_server_next');
+    return setOnboardingError('We could not finish onboarding. Please refresh and try again.', {
+      endpoint,
+      status: response.status,
+      message: result.error || response.statusText,
+      tokenPresent: Boolean(await clerkAuthHeaders().then((headers) => headers.authorization)),
+    });
+  }
+  window.location.assign(result.next);
+});
 document.querySelector('#back-to-auth').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); window.location.assign('/login'); });
 
 const authButtons = document.querySelectorAll('[data-auth-provider]');
