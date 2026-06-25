@@ -73,9 +73,20 @@ authButtons.forEach((button) => button.addEventListener('click', (event) => { ev
 const setCallbackMessage = (msg) => { const el = document.querySelector('#callback-note'); if (el) el.textContent = msg; };
 const handleClerkError = (message) => { setAuthButtonsDisabled(true); setAuthMessage(message); if (route === '/sso-callback') setCallbackMessage(message); };
 const routeAfterSignIn = async () => {
+  // Try cookie-based session first (normal path once Clerk has written the cookie).
   const res = await fetch('/api/session');
-  const { authenticated, user } = await res.json();
-  if (authenticated) { window.location.replace(user?.onboardingComplete ? '/console' : '/onboarding/company'); return true; }
+  const data = await res.json();
+  if (data.authenticated) { window.location.replace(data.user?.onboardingComplete ? '/console' : '/onboarding/company'); return true; }
+  // Cookie may not be written yet (Clerk v5 sets it asynchronously after load()).
+  // Retry once with an explicit Bearer token from Clerk's in-memory session.
+  try {
+    const token = await window.Clerk?.session?.getToken();
+    if (token) {
+      const res2 = await fetch('/api/session', { headers: { authorization: `Bearer ${token}` } });
+      const data2 = await res2.json();
+      if (data2.authenticated) { window.location.replace(data2.user?.onboardingComplete ? '/console' : '/onboarding/company'); return true; }
+    }
+  } catch (e) { console.warn('[sso-callback] Bearer token fallback failed:', e?.message); }
   return false;
 };
 const completeClerkCallback = async () => {
@@ -92,10 +103,20 @@ const completeClerkCallback = async () => {
     // Clerk JS v5 processes the OAuth callback inside Clerk.load() and sets Clerk.user before
     // the ready event fires. Calling handleRedirectCallback after that throws "no pending redirect".
     // Check for a live session first; only fall back to handleRedirectCallback if not yet signed in.
-    if (window.Clerk.user || window.Clerk.session) { await routeAfterSignIn(); return; }
+    if (window.Clerk.user || window.Clerk.session) {
+      if (!await routeAfterSignIn()) {
+        // Session API failed both ways — Clerk says signed in so go to onboarding as safe default.
+        console.warn('[sso-callback] Session API returned unauthenticated despite Clerk.user being set — routing to onboarding.');
+        window.location.replace('/onboarding/company');
+      }
+      return;
+    }
     await window.Clerk.handleRedirectCallback({ signInForceRedirectUrl: '/onboarding/company', signUpForceRedirectUrl: '/onboarding/company' });
     // handleRedirectCallback may navigate on its own; if still here, route manually.
-    if (!await routeAfterSignIn()) setCallbackMessage('Sign-in completed but no session was found. Please try again.');
+    if (!await routeAfterSignIn()) {
+      if (window.Clerk.user || window.Clerk.session) { window.location.replace('/onboarding/company'); }
+      else { setCallbackMessage('Sign-in completed but no session was found. Please try again.'); }
+    }
   } catch (err) {
     const detail = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || String(err);
     console.error('[sso-callback] Clerk callback error:', detail);
