@@ -13,6 +13,14 @@ const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? path.join('/tmp', 'lian-data') : path.join(root, 'data'));
 const dataFile = path.join(dataDir, 'lian-console.json');
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
+
+const TIER_SCOPES = {
+  free:       ['read', 'write'],
+  starter:    ['read', 'write', 'adapters', 'audit'],
+  growth:     ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance'],
+  pro:        ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance', 'barriers', 'hipaa', 'erasure', 'backtest', 'metrics'],
+  enterprise: ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance', 'barriers', 'hipaa', 'erasure', 'backtest', 'metrics', 'airgap', 'kms'],
+};
 const validSteps = [...requiredSteps, 'context'];
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '' });
@@ -77,6 +85,7 @@ const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 // Helpers use res.setHeader so security headers set at request start are preserved
 const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.writeHead(status); res.end(JSON.stringify(body)); };
 const readBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Invalid JSON')); } }); });
+const readRawBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => resolve(body)); req.on('error', reject); });
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
 const redirect = (res, location) => { res.setHeader('location', location); res.writeHead(302); res.end(); };
 const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
@@ -131,6 +140,59 @@ const app = async (req, res) => {
 
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
+    // Clerk webhook — must be before CORS/rate-limit (server-to-server, no origin header)
+    if (pathname === '/api/webhooks/clerk' && req.method === 'POST') {
+      const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+      if (!webhookSecret) return json(res, 500, { error: 'Webhook not configured.' });
+      const rawBody = await readRawBody(req);
+      const { Webhook } = require('svix');
+      let event;
+      try {
+        event = new Webhook(webhookSecret).verify(rawBody, {
+          'svix-id': req.headers['svix-id'],
+          'svix-timestamp': req.headers['svix-timestamp'],
+          'svix-signature': req.headers['svix-signature'],
+        });
+      } catch { log('webhook_verify_failed', req, null, {}); return json(res, 400, { error: 'Invalid signature.' }); }
+
+      const clerkUserId = event.data?.id;
+      if (!clerkUserId) return json(res, 200, { ok: true });
+
+      if (event.type === 'user.created') {
+        const tier = event.data.public_metadata?.plan ?? 'free';
+        const scopes = TIER_SCOPES[tier] ?? TIER_SCOPES.free;
+        const rawKey = `lian_live_${crypto.randomBytes(32).toString('hex')}`;
+        const keyId = crypto.randomUUID();
+        try {
+          await clerk.users.updateUserMetadata(clerkUserId, {
+            privateMetadata: { pendingApiKey: rawKey, pendingKeyId: keyId, pendingKeyScopes: scopes, liansTier: tier },
+          });
+          log('webhook_user_created', req, null, { clerkUserId, tier });
+        } catch (err) { log('webhook_metadata_failed', req, null, { error: err.message, clerkUserId }); }
+      }
+
+      if (event.type === 'user.updated') {
+        const newTier = event.data.public_metadata?.plan ?? 'free';
+        try {
+          const clerkUser = await clerk.users.getUser(clerkUserId);
+          const currentTier = clerkUser.privateMetadata?.liansTier;
+          if (currentTier === newTier) return json(res, 200, { ok: true });
+          const scopes = TIER_SCOPES[newTier] ?? TIER_SCOPES.free;
+          const rawKey = `lian_live_${crypto.randomBytes(32).toString('hex')}`;
+          const keyId = crypto.randomUUID();
+          // Revoke the old key in the store
+          const oldKeyId = clerkUser.privateMetadata?.liansKeyId;
+          if (oldKeyId) { const store = readStore(); const old = store.apiKeys.find((k) => k.id === oldKeyId); if (old) { old.revokedAt = new Date().toISOString(); writeStore(store); } }
+          await clerk.users.updateUserMetadata(clerkUserId, {
+            privateMetadata: { ...clerkUser.privateMetadata, pendingApiKey: rawKey, pendingKeyId: keyId, pendingKeyScopes: scopes, liansTier: newTier },
+          });
+          log('webhook_tier_changed', req, null, { clerkUserId, from: currentTier, to: newTier });
+        } catch (err) { log('webhook_tier_change_failed', req, null, { error: err.message, clerkUserId }); }
+      }
+
+      return json(res, 200, { ok: true });
+    }
+
     // Block cross-origin requests to the API
     if (pathname.startsWith('/api/')) {
       const origin = req.headers.origin;
@@ -142,7 +204,7 @@ const app = async (req, res) => {
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkBillingPlanId: process.env.CLERK_BILLING_PLAN_ID || '', clerkJsUrl, clerkJsFallbackUrl })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
       return;
     }
 
@@ -181,8 +243,56 @@ const app = async (req, res) => {
     if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; store.onboarding[user.id] = { ...answers, completedAt: new Date().toISOString() }; writeStore(store); log('onboarding_completed', req, target); return json(res, 200, { next: '/console' }); }
 
     // API keys
-    if (pathname === '/api/keys' && req.method === 'GET') { const user = await apiOnboarding(req, res); if (!user) return; return json(res, 200, { keys: readStore().apiKeys.filter((key) => key.userId === user.id).map(({ hashedKey, ...key }) => key) }); }
+    if (pathname === '/api/keys' && req.method === 'GET') {
+      const user = await apiOnboarding(req, res); if (!user) return;
+      const keys = readStore().apiKeys.filter((key) => key.userId === user.id).map(({ hashedKey, ...key }) => key);
+      // Check for one-time pending key from Clerk webhook provisioning
+      let freshKey = null;
+      try {
+        const clerkUser = await clerk.users.getUser(user.clerkUserId);
+        const pending = clerkUser.privateMetadata?.pendingApiKey;
+        if (pending) {
+          const keyId = clerkUser.privateMetadata?.pendingKeyId || crypto.randomUUID();
+          const scopes = clerkUser.privateMetadata?.pendingKeyScopes || TIER_SCOPES.free;
+          const tier = clerkUser.privateMetadata?.liansTier || 'free';
+          // Materialise the key into the store
+          const store = readStore();
+          const existing = store.apiKeys.find((k) => k.id === keyId);
+          if (!existing) {
+            const keyRecord = { id: keyId, userId: user.id, label: 'Default', prefix: `${pending.slice(0, 18)}…`, hashedKey: sha256(pending), scopes, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null };
+            store.apiKeys.unshift(keyRecord);
+            writeStore(store);
+            const { hashedKey, ...safeKey } = keyRecord;
+            keys.unshift(safeKey);
+          }
+          // Clear the pending key from Clerk metadata — never reveal again
+          await clerk.users.updateUserMetadata(user.clerkUserId, {
+            privateMetadata: { ...clerkUser.privateMetadata, pendingApiKey: null, pendingKeyId: null, pendingKeyScopes: null, liansKeyId: keyId, liansTier: tier },
+          });
+          freshKey = { id: keyId, rawKey: pending };
+          log('api_key_revealed', req, user, { keyId });
+        }
+      } catch (err) { log('pending_key_check_failed', req, user, { error: err.message }); }
+      return json(res, 200, { keys, freshKey });
+    }
     if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' }); const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
+    if (pathname.match(/^\/api\/keys\/[^/]+\/rotate$/) && req.method === 'POST') {
+      const user = await apiOnboarding(req, res); if (!user) return;
+      const id = pathname.split('/')[3];
+      const store = readStore();
+      const old = store.apiKeys.find((k) => k.id === id && k.userId === user.id);
+      if (!old || old.revokedAt) return json(res, 404, { error: 'Key not found.' });
+      old.revokedAt = new Date().toISOString();
+      const rawKey = `lian_live_${crypto.randomBytes(32).toString('hex')}`;
+      const newKey = { id: crypto.randomUUID(), userId: user.id, label: old.label, prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), scopes: old.scopes || TIER_SCOPES.free, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null };
+      store.apiKeys.unshift(newKey);
+      writeStore(store);
+      // Update liansKeyId in Clerk so future rotations find the right key
+      try { const clerkUser = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...clerkUser.privateMetadata, liansKeyId: newKey.id } }); } catch (err) { log('rotate_metadata_update_failed', req, user, { error: err.message }); }
+      const { hashedKey, ...safeKey } = newKey;
+      log('api_key_rotated', req, user, { oldId: id, newPrefix: newKey.prefix });
+      return json(res, 200, { key: safeKey, rawKey });
+    }
     if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop(); const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
 
     // Playground demo (uses lian-sdk when available, falls back to fixture)
@@ -205,12 +315,13 @@ const app = async (req, res) => {
     if (pathname === '/api/billing' && req.method === 'GET') {
       const user = await apiAuth(req, res); if (!user) return;
       try {
-        const clerkUser = await clerk.users.getUser(user.clerkUserId);
-        const plan = clerkUser.publicMetadata?.plan || 'free';
-        return json(res, 200, { plan, email: user.email });
+        const sub = await clerk.users.getUserBillingSubscription(user.clerkUserId);
+        const planSlug = sub?.data?.plan?.slug || 'free';
+        const features = (sub?.data?.features || []).map((f) => f.key);
+        return json(res, 200, { plan: planSlug, features, email: user.email });
       } catch (err) {
         log('clerk_billing_fetch_failed', req, user, { error: err.message });
-        return json(res, 200, { plan: 'free', email: user.email });
+        return json(res, 200, { plan: 'free', features: [], email: user.email });
       }
     }
 

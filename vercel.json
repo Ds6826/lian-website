@@ -1,12 +1,22 @@
 {
   "version": 2,
-  "routes": [
+  "builds": [
     {
-      "handle": "filesystem"
+      "src": "api/index.js",
+      "use": "@vercel/node",
+      "config": { "includeFiles": ["*.html"] }
     },
-    {
-      "src": "/(.*)",
-      "dest": "api/index.js"
-    }
+    { "src": "app.js", "use": "@vercel/static" },
+    { "src": "clerk-loader.js", "use": "@vercel/static" },
+    { "src": "script.js", "use": "@vercel/static" },
+    { "src": "governor.js", "use": "@vercel/static" },
+    { "src": "console-api.js", "use": "@vercel/static" },
+    { "src": "app.css", "use": "@vercel/static" },
+    { "src": "styles.css", "use": "@vercel/static" },
+    { "src": "governor.css", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }

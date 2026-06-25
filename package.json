@@ -6,6 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@clerk/backend": "^1.24.0"
+    "@clerk/backend": "^1.24.0",
+    "svix": "^1.96.1"
   }
 }
