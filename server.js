@@ -24,7 +24,7 @@ const TIER_SCOPES = {
 const validSteps = [...requiredSteps, 'context'];
 const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-20260625-v2';
 
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '' });
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
 
 // ── security headers ──────────────────────────────────────────────────────────
@@ -94,17 +94,26 @@ const serveFile = (res, filename) => { const types = { '.html': 'text/html; char
 // ── auth (Clerk) ──────────────────────────────────────────────────────────────
 
 const verifyClerkToken = async (req) => {
-  const authHeader = req.headers.authorization || '';
-  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  const token = bearerToken || cookies(req).__session;
-  if (!token) return null;
-  try { return await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY }); } catch { return null; }
+  try {
+    const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+    const host = req.headers.host || 'localhost';
+    const headers = new Headers();
+    for (const [k, v] of Object.entries(req.headers)) {
+      if (typeof v === 'string') headers.set(k, v);
+      else if (Array.isArray(v)) v.forEach(item => headers.append(k, item));
+    }
+    const state = await clerk.authenticateRequest(
+      new Request(`${proto}://${host}${req.url}`, { headers })
+    );
+    if (!state.isSignedIn) return null;
+    return state.toAuth();
+  } catch { return null; }
 };
 
 const userFor = async (req) => {
   const payload = await verifyClerkToken(req);
   if (!payload) return null;
-  const clerkUserId = payload.sub;
+  const clerkUserId = payload.userId;
   const store = readStore();
   let user = store.users.find((u) => u.clerkUserId === clerkUserId);
   if (!user) {
