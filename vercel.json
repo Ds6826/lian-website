@@ -1,15 +1,8 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["*.html", "*.css", "app.js", "console-api.js", "governor.js", "script.js"]
-      }
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/server" }],
+  "functions": {
+    "api/server.js": {
+      "includeFiles": "app.html"
     }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/server.js" }
-  ]
+  }
 }
