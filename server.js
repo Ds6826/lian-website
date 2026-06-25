@@ -10,7 +10,7 @@ if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forE
 
 const port = Number(process.env.PORT || 8000);
 const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
-const dataDir = process.env.DATA_DIR || path.join(root, 'data');
+const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? path.join('/tmp', 'lian-data') : path.join(root, 'data'));
 const dataFile = path.join(dataDir, 'lian-console.json');
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 const validSteps = [...requiredSteps, 'context'];
@@ -20,11 +20,18 @@ const isProd = process.env.NODE_ENV === 'production';
 
 // ── security headers ──────────────────────────────────────────────────────────
 
-// Derive Clerk's frontend API hostname from the publishable key for a tight CSP
-const clerkHost = (() => {
-  try { return `https://${Buffer.from((process.env.CLERK_PUBLISHABLE_KEY || '').split('_')[2] || '', 'base64').toString().replace(/\$$/, '')}`; }
-  catch { return ''; }
+// Derive Clerk's frontend API origin from the publishable key for a tight CSP
+// and for loading Clerk.js. Keep this publishable-only; never expose the secret.
+const clerkFrontendApi = (() => {
+  try {
+    return Buffer.from((process.env.CLERK_PUBLISHABLE_KEY || '').split('_')[2] || '', 'base64').toString().replace(/\$$/, '');
+  } catch {
+    return '';
+  }
 })();
+const clerkOrigin = clerkFrontendApi ? `https://${clerkFrontendApi}` : '';
+const clerkJsUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js` : '';
+const clerkJsFallbackUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
 
 const SEC_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -34,12 +41,12 @@ const SEC_HEADERS = {
   ...(isProd ? { 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload' } : {}),
   'content-security-policy': [
     "default-src 'self'",
-    `script-src 'self'${clerkHost ? ` ${clerkHost}` : ''}`,
+    `script-src 'self' https://cdn.jsdelivr.net${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self'${clerkHost ? ` ${clerkHost} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
-    `frame-src${clerkHost ? ` ${clerkHost}` : " 'none'"}`,
+    `connect-src 'self'${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
+    `frame-src${clerkOrigin ? ` ${clerkOrigin}` : " 'none'"}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -101,7 +108,14 @@ const userFor = async (req) => {
   return user;
 };
 
-const firstIncomplete = (user) => { const answers = readStore().onboarding[user.id] || {}; return requiredSteps.find((step) => !answers[step]) || 'context'; };
+// The console is intentionally a route-by-route wizard. Keep the route guard
+// and the client in agreement so a bookmarked later step cannot skip setup.
+const firstIncomplete = (user) => {
+  const answers = readStore().onboarding[user.id] || {};
+  const required = requiredSteps.find((step) => !answers[step]);
+  if (required) return required;
+  return Object.prototype.hasOwnProperty.call(answers, 'context') ? 'review' : 'context';
+};
 const nextStep = (step) => ({ company: 'role', role: 'use-case', 'use-case': 'tools', tools: 'memory-needs', 'memory-needs': 'context', context: 'review' }[step]);
 
 const requireAuth = async (req, res) => { const user = await userFor(req); if (!user) { log('redirect_guard', req, null, { reason: 'unauthenticated' }); redirect(res, '/login'); return null; } return user; };
@@ -111,7 +125,7 @@ const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res)
 
 // ── server ────────────────────────────────────────────────────────────────────
 
-http.createServer(async (req, res) => {
+const app = async (req, res) => {
   // Apply security headers to every response before any writeHead call
   for (const [k, v] of Object.entries(SEC_HEADERS)) res.setHeader(k, v);
 
@@ -128,13 +142,24 @@ http.createServer(async (req, res) => {
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkBillingPlanId: process.env.CLERK_BILLING_PLAN_ID || '' })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkBillingPlanId: process.env.CLERK_BILLING_PLAN_ID || '', clerkJsUrl, clerkJsFallbackUrl })};`);
       return;
     }
 
     // Page routes — serve the SPA shell for every app route
     if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
-    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) { const user = await requireAuth(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
+    if (pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
+    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) {
+      const user = await requireAuth(req, res); if (!user) return;
+      if (user.onboardingComplete) return redirect(res, '/console');
+      const requestedStep = pathname.split('/')[2] || firstIncomplete(user);
+      const expectedStep = firstIncomplete(user);
+      if (!['company', 'role', 'use-case', 'tools', 'memory-needs', 'context', 'review'].includes(requestedStep) || requestedStep !== expectedStep) {
+        log('onboarding_redirect_guard', req, user, { requestedStep, expectedStep });
+        return redirect(res, `/onboarding/${expectedStep}`);
+      }
+      return serveFile(res, path.join(root, 'app.html'));
+    }
     if (pathname === '/console' || pathname.startsWith('/console/')) { const user = await requireOnboarding(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
 
     // Logout (Clerk handles the actual session; this just redirects)
@@ -152,7 +177,7 @@ http.createServer(async (req, res) => {
     // Onboarding
     if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: user.onboardingComplete, nextStep: user.onboardingComplete ? null : firstIncomplete(user) }); }
     if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected && !(step === 'context' && expected === 'context')) return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); return json(res, 200, { next: `/onboarding/${next}` }); }
-    if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'context') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; store.onboarding[user.id] = { ...answers, completedAt: new Date().toISOString() }; writeStore(store); log('onboarding_completed', req, target); return json(res, 200, { next: '/console' }); }
+    if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; store.onboarding[user.id] = { ...answers, completedAt: new Date().toISOString() }; writeStore(store); log('onboarding_completed', req, target); return json(res, 200, { next: '/console' }); }
 
     // API keys
     if (pathname === '/api/keys' && req.method === 'GET') { const user = await apiOnboarding(req, res); if (!user) return; return json(res, 200, { keys: readStore().apiKeys.filter((key) => key.userId === user.id).map(({ hashedKey, ...key }) => key) }); }
@@ -194,4 +219,10 @@ http.createServer(async (req, res) => {
     if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
     return serveFile(res, file);
   } catch (error) { log('server_error', req, null, { message: error.message, stack: error.stack }); return json(res, 500, { error: 'Unexpected server error.' }); }
-}).listen(port, () => console.log(`Lian server running at ${baseUrl}`));
+};
+
+module.exports = app;
+
+if (require.main === module) {
+  http.createServer(app).listen(port, () => console.log(`Lian server running at ${baseUrl}`));
+}

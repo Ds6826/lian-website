@@ -19,8 +19,8 @@
           <h1>Memory you can<br />defend.</h1>
           <p>Set up your Lian workspace and give your agents an auditable source of truth.</p>
           <div class="oauth-stack">
-            <a class="oauth-button" href="/auth/google"><b class="google-icon">G</b> Continue with Google</a>
-            <a class="oauth-button" href="/auth/github"><b class="github-icon">◖</b> Continue with GitHub</a>
+            <a class="oauth-button" href="/login" data-auth-provider="google"><b class="google-icon">G</b> Continue with Google</a>
+            <a class="oauth-button" href="/login" data-auth-provider="github"><b class="github-icon">◖</b> Continue with GitHub</a>
           </div>
           <p class="auth-note">Sign in securely with Google or GitHub to create your workspace.</p>
         </div>
@@ -51,6 +51,8 @@
         <div class="view" id="view-billing"><div class="view-wrap"><p class="console-eyebrow">ACCOUNT</p><h1>Usage & billing</h1><div class="metric-grid"><article><span>MEMORY WRITES</span><strong>0</strong><small>of 10,000 included</small></article><article><span>RECALLS</span><strong>0</strong><small>of 1,000 included</small></article><article><span>PLAN</span><strong>Dev</strong><small>Local development</small></article></div></div></div>
       </section>
     </main>
+    <script src="/config.js"></script>
+    <script src="clerk-loader.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
