@@ -10,12 +10,14 @@
     { "src": "clerk-loader.js", "use": "@vercel/static" },
     { "src": "script.js", "use": "@vercel/static" },
     { "src": "governor.js", "use": "@vercel/static" },
+    { "src": "memory-governor.html", "use": "@vercel/static" },
     { "src": "console-api.js", "use": "@vercel/static" },
     { "src": "app.css", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
     { "src": "governor.css", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/memory-governor", "dest": "/memory-governor.html" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
