@@ -13,6 +13,7 @@ const labels = { company: 'What you are building', role: 'Your role', 'use-case'
 const route = window.location.pathname;
 const selectedAnswers = {};
 if (route.startsWith('/onboarding')) show(onboardingPage); else if (route.startsWith('/console')) show(consolePage); else show(authPage);
+if (route === '/sso-callback') { const authBox = document.querySelector('#auth-box'); const callbackBox = document.querySelector('#callback-box'); if (authBox) authBox.hidden = true; if (callbackBox) callbackBox.hidden = false; }
 
 const session = async () => (await fetch('/api/session')).json();
 const pathStep = () => route.split('/')[2] || 'company';
@@ -69,11 +70,31 @@ const beginSocialSignIn = async (provider) => {
   }
 };
 authButtons.forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); beginSocialSignIn(button.dataset.authProvider); }));
-const handleClerkError = (message) => { setAuthButtonsDisabled(true); setAuthMessage(message); };
+const setCallbackMessage = (msg) => { const el = document.querySelector('#callback-note'); if (el) el.textContent = msg; };
+const handleClerkError = (message) => { setAuthButtonsDisabled(true); setAuthMessage(message); if (route === '/sso-callback') setCallbackMessage(message); };
+const routeAfterSignIn = async () => {
+  const res = await fetch('/api/session');
+  const { authenticated, user } = await res.json();
+  if (authenticated) { window.location.replace(user?.onboardingComplete ? '/console' : '/onboarding/company'); return true; }
+  return false;
+};
 const completeClerkCallback = async () => {
   if (route !== '/sso-callback') return;
-  try { await window.Clerk.handleRedirectCallback({ signInForceRedirectUrl: '/onboarding/company', signUpForceRedirectUrl: '/onboarding/company' }); }
-  catch { setAuthMessage('We could not complete secure sign-in. Please try again.'); }
+  try {
+    // Clerk JS v5 processes the OAuth callback inside Clerk.load() and sets Clerk.user before
+    // the ready event fires. Calling handleRedirectCallback after that throws "no pending redirect".
+    // Check for a live session first; only fall back to handleRedirectCallback if not yet signed in.
+    if (window.Clerk.user || window.Clerk.session) { await routeAfterSignIn(); return; }
+    await window.Clerk.handleRedirectCallback({ signInForceRedirectUrl: '/onboarding/company', signUpForceRedirectUrl: '/onboarding/company' });
+    // handleRedirectCallback may navigate on its own; if still here, route manually.
+    if (!await routeAfterSignIn()) setCallbackMessage('We could not complete secure sign-in. Please try again.');
+  } catch (err) {
+    const detail = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || String(err);
+    console.error('[sso-callback]', detail);
+    // Clerk v5 may throw AND have already signed the user in — check before showing error.
+    if (window.Clerk?.user || window.Clerk?.session) { if (await routeAfterSignIn()) return; }
+    setCallbackMessage('We could not complete secure sign-in. Please try again.');
+  }
 };
 window.addEventListener('lians:clerk-error', (event) => handleClerkError(event.detail));
 window.addEventListener('lians:clerk-loading', () => setAuthButtonsDisabled(true));
