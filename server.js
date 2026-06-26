@@ -217,10 +217,15 @@ const app = async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
-    // Block cross-origin requests to the API
+    // Block cross-origin requests to the API.
+    // Allow both apex and www so a misconfigured BASE_URL env var never locks
+    // out the live site (e.g. BASE_URL=https://lians.ai while serving www.lians.ai).
     if (pathname.startsWith('/api/')) {
       const origin = req.headers.origin;
-      if (origin && origin !== baseUrl) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
+      const host = (req.headers.host || '').split(':')[0];
+      const originHost = origin ? new URL(origin).hostname : null;
+      const allowed = !origin || originHost === host || originHost === 'localhost' || (originHost && originHost.endsWith('.lians.ai')) || originHost === 'lians.ai';
+      if (!allowed) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
       if (!rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
     }
 
