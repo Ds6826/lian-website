@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v3';
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v7';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -14,22 +14,122 @@ const onboardingSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs',
 const labels = { company: 'What you are building', role: 'Your role', 'use-case': 'Memory use case', tools: 'First connection', 'memory-needs': 'Memory behavior', context: 'Additional context' };
 const route = window.location.pathname;
 const selectedAnswers = {};
-if (route.startsWith('/onboarding')) show(onboardingPage); else if (route.startsWith('/console')) show(consolePage); else show(authPage);
-if (route === '/sso-callback') { const authBox = document.querySelector('#auth-box'); const callbackBox = document.querySelector('#callback-box'); if (authBox) authBox.hidden = true; if (callbackBox) callbackBox.hidden = false; }
+const authBox = document.querySelector('#auth-box');
+const callbackBox = document.querySelector('#callback-box');
+const workflowState = { running: false, completedCallback: false };
+const workflowLog = (metadata) => console.info('[Lians workflow]', {
+  pathname: window.location.pathname,
+  clerkLoaded: window.__liansClerkStatus?.state === 'ready',
+  signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
+  ...metadata,
+});
+const renderShellForRoute = (pathname = window.location.pathname) => {
+  if (pathname.startsWith('/onboarding')) show(onboardingPage);
+  else if (pathname.startsWith('/console')) show(consolePage);
+  else show(authPage);
+  if (authBox && callbackBox) {
+    const isCallback = pathname === '/sso-callback';
+    authBox.hidden = isCallback;
+    callbackBox.hidden = !isCallback;
+  }
+};
+renderShellForRoute(route);
 
-const clerkAuthHeaders = async () => {
+const clerkAuthHeaders = async ({ fresh = false } = {}) => {
   try {
-    const token = await window.Clerk?.session?.getToken();
-    return token ? { authorization: `Bearer ${token}` } : {};
+    const token = await window.Clerk?.session?.getToken?.(fresh ? { skipCache: true } : undefined);
+    return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
     return {};
   }
 };
-const authedFetch = async (url, options = {}) => fetch(url, { ...options, headers: { ...(options.headers || {}), ...(await clerkAuthHeaders()) } });
-const session = async () => (await authedFetch('/api/session')).json();
+const authedFetch = async (url, options = {}) => {
+  const method = String(options.method || 'GET').toUpperCase();
+  const shouldFreshen = method !== 'GET' && method !== 'HEAD';
+  const buildRequest = async (fresh = false) => ({
+    ...options,
+    credentials: 'include',
+    headers: { ...(options.headers || {}), ...(await clerkAuthHeaders({ fresh })) },
+  });
+  let response = await fetch(url, await buildRequest(shouldFreshen));
+  if (response.status === 401 && shouldFreshen) {
+    console.info('[Lians auth] Retrying mutating request with a fresh Clerk token.', {
+      url,
+      method,
+      clerkLoaded: window.__liansClerkStatus?.state === 'ready',
+      signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
+    });
+    response = await fetch(url, await buildRequest(true));
+  }
+  return response;
+};
 const pathStep = () => route.split('/')[2] || 'company';
+const redirectOnce = (destination, reason = 'workflow') => {
+  if (!destination) return false;
+  const next = destination === '/onboarding' ? '/onboarding/company' : destination;
+  if (window.location.pathname === next) return false;
+  const now = Date.now();
+  const loop = JSON.parse(sessionStorage.getItem('lians:redirectLoop') || '{"count":0,"startedAt":0}');
+  const fresh = now - loop.startedAt < 8000;
+  const nextLoop = { count: fresh ? loop.count + 1 : 1, startedAt: fresh ? loop.startedAt : now };
+  sessionStorage.setItem('lians:redirectLoop', JSON.stringify(nextLoop));
+  if (nextLoop.count > 3) {
+    workflowLog({ reason: 'redirect_loop_paused', next, loopCount: nextLoop.count });
+    const message = 'Workflow routing paused because the app detected a redirect loop. Please refresh or sign out.';
+    setAuthMessage(message);
+    setCallbackMessage(message);
+    return true;
+  }
+  if (window.__liansRedirectingTo === next) return true;
+  window.__liansRedirectingTo = next;
+  workflowLog({ reason, next });
+  window.location.replace(next);
+  return true;
+};
+const readSession = async () => {
+  let response;
+  let data = {};
+  try {
+    response = await authedFetch('/api/session');
+    data = await response.json();
+  } catch (error) {
+    workflowLog({ reason: 'session_fetch_failed', error: error?.message });
+    return { status: 0, authenticated: false, next: '/login' };
+  }
+  workflowLog({ reason: 'session_checked', sessionStatus: response.status, next: data.next, authenticated: Boolean(data.authenticated) });
+  return { status: response.status, ...data };
+};
+const waitForClerkSession = async ({ timeoutMs = 8000 } = {}) => {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    if (window.Clerk?.session || window.Clerk?.user) return true;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return Boolean(window.Clerk?.session || window.Clerk?.user);
+};
+const setOnboardingError = (message, detail = {}) => {
+  const activeStep = document.querySelector(`.wizard-step[data-step="${pathStep()}"]`);
+  if (!activeStep) return;
+  let error = activeStep.querySelector('.onboarding-error');
+  if (!error) {
+    error = document.createElement('p');
+    error.className = 'onboarding-error';
+    error.setAttribute('role', 'alert');
+    activeStep.append(error);
+  }
+  error.textContent = message;
+  console.warn('[Lians onboarding]', {
+    route,
+    clerkLoaded: window.__liansClerkStatus?.state === 'ready',
+    signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
+    ...detail,
+  });
+};
+const clearOnboardingError = () => document.querySelectorAll('.onboarding-error').forEach((error) => error.remove());
 const setWizard = async () => {
   const step = pathStep(); const response = await authedFetch('/api/onboarding'); if (!response.ok) throw new Error('Unable to load onboarding.'); const data = await response.json(); const answers = data.answers || {};
+  if (data.onboardingComplete) return redirectOnce('/console', 'onboarding_already_complete');
+  if (data.nextStep && data.nextStep !== step) return redirectOnce(`/onboarding/${data.nextStep}`, 'correct_onboarding_step');
   Object.assign(selectedAnswers, answers);
   document.querySelectorAll('.wizard-step').forEach((panel) => { panel.hidden = panel.dataset.step !== step; });
   document.querySelectorAll('.wizard-progress i').forEach((item, index) => item.classList.toggle('active', index <= onboardingSteps.indexOf(step)));
@@ -39,9 +139,9 @@ const setWizard = async () => {
   if (step === 'context') { document.querySelector('#context').value = answers.context || ''; document.querySelector('#character-count').textContent = (answers.context || '').length; }
   if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '—'}</b></div>`).join('');
 };
-if (route.startsWith('/onboarding')) setWizard().catch(() => window.location.assign('/login'));
 
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
+  clearOnboardingError();
   const field = button.parentElement.dataset.field;
   selectedAnswers[field] = button.textContent;
   button.parentElement.querySelectorAll('button').forEach((item) => item.classList.toggle('active', item === button));
@@ -49,8 +149,48 @@ document.querySelectorAll('.choice-grid button').forEach((button) => button.addE
   if (continueButton) continueButton.hidden = false;
 }));
 document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
-document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => { const step = pathStep(); const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step]; if (step !== 'context' && !value) return; button.disabled = true; const response = await authedFetch(`/api/onboarding/${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) }); const result = await response.json(); if (!response.ok) { button.disabled = false; return alert(result.error || 'Unable to continue.'); } window.location.assign(result.next); }));
-document.querySelector('.onboarding-submit').addEventListener('click', async () => { const button = document.querySelector('.onboarding-submit'); button.disabled = true; button.textContent = 'Creating workspace…'; const response = await authedFetch('/api/onboarding/complete', { method: 'POST' }); const result = await response.json(); if (!response.ok) { button.disabled = false; button.innerHTML = 'Proceed to Console <span>→</span>'; return alert(result.error || 'Unable to complete onboarding.'); } window.location.assign(result.next); });
+document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => {
+  const step = pathStep();
+  const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step];
+  if (step !== 'context' && !value) return;
+  clearOnboardingError();
+  button.disabled = true;
+  const endpoint = `/api/onboarding/${step}`;
+  const response = await authedFetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    button.disabled = false;
+    if (result.next) redirectOnce(result.next, 'onboarding_save_server_next');
+    return setOnboardingError('We could not save this onboarding step. Please refresh and try again.', {
+      endpoint,
+      status: response.status,
+      message: result.error || response.statusText,
+      tokenPresent: Boolean(await clerkAuthHeaders().then((headers) => headers.authorization)),
+    });
+  }
+  window.location.assign(result.next);
+}));
+document.querySelector('.onboarding-submit').addEventListener('click', async () => {
+  const button = document.querySelector('.onboarding-submit');
+  clearOnboardingError();
+  button.disabled = true;
+  button.textContent = 'Creating workspace…';
+  const endpoint = '/api/onboarding/complete';
+  const response = await authedFetch(endpoint, { method: 'POST' });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    button.disabled = false;
+    button.innerHTML = 'Proceed to Console <span>→</span>';
+    if (result.next) redirectOnce(result.next, 'onboarding_complete_server_next');
+    return setOnboardingError('We could not finish onboarding. Please refresh and try again.', {
+      endpoint,
+      status: response.status,
+      message: result.error || response.statusText,
+      tokenPresent: Boolean(await clerkAuthHeaders().then((headers) => headers.authorization)),
+    });
+  }
+  window.location.assign(result.next);
+});
 document.querySelector('#back-to-auth').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); window.location.assign('/login'); });
 
 const authButtons = document.querySelectorAll('[data-auth-provider]');
@@ -84,32 +224,17 @@ const beginSocialSignIn = async (provider) => {
 };
 authButtons.forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); beginSocialSignIn(button.dataset.authProvider); }));
 const setCallbackMessage = (msg) => { const el = document.querySelector('#callback-note'); if (el) el.textContent = msg; };
-const handleClerkError = (message) => { setAuthButtonsDisabled(true); setAuthMessage(message); if (route === '/sso-callback') setCallbackMessage(message); };
-const navigateToWorkflowDestination = (destination) => {
-  const next = destination || '/onboarding/company';
-  if (next === window.location.pathname) return true;
-  window.location.replace(next);
-  return true;
-};
-const routeAfterSignIn = async () => {
-  // Try cookie-based session first (normal path once Clerk has written the cookie).
-  const res = await fetch('/api/session');
-  const data = await res.json();
-  if (data.authenticated) return navigateToWorkflowDestination(data.next || (data.user?.onboardingComplete ? '/console' : '/onboarding/company'));
-  // Cookie may not be written yet (Clerk v5 sets it asynchronously after load()).
-  // Retry once with an explicit Bearer token from Clerk's in-memory session.
-  try {
-    const token = await window.Clerk?.session?.getToken();
-    if (token) {
-      const res2 = await fetch('/api/session', { headers: { authorization: `Bearer ${token}` } });
-      const data2 = await res2.json();
-      if (data2.authenticated) return navigateToWorkflowDestination(data2.next || (data2.user?.onboardingComplete ? '/console' : '/onboarding/company'));
-    }
-  } catch (e) { console.warn('[sso-callback] Bearer token fallback failed:', e?.message); }
-  return false;
+const handleClerkError = (message) => {
+  setAuthButtonsDisabled(true);
+  setAuthMessage(message);
+  if (route === '/sso-callback') setCallbackMessage(message);
+  if (route.startsWith('/console') || route.startsWith('/onboarding')) redirectOnce('/login', 'clerk_error_protected_route');
 };
 const completeClerkCallback = async () => {
-  if (route !== '/sso-callback') return;
+  if (route !== '/sso-callback' || workflowState.completedCallback) return;
+  workflowState.completedCallback = true;
+  renderShellForRoute('/sso-callback');
+  setCallbackMessage('Finishing secure sign-in…');
   // Quick sanity check: warn if the current origin doesn't match the canonical origin.
   const canonicalOrigin = window.__lian_config?.canonicalOrigin;
   if (canonicalOrigin && !canonicalOrigin.includes(window.location.hostname)) {
@@ -123,11 +248,8 @@ const completeClerkCallback = async () => {
     // the ready event fires. Calling handleRedirectCallback after that throws "no pending redirect".
     // Check for a live session first; only fall back to handleRedirectCallback if not yet signed in.
     if (window.Clerk.user || window.Clerk.session) {
-      if (!await routeAfterSignIn()) {
-        // Session API failed both ways — Clerk says signed in, so go to onboarding as the safe default.
-        console.warn('[sso-callback] Session API returned unauthenticated despite Clerk.user being set — routing to onboarding.');
-        window.location.replace('/onboarding/company');
-      }
+      await waitForClerkSession();
+      await runWorkflowGate('callback_signed_in');
       return;
     }
     await window.Clerk.handleRedirectCallback({
@@ -135,38 +257,74 @@ const completeClerkCallback = async () => {
       signUpFallbackRedirectUrl: '/sso-callback',
     }, async () => {});
     // handleRedirectCallback may navigate on its own; if still here, route manually.
-    if (!await routeAfterSignIn()) {
-      if (window.Clerk.user || window.Clerk.session) { window.location.replace('/onboarding/company'); }
-      else { setCallbackMessage('Sign-in completed but no session was found. Please try again.'); }
-    }
+    await waitForClerkSession();
+    await runWorkflowGate('callback_completed');
   } catch (err) {
     const detail = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || String(err);
     console.error('[sso-callback] Clerk callback error:', detail);
     // Clerk v5 may throw AND have already signed the user in — check before showing error.
-    if (window.Clerk?.user || window.Clerk?.session) { if (await routeAfterSignIn()) return; }
+    if (window.Clerk?.user || window.Clerk?.session) { await runWorkflowGate('callback_error_signed_in'); return; }
     const friendly = /no pending/i.test(detail) ? 'Sign-in session was not found after redirect — try signing in again.' : detail || 'We could not complete secure sign-in. Please try again.';
     setCallbackMessage(friendly);
   }
 };
-const onClerkReady = () => {
-  setAuthButtonsDisabled(false);
-  completeClerkCallback();
+const runWorkflowGate = async (reason = 'clerk_ready') => {
+  if (workflowState.running && route !== '/sso-callback') return;
+  workflowState.running = true;
   const signedIn = Boolean(window.Clerk?.user || window.Clerk?.session);
-  // /login, /onboarding/*, or /console while signed in → ask the server for
-  // the right workflow destination. If already there, routeAfterSignIn is a no-op.
-  if ((route === '/login' || route.startsWith('/onboarding') || route.startsWith('/console')) && signedIn) {
-    routeAfterSignIn().then((routed) => {
-      if (!routed && (route === '/login' || route === '/sso-callback' || route.startsWith('/console'))) {
-        setAuthMessage('You are signed in. Opening onboarding…');
-        window.location.replace('/onboarding/company');
+  workflowLog({ reason: `${reason}:start` });
+  if (route === '/sso-callback') {
+    if (!signedIn) {
+      const hasSession = await waitForClerkSession();
+      if (!hasSession) {
+        workflowLog({ reason: 'callback_no_session_after_wait' });
+        setCallbackMessage('Sign-in did not finish. Please return to login and try again.');
+        workflowState.running = false;
+        return;
       }
-    });
+    }
+    const sessionData = await readSession();
+    if (sessionData.authenticated) redirectOnce(sessionData.next || '/onboarding/company', 'callback_session_ready');
+    else redirectOnce('/onboarding/company', 'callback_clerk_signed_in_session_pending');
     return;
   }
-  // /console or /onboarding/* while NOT signed in → send to login
-  if ((route.startsWith('/console') || route.startsWith('/onboarding')) && !signedIn) {
-    window.location.replace('/login');
+  if (!signedIn) {
+    if (route.startsWith('/console') || route.startsWith('/onboarding')) redirectOnce('/login', 'protected_route_signed_out');
+    workflowState.running = false;
+    return;
   }
+  const sessionData = await readSession();
+  if (!sessionData.authenticated) {
+    if (route === '/login' || route.startsWith('/console')) redirectOnce('/onboarding/company', 'signed_in_session_pending');
+    workflowState.running = false;
+    return;
+  }
+  const destination = sessionData.next || (sessionData.user?.onboardingComplete ? '/console' : '/onboarding/company');
+  if (route === '/login') {
+    redirectOnce(destination, 'login_signed_in');
+    return;
+  }
+  if (route.startsWith('/console') && destination !== '/console') {
+    redirectOnce(destination, 'console_requires_onboarding');
+    return;
+  }
+  if (route.startsWith('/onboarding')) {
+    if (destination === '/console') {
+      redirectOnce('/console', 'onboarding_complete');
+      return;
+    }
+    if (destination !== route) {
+      redirectOnce(destination, 'onboarding_step_guard');
+      return;
+    }
+    try { await setWizard(); } catch { redirectOnce('/login', 'onboarding_load_failed'); }
+  }
+  workflowState.running = false;
+};
+const onClerkReady = () => {
+  setAuthButtonsDisabled(false);
+  if (route === '/sso-callback') completeClerkCallback();
+  else if (route === '/login' || route.startsWith('/onboarding') || route.startsWith('/console')) runWorkflowGate('clerk_ready');
 };
 window.addEventListener('lians:clerk-error', (event) => handleClerkError(event.detail));
 window.addEventListener('lians:clerk-loading', () => setAuthButtonsDisabled(true));

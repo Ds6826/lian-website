@@ -90,10 +90,34 @@ const readRawBody = (req) => new Promise((resolve, reject) => { let body = ''; r
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
 const redirect = (res, location) => { res.setHeader('location', location); res.writeHead(302); res.end(); };
 const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
+const allowedApiOrigins = (req) => {
+  const proto = (req.headers['x-forwarded-proto'] || (req.headers.host?.startsWith('localhost') ? 'http' : 'https')).split(',')[0].trim();
+  const host = req.headers.host || '';
+  const origins = new Set([baseUrl, `${proto}://${host}`]);
+  try {
+    const configured = new URL(baseUrl);
+    if (configured.hostname === 'lians.ai') origins.add(`${configured.protocol}//www.lians.ai`);
+    if (configured.hostname === 'www.lians.ai') origins.add(`${configured.protocol}//lians.ai`);
+  } catch {}
+  return origins;
+};
 
 // ── auth (Clerk) ──────────────────────────────────────────────────────────────
 
 const verifyClerkToken = async (req) => {
+  const bearer = (req.headers.authorization || '').match(/^Bearer\s+(.+)$/i)?.[1];
+  if (bearer) {
+    try {
+      const { data, errors } = await verifyToken(bearer, {
+        secretKey: process.env.CLERK_SECRET_KEY,
+        publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+      });
+      if (!errors && data?.sub) return { userId: data.sub, sessionId: data.sid || null, source: 'bearer' };
+      log('clerk_bearer_verify_failed', req, null, { reason: errors?.[0]?.reason || errors?.[0]?.message || 'unknown' });
+    } catch (err) {
+      log('clerk_bearer_verify_error', req, null, { message: err.message });
+    }
+  }
   try {
     const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
     const host = req.headers.host || 'localhost';
@@ -106,8 +130,12 @@ const verifyClerkToken = async (req) => {
       new Request(`${proto}://${host}${req.url}`, { headers })
     );
     if (!state.isSignedIn) return null;
-    return state.toAuth();
-  } catch { return null; }
+    const auth = state.toAuth();
+    return { ...auth, source: 'request' };
+  } catch (err) {
+    log('clerk_request_auth_error', req, null, { method: req.method, message: err.message });
+    return null;
+  }
 };
 
 const userFor = async (req) => {
@@ -222,10 +250,7 @@ const app = async (req, res) => {
     // out the live site (e.g. BASE_URL=https://lians.ai while serving www.lians.ai).
     if (pathname.startsWith('/api/')) {
       const origin = req.headers.origin;
-      const host = (req.headers.host || '').split(':')[0];
-      const originHost = origin ? new URL(origin).hostname : null;
-      const allowed = !origin || originHost === host || originHost === 'localhost' || (originHost && originHost.endsWith('.lians.ai')) || originHost === 'lians.ai';
-      if (!allowed) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
+      if (origin && !allowedApiOrigins(req).has(origin)) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
       if (!rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
     }
 
