@@ -70,7 +70,57 @@
             <button class="sdk-lang-tab" role="tab" aria-selected="false" data-lang="node">Node.js</button>
             <button class="sdk-lang-tab" role="tab" aria-selected="false" data-lang="curl">cURL API</button>
           </div>
-          <div class="sdk-steps" id="sdk-steps"></div>
+          <div class="sdk-steps" data-sdk-content="python">
+            <article class="sdk-step">
+              <span class="sdk-step-num">1</span>
+              <div class="sdk-step-text"><h3>Install the SDK</h3><p>Install the local-first Python SDK. No Docker or account is required for the first run.</p></div>
+              <div class="sdk-code-block"><header>python</header><pre>pip install Lians-sdk[local]</pre></div>
+            </article>
+            <article class="sdk-step">
+              <span class="sdk-step-num">2</span>
+              <div class="sdk-step-text"><h3>Add a memory</h3><p>Store an event with its real-world timestamp and structured metadata.</p></div>
+              <div class="sdk-code-block"><header>python</header><pre>mem.add(agent_id="analyst-1", content="NVDA guidance raised to $40B")</pre></div>
+            </article>
+            <article class="sdk-step">
+              <span class="sdk-step-num">3</span>
+              <div class="sdk-step-text"><h3>Recall at a point in time</h3><p>Ask what was valid when a decision was made.</p></div>
+              <div class="sdk-code-block"><header>python</header><pre>mem.recall_at(agent_id="analyst-1", query="NVDA guidance", as_of=...)</pre></div>
+            </article>
+          </div>
+          <div class="sdk-steps" data-sdk-content="node" hidden>
+            <article class="sdk-step">
+              <span class="sdk-step-num">1</span>
+              <div class="sdk-step-text"><h3>Install the SDK</h3><p>Add the Node package to your existing agent application.</p></div>
+              <div class="sdk-code-block"><header>node</header><pre>npm install Lians</pre></div>
+            </article>
+            <article class="sdk-step">
+              <span class="sdk-step-num">2</span>
+              <div class="sdk-step-text"><h3>Create the client</h3><p>Use your local or hosted Lians endpoint.</p></div>
+              <div class="sdk-code-block"><header>node</header><pre>import { LianClient } from "Lians"</pre></div>
+            </article>
+            <article class="sdk-step">
+              <span class="sdk-step-num">3</span>
+              <div class="sdk-step-text"><h3>Recall a fact</h3><p>Request context that is valid right now or at a prior date.</p></div>
+              <div class="sdk-code-block"><header>node</header><pre>await client.recall({ query: "NVDA guidance" })</pre></div>
+            </article>
+          </div>
+          <div class="sdk-steps" data-sdk-content="curl" hidden>
+            <article class="sdk-step">
+              <span class="sdk-step-num">1</span>
+              <div class="sdk-step-text"><h3>Write a memory</h3><p>Send a fact, its event time, and metadata to the memory service.</p></div>
+              <div class="sdk-code-block"><header>curl</header><pre>curl -X POST /v1/memories</pre></div>
+            </article>
+            <article class="sdk-step">
+              <span class="sdk-step-num">2</span>
+              <div class="sdk-step-text"><h3>Recall it</h3><p>Use the optional as_of field for historical recall.</p></div>
+              <div class="sdk-code-block"><header>curl</header><pre>curl -X POST /v1/recall</pre></div>
+            </article>
+            <article class="sdk-step">
+              <span class="sdk-step-num">3</span>
+              <div class="sdk-step-text"><h3>Verify the trail</h3><p>Reconstruct the memory state behind an agent decision.</p></div>
+              <div class="sdk-code-block"><header>curl</header><pre>curl /v1/audit/reconstruct</pre></div>
+            </article>
+          </div>
         </div>
       </section>
 
