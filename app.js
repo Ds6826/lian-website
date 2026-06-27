@@ -1,9 +1,11 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260625-v7';
+﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260626-v15';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
+const billingPage = document.querySelector('#billing-page');
+const upgradePage = document.querySelector('#upgrade-page');
 const consolePage = document.querySelector('#console-page');
-const show = (page) => [authPage, onboardingPage, consolePage].forEach((item) => {
+const show = (page) => [authPage, onboardingPage, billingPage, upgradePage, consolePage].forEach((item) => {
   const active = item === page;
   item.hidden = !active;
   // These route shells live in one HTML document. The inline display guard keeps
@@ -25,6 +27,8 @@ const workflowLog = (metadata) => console.info('[Lians workflow]', {
 });
 const renderShellForRoute = (pathname = window.location.pathname) => {
   if (pathname.startsWith('/onboarding')) show(onboardingPage);
+  else if (pathname === '/billing') show(billingPage);
+  else if (pathname === '/upgrade') show(upgradePage);
   else if (pathname.startsWith('/console')) show(consolePage);
   else show(authPage);
   if (authBox && callbackBox) {
@@ -34,6 +38,13 @@ const renderShellForRoute = (pathname = window.location.pathname) => {
   }
 };
 renderShellForRoute(route);
+// Early cookie-based session check on /login — fires before Clerk JS loads so returning
+// users with a valid session are sent straight to their destination without seeing the form.
+if (route === '/login') {
+  fetch('/api/session', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => {
+    if (d?.authenticated) window.location.assign(d.next || (d.user?.onboardingComplete ? '/console' : '/onboarding/company'));
+  }).catch(() => {});
+}
 
 const clerkAuthHeaders = async ({ fresh = false } = {}) => {
   try {
@@ -44,21 +55,15 @@ const clerkAuthHeaders = async ({ fresh = false } = {}) => {
   }
 };
 const authedFetch = async (url, options = {}) => {
-  const method = String(options.method || 'GET').toUpperCase();
-  const shouldFreshen = method !== 'GET' && method !== 'HEAD';
   const buildRequest = async (fresh = false) => ({
     ...options,
     credentials: 'include',
     headers: { ...(options.headers || {}), ...(await clerkAuthHeaders({ fresh })) },
   });
-  let response = await fetch(url, await buildRequest(shouldFreshen));
-  if (response.status === 401 && shouldFreshen) {
-    console.info('[Lians auth] Retrying mutating request with a fresh Clerk token.', {
-      url,
-      method,
-      clerkLoaded: window.__liansClerkStatus?.state === 'ready',
-      signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
-    });
+  // Always try the cached token first — forcing skipCache contacts clerk.lians.ai which can fail.
+  // Fall back to a fresh token only if the server actually rejects the cached one.
+  let response = await fetch(url, await buildRequest(false));
+  if (response.status === 401) {
     response = await fetch(url, await buildRequest(true));
   }
   return response;
@@ -128,8 +133,8 @@ const setOnboardingError = (message, detail = {}) => {
 const clearOnboardingError = () => document.querySelectorAll('.onboarding-error').forEach((error) => error.remove());
 const setWizard = async () => {
   const step = pathStep(); const response = await authedFetch('/api/onboarding'); if (!response.ok) throw new Error('Unable to load onboarding.'); const data = await response.json(); const answers = data.answers || {};
-  if (data.onboardingComplete) return redirectOnce('/console', 'onboarding_already_complete');
-  if (data.nextStep && data.nextStep !== step) return redirectOnce(`/onboarding/${data.nextStep}`, 'correct_onboarding_step');
+  if (data.onboardingComplete) { window.location.assign('/console'); return; }
+  if (data.nextStep && onboardingSteps.indexOf(data.nextStep) > onboardingSteps.indexOf(step)) { window.location.assign(`/onboarding/${data.nextStep}`); return; }
   Object.assign(selectedAnswers, answers);
   document.querySelectorAll('.wizard-step').forEach((panel) => { panel.hidden = panel.dataset.step !== step; });
   document.querySelectorAll('.wizard-progress i').forEach((item, index) => item.classList.toggle('active', index <= onboardingSteps.indexOf(step)));
@@ -137,7 +142,189 @@ const setWizard = async () => {
   const continueButton = document.querySelector(`.wizard-step[data-step="${step}"] .step-next`);
   if (continueButton && step !== 'context') continueButton.hidden = !selectedAnswers[step];
   if (step === 'context') { document.querySelector('#context').value = answers.context || ''; document.querySelector('#character-count').textContent = (answers.context || '').length; }
-  if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '—'}</b></div>`).join('');
+  if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '-'}</b></div>`).join('');
+};
+
+const BILLING_PLANS = [
+  { id: 'free', name: 'Free', price: '$0', period: '/ mo', tagline: 'Start building at no cost.', features: ['Memory writes', 'Memory recalls', 'Semantic search'], cta: 'Get started free' },
+  { id: 'starter', name: 'Starter', price: '$15', period: '/ mo', tagline: 'For growing projects.', features: ['Everything in Free', 'Domain adapters', 'Finance, healthcare, legal', 'Audit log'], cta: 'Choose Starter' },
+  { id: 'growth', name: 'Growth', price: '$70', period: '/ mo', tagline: 'For production workloads.', features: ['Everything in Starter', 'Conflict detection', 'Webhooks', 'Compliance reports', 'Merkle audit chain'], cta: 'Choose Growth' },
+  { id: 'pro', name: 'Pro', price: '$200', period: '/ mo', tagline: 'For regulated environments.', features: ['Everything in Growth', 'Information barriers', 'HIPAA encryption', 'GDPR erasure certifications', 'Backtest', 'Prometheus metrics'], cta: 'Choose Pro', highlight: true },
+  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', tagline: 'For enterprise deployments.', features: ['Everything in Pro', 'Air-gap mode', 'Custom KMS (AWS / Azure / Vault)', 'Dedicated onboarding', 'SLA'], cta: 'Contact us', contact: true },
+];
+const PLAN_NAMES = { free: 'Free', starter: 'Starter', growth: 'Growth', pro: 'Pro', enterprise: 'Enterprise' };
+const PLAN_LIMITS = { free: { memories: '10K', recalls: '1K' }, starter: { memories: '100K', recalls: '10K' }, growth: { memories: '1M', recalls: '100K' }, pro: { memories: '10M', recalls: '1M' }, enterprise: { memories: 'Unlimited', recalls: 'Unlimited' } };
+const VIEW_SCOPE_REQ = { webhooks: 'webhooks', exports: 'compliance' };
+const setBillingPage = () => {
+  const grid = document.querySelector('#plan-grid');
+  const note = document.querySelector('#billing-note');
+  if (!grid) return;
+
+  // Handle successful return from Clerk checkout
+  const params = new URLSearchParams(window.location.search);
+  const completedPlan = params.get('billing_complete');
+  if (completedPlan && ['free', 'starter', 'growth', 'pro', 'enterprise'].includes(completedPlan)) {
+    if (note) note.textContent = 'Activating your plan…';
+    const syncPromise = completedPlan === 'free'
+      ? authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: completedPlan }) })
+      : authedFetch('/api/billing/sync', { method: 'POST' });
+    syncPromise
+      .then(async (r) => {
+        const result = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          if (note) note.textContent = result.error || 'Payment not completed. Please choose a plan below.';
+          return;
+        }
+        window.location.assign(result.next || '/console');
+      })
+      .catch(() => { if (note) note.textContent = 'Unable to activate plan. Please refresh.'; });
+    // No early return — grid renders below so the user can retry if payment fails
+  }
+
+  const clerkPlanIds = window.__lian_config?.billingPlans || {};
+  grid.innerHTML = BILLING_PLANS.map((plan) => `
+    <div class="plan-card${plan.highlight ? ' plan-highlight' : ''}">
+      <p class="plan-tier">${plan.name}</p>
+      <div class="plan-price">${plan.price}${plan.period ? `<small> ${plan.period}</small>` : ''}</div>
+      <p class="plan-tagline">${plan.tagline}</p>
+      <ul class="plan-features">${plan.features.map((f) => `<li>${f}</li>`).join('')}</ul>
+      ${plan.contact
+        ? `<a class="plan-cta plan-cta-link" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">${plan.cta} ↗</a>`
+        : `<button class="plan-cta" data-plan="${plan.id}">${plan.cta}</button>`}
+    </div>`).join('');
+
+  grid.querySelectorAll('.plan-cta[data-plan]').forEach((btn) => btn.addEventListener('click', async () => {
+    const plan = btn.dataset.plan;
+    if (note) note.textContent = '';
+    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = true; });
+
+    // Free plan: record immediately, no payment needed
+    if (plan === 'free') {
+      const response = await authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan }) });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+        if (note) note.textContent = result.error || 'Unable to select plan. Please refresh and try again.';
+        return;
+      }
+      window.location.assign(result.next || '/console');
+      return;
+    }
+
+    // Paid plans: launch Clerk billing checkout
+    const clerkPlanId = clerkPlanIds[plan];
+    const origin = window.__lian_config?.canonicalOrigin || window.location.origin;
+    const clerkBilling = window.Clerk?.billing;
+    const clerkAllKeys = window.Clerk ? Object.getOwnPropertyNames(window.Clerk).filter((k) => /bill|sub|checkout|payment|plan/i.test(k)) : [];
+    console.info('[Lians billing debug]', {
+      plan,
+      clerkPlanId,
+      hasBillingNs: Boolean(clerkBilling),
+      billingType: typeof clerkBilling,
+      billingOwnKeys: clerkBilling ? Object.getOwnPropertyNames(clerkBilling) : [],
+      billingProtoKeys: clerkBilling ? Object.getOwnPropertyNames(Object.getPrototypeOf(clerkBilling) || {}) : [],
+      hasStartCheckout: typeof clerkBilling?.startCheckout,
+      clerkBillingRelatedKeys: clerkAllKeys,
+      clerkVersion: window.Clerk?.version,
+    });
+    const startCheckout = clerkBilling?.startCheckout;
+    if (clerkPlanId && startCheckout) {
+      if (note) note.textContent = 'Opening checkout…';
+      try {
+        // Clerk v5 billing is a modal — no successUrl/cancelUrl. The Promise resolves when the modal closes.
+        await startCheckout.call(window.Clerk.billing, { planId: clerkPlanId });
+        if (note) note.textContent = 'Activating your plan…';
+        const syncRes = await authedFetch('/api/billing/sync', { method: 'POST' });
+        const syncResult = await syncRes.json().catch(() => ({}));
+        if (!syncRes.ok) {
+          grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+          if (note) note.textContent = syncResult.error || 'Payment not completed. Please try again.';
+          return;
+        }
+        window.location.assign(syncResult.next || '/console');
+      } catch (err) {
+        grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+        if (note) note.textContent = '';
+        console.error('[Lians billing]', err);
+      }
+      return;
+    }
+
+    // Clerk billing SDK not available — most likely cause: Stripe is not connected to
+    // your Clerk account. Go to Clerk Dashboard → Configure → Billing → Connect Stripe.
+    console.error('[Lians billing] window.Clerk.billing.startCheckout is not available.', {
+      billing: window.Clerk?.billing,
+      clerkVersion: window.Clerk?.version,
+    });
+    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+    if (note) note.textContent = 'Billing checkout is not available. Please refresh and try again.';
+  }));
+};
+const doSignOut = async () => {
+  try { if (window.Clerk?.signOut) await window.Clerk.signOut(); } catch (e) {}
+  await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+  window.location.assign('/login');
+};
+document.querySelector('#billing-sign-out')?.addEventListener('click', doSignOut);
+document.querySelector('#upgrade-sign-out')?.addEventListener('click', doSignOut);
+
+const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+const setUpgradePage = (sessionData) => {
+  const currentPlan = sessionData?.user?.billingPlan || 'free';
+  const currentIndex = PLAN_ORDER.indexOf(currentPlan);
+  const sub = document.querySelector('#upgrade-sub');
+  const grid = document.querySelector('#upgrade-plan-grid');
+  const note = document.querySelector('#upgrade-note');
+  const upgradable = BILLING_PLANS.filter((plan) => PLAN_ORDER.indexOf(plan.id) > currentIndex);
+  const currentLabel = BILLING_PLANS.find((p) => p.id === currentPlan)?.name || 'Free';
+  if (sub) sub.innerHTML = `You're on the <strong>${currentLabel}</strong> plan. Upgrade to unlock more of Lians.`;
+  if (!grid) return;
+  if (!upgradable.length) {
+    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Contact us</a> for custom solutions.</p>';
+    return;
+  }
+  const clerkPlanIds = window.__lian_config?.billingPlans || {};
+  grid.innerHTML = upgradable.map((plan) => `
+    <div class="plan-card${plan.highlight ? ' plan-highlight' : ''}">
+      <p class="plan-tier">${plan.name}</p>
+      <div class="plan-price">${plan.price}${plan.period ? `<small> ${plan.period}</small>` : ''}</div>
+      <p class="plan-tagline">${plan.tagline}</p>
+      <ul class="plan-features">${plan.features.map((f) => `<li>${f}</li>`).join('')}</ul>
+      ${plan.contact
+        ? `<a class="plan-cta plan-cta-link" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">${plan.cta} ↗</a>`
+        : `<button class="plan-cta" data-plan="${plan.id}">${plan.cta}</button>`}
+    </div>`).join('');
+  grid.querySelectorAll('.plan-cta[data-plan]').forEach((btn) => btn.addEventListener('click', async () => {
+    const plan = btn.dataset.plan;
+    if (note) note.textContent = '';
+    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = true; });
+    const clerkPlanId = clerkPlanIds[plan];
+    const origin = window.__lian_config?.canonicalOrigin || window.location.origin;
+    const startCheckoutUpgrade = window.Clerk?.billing?.startCheckout;
+    if (clerkPlanId && startCheckoutUpgrade) {
+      if (note) note.textContent = 'Opening checkout…';
+      try {
+        await startCheckoutUpgrade.call(window.Clerk.billing, { planId: clerkPlanId });
+        if (note) note.textContent = 'Activating your plan…';
+        const syncRes = await authedFetch('/api/billing/sync', { method: 'POST' });
+        const syncResult = await syncRes.json().catch(() => ({}));
+        if (!syncRes.ok) {
+          grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+          if (note) note.textContent = syncResult.error || 'Payment not completed. Please try again.';
+          return;
+        }
+        window.location.assign('/console');
+      } catch (err) {
+        grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+        if (note) note.textContent = '';
+        console.error('[Lians upgrade]', err);
+      }
+      return;
+    }
+    console.error('[Lians upgrade] window.Clerk.billing.startCheckout is not available.', { billing: window.Clerk?.billing });
+    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
+    if (note) note.textContent = 'Billing checkout is not available. Please refresh and try again.';
+  }));
 };
 
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
@@ -160,7 +347,6 @@ document.querySelectorAll('.step-next').forEach((button) => button.addEventListe
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
     button.disabled = false;
-    if (result.next) redirectOnce(result.next, 'onboarding_save_server_next');
     return setOnboardingError('We could not save this onboarding step. Please refresh and try again.', {
       endpoint,
       status: response.status,
@@ -168,7 +354,8 @@ document.querySelectorAll('.step-next').forEach((button) => button.addEventListe
       tokenPresent: Boolean(await clerkAuthHeaders().then((headers) => headers.authorization)),
     });
   }
-  window.location.assign(result.next);
+  const idx = onboardingSteps.indexOf(step);
+  window.location.assign(idx >= 0 && idx < onboardingSteps.length - 1 ? `/onboarding/${onboardingSteps[idx + 1]}` : '/console');
 }));
 document.querySelector('.onboarding-submit').addEventListener('click', async () => {
   const button = document.querySelector('.onboarding-submit');
@@ -191,7 +378,7 @@ document.querySelector('.onboarding-submit').addEventListener('click', async () 
   }
   window.location.assign(result.next);
 });
-document.querySelector('#back-to-auth').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); window.location.assign('/login'); });
+document.querySelector('#back-to-auth').addEventListener('click', doSignOut);
 
 const authButtons = document.querySelectorAll('[data-auth-provider]');
 const authNote = document.querySelector('.auth-note');
@@ -264,9 +451,28 @@ const completeClerkCallback = async () => {
     console.error('[sso-callback] Clerk callback error:', detail);
     // Clerk v5 may throw AND have already signed the user in — check before showing error.
     if (window.Clerk?.user || window.Clerk?.session) { await runWorkflowGate('callback_error_signed_in'); return; }
-    const friendly = /no pending/i.test(detail) ? 'Sign-in session was not found after redirect — try signing in again.' : detail || 'We could not complete secure sign-in. Please try again.';
+    const friendly = /no pending/i.test(detail) ? 'Sign-in session was not found after redirect. Try signing in again.' : detail || 'We could not complete secure sign-in. Please try again.';
     setCallbackMessage(friendly);
   }
+};
+const loadConsolePlan = async () => {
+  try {
+    const r = await authedFetch('/api/billing');
+    if (!r.ok) return;
+    const { plan = 'free', scopes = [] } = await r.json();
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    const usageEl = document.querySelector('.usage');
+    if (usageEl) usageEl.innerHTML = `<span>${PLAN_NAMES[plan] || plan} plan</span><p>Memories <b>0 / ${limits.memories}</b></p><div><i></i></div><p>Recall <b>0 / ${limits.recalls}</b></p><div><i></i></div>`;
+    for (const [view, scope] of Object.entries(VIEW_SCOPE_REQ)) {
+      if (scopes.includes(scope)) continue;
+      document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('locked');
+      const wrap = document.querySelector(`#view-${view} .view-wrap`);
+      if (wrap) {
+        const [section, title] = viewMeta[view] || ['ACTIVITY', view];
+        wrap.innerHTML = `<p class="console-eyebrow">${section}</p><h1>${title}</h1><div class="upgrade-prompt"><h3>Upgrade to unlock ${title}</h3><p>This feature is not available on your current plan.</p><button class="console-button" onclick="window.location.assign('/upgrade')">View upgrade options <span>→</span></button></div>`;
+      }
+    }
+  } catch {}
 };
 const runWorkflowGate = async (reason = 'clerk_ready') => {
   if (workflowState.running && route !== '/sso-callback') return;
@@ -289,7 +495,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     return;
   }
   if (!signedIn) {
-    if (route.startsWith('/console') || route.startsWith('/onboarding')) redirectOnce('/login', 'protected_route_signed_out');
+    if (route.startsWith('/console') || route.startsWith('/onboarding') || route === '/billing' || route === '/upgrade') redirectOnce('/login', 'protected_route_signed_out');
     workflowState.running = false;
     return;
   }
@@ -299,32 +505,61 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     workflowState.running = false;
     return;
   }
-  const destination = sessionData.next || (sessionData.user?.onboardingComplete ? '/console' : '/onboarding/company');
+  const destination = sessionData.next || (
+    !sessionData.user?.onboardingComplete ? '/onboarding/company' :
+    !sessionData.user?.billingPlan ? '/billing' : '/console'
+  );
   if (route === '/login') {
-    redirectOnce(destination, 'login_signed_in');
+    window.location.assign(destination);
     return;
   }
   if (route.startsWith('/console') && destination !== '/console') {
-    redirectOnce(destination, 'console_requires_onboarding');
+    window.location.assign(destination);
+    return;
+  }
+  if (route.startsWith('/console') && destination === '/console') {
+    document.querySelector('#console-gate')?.classList.add('cleared');
+    loadConsolePlan();
+    workflowState.running = false;
+    return;
+  }
+  if (route === '/billing') {
+    if (destination !== '/billing') { window.location.assign(destination); return; }
+    setBillingPage();
+    workflowState.running = false;
+    return;
+  }
+  if (route === '/upgrade') {
+    if (destination !== '/console') { window.location.assign(destination); return; }
+    // Handle return from Clerk checkout on the upgrade flow
+    const upgradeParams = new URLSearchParams(window.location.search);
+    const upgradedPlan = upgradeParams.get('billing_complete');
+    if (upgradedPlan && ['starter', 'growth', 'pro', 'enterprise'].includes(upgradedPlan)) {
+      const upgradeNote = document.querySelector('#upgrade-note');
+      if (upgradeNote) upgradeNote.textContent = 'Activating your plan…';
+      authedFetch('/api/billing/sync', { method: 'POST' })
+        .then((r) => r.json().catch(() => ({})))
+        .then(() => window.location.assign('/console'))
+        .catch(() => window.location.assign('/console'));
+      return;
+    }
+    setUpgradePage(sessionData);
+    workflowState.running = false;
     return;
   }
   if (route.startsWith('/onboarding')) {
-    if (destination === '/console') {
-      redirectOnce('/console', 'onboarding_complete');
+    if (destination === '/console' || destination === '/billing') {
+      window.location.assign(destination);
       return;
     }
-    if (destination !== route) {
-      redirectOnce(destination, 'onboarding_step_guard');
-      return;
-    }
-    try { await setWizard(); } catch { redirectOnce('/login', 'onboarding_load_failed'); }
+    try { await setWizard(); } catch (err) { setOnboardingError('Unable to load your onboarding state. Please refresh to try again.', { error: err.message }); }
   }
   workflowState.running = false;
 };
 const onClerkReady = () => {
   setAuthButtonsDisabled(false);
   if (route === '/sso-callback') completeClerkCallback();
-  else if (route === '/login' || route.startsWith('/onboarding') || route.startsWith('/console')) runWorkflowGate('clerk_ready');
+  else if (route === '/login' || route.startsWith('/onboarding') || route === '/billing' || route === '/upgrade' || route.startsWith('/console')) runWorkflowGate('clerk_ready');
 };
 window.addEventListener('lians:clerk-error', (event) => handleClerkError(event.detail));
 window.addEventListener('lians:clerk-loading', () => setAuthButtonsDisabled(true));
@@ -350,5 +585,6 @@ async function loadKeys() { const response = await authedFetch('/api/keys'); if 
 document.querySelector('#key-form').addEventListener('submit', async (event) => { event.preventDefault(); const label = document.querySelector('#key-name').value; const response = await authedFetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label }) }); const result = await response.json(); if (!response.ok) return document.querySelector('#backend-note').textContent = result.error || 'Unable to create key.'; document.querySelector('#new-key-secret').textContent = result.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#key-name').value = ''; loadKeys(); });
 document.querySelector('#copy-key').addEventListener('click', async () => { await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); document.querySelector('#copy-key').textContent = 'Copied'; });
 document.querySelector('#save-settings').addEventListener('click', () => alert('Settings saved.'));
-document.querySelector('#sign-out').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); window.location.assign('/login'); });
+document.querySelector('#sign-out').addEventListener('click', doSignOut);
+document.querySelector('.upgrade-button')?.addEventListener('click', () => window.location.assign('/upgrade'));
 document.querySelector('.mobile-menu').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));

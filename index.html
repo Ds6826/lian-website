@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Lians is the financial-grade memory layer for AI agents operating in regulated environments." />
-    <title>Lians — Financial-grade agent memory</title>
+    <title>Lians: Financial-grade agent memory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -44,7 +44,7 @@
               <button class="memory-node" data-date="2025-05-22" data-value="$36B" data-label="Guidance raised" style="--x: 53%"><i></i><span>May 22</span></button>
               <button class="memory-node" data-date="2025-11-19" data-value="$40B" data-label="Current guidance" style="--x: 91%"><i></i><span>Nov 19</span></button>
             </div>
-            <p class="stage-caption">Click a revision. Lians returns the fact that was valid then—not every fact that has ever existed.</p>
+            <p class="stage-caption">Click a revision. Lians returns the fact that was valid then, not every fact that has ever existed.</p>
           </div>
           <aside class="truth-card">
             <div class="card-label">VALID ON <span id="selected-date">2025-01-15</span></div>
@@ -62,6 +62,18 @@
         <p>Numbers from Lians’s NVDA revision-chain benchmark.</p>
       </section>
 
+      <section class="sdk-section section-shell">
+        <div class="sdk-copy"><p class="kicker">Install the SDK</p><h2>Start in seconds.<br />Free to use.</h2><p>The core SDK is open source and works locally with no account required. Sign up when you’re ready to connect to the hosted API.</p><a class="button button-primary" href="/login">Get your API key <span>→</span></a></div>
+        <div class="sdk-panel">
+          <div class="sdk-lang-tabs" role="tablist" aria-label="Language">
+            <button class="sdk-lang-tab active" role="tab" aria-selected="true" data-lang="python">Python</button>
+            <button class="sdk-lang-tab" role="tab" aria-selected="false" data-lang="node">Node.js</button>
+            <button class="sdk-lang-tab" role="tab" aria-selected="false" data-lang="curl">cURL API</button>
+          </div>
+          <div class="sdk-steps" id="sdk-steps"></div>
+        </div>
+      </section>
+
       <section class="governor-teaser section-shell"><div><p class="kicker">Lians Memory Governor</p><h2>Memory that improves without<br />blindly rewriting itself.</h2></div><div><p>Lians Memory Governor helps AI agents learn across sessions while keeping memory changes proposed, versioned, audited, and reversible. Instead of silently overwriting facts, it treats memory updates like governed infrastructure.</p><a class="button button-primary" href="/memory-governor">Explore Memory Governor <span>→</span></a></div></section>
 
       <section class="problem-section section-shell">
@@ -74,7 +86,7 @@
       </section>
 
       <section class="recall-lab section-shell" aria-labelledby="recall-lab-title">
-        <div class="lab-heading"><div><p class="kicker">Try point-in-time recall</p><h2 id="recall-lab-title">Ask Lians<br />a better question.</h2></div><p>Choose a moment, then inspect what an analyst agent would receive. The answer changes because the validity window changes—not because the query changed.</p></div>
+        <div class="lab-heading"><div><p class="kicker">Try point-in-time recall</p><h2 id="recall-lab-title">Ask Lians<br />a better question.</h2></div><p>Choose a moment, then inspect what an analyst agent would receive. The answer changes because the validity window changes, not because the query changed.</p></div>
         <div class="lab-shell">
           <div class="lab-controls" role="tablist" aria-label="Recall time">
             <button class="recall-tab active" role="tab" aria-selected="true" data-recall="now">Today <small>Current view</small></button>
@@ -154,7 +166,7 @@ mem = LocalLianClient()
   agent_id=<span class="code-string">"analyst-1"</span>,
   query=<span class="code-string">"NVDA revenue guidance"</span>,
   as_of=<span class="code-pink">march_1_2025</span>
-)</code></pre><div class="code-result"><span>↳</span> $32B — the guidance valid on March 1, 2025</div></div>
+)</code></pre><div class="code-result"><span>↳</span> $32B, the guidance valid on March 1, 2025</div></div>
       </section>
 
       <section class="closing section-shell"><p class="eyebrow"><span></span> Agents make decisions. Memory needs receipts.</p><h2>Build on memory<br />you can <em>defend.</em></h2><a class="button button-light" href="/login">Get started with Lians <span>→</span></a></section>
