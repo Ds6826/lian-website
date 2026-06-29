@@ -35,17 +35,9 @@
         <div class="hero-footnote"><span class="pulse"></span> Open source · Apache 2.0 · Self-hostable</div>
       </section>
 
-      <section class="problem-section section-shell">
-        <div class="problem-intro"><span class="section-number">01</span><div><p class="kicker">Why agent memory breaks in regulated work</p><h2>Similarity is not<br />the same as truth.</h2></div></div>
-        <div class="problem-grid">
-          <p class="problem-lede">AI agents need <em>memory</em> — a store of facts they can recall later. Most memory tools retrieve by <em>similarity</em>. But in finance, healthcare, and legal work, facts change: guidance is revised, prescriptions are switched, contracts are amended. Return the most similar fact and the agent acts on a convincing version of the past. Lians returns the fact that was <em>valid</em> when it mattered.</p>
-          <div class="comparison-card old-memory"><p class="card-kicker">CONVENTIONAL MEMORY</p><h3>“Here are all five guidance updates.”</h3><ul><li><span>$28B</span> Jan 15 · relevant</li><li><span>$32B</span> Feb 20 · relevant</li><li><span>$36B</span> May 22 · relevant</li><li><span>$38B</span> Aug 27 · relevant</li><li class="current"><span>$40B</span> Nov 19 · relevant</li></ul><small>Five similar facts, no validity decision.</small></div>
-          <div class="comparison-card lians-memory"><p class="card-kicker">LIANS MEMORY · TODAY</p><h3>“$40B is the current guidance.”</h3><div class="answer-block"><strong>$40B</strong><span>Valid from Nov 19, 2025</span></div><p>Lians filters superseded records before ranking, so stale updates never reach the agent’s context.</p><small><i>✓</i> Provenance and every prior revision remain auditable.</small></div>
-        </div>
-      </section>
-
       <section class="memory-stage section-shell" aria-label="Lians memory timeline demonstration">
         <div class="stage-topline"><span>LIVE MEMORY STATE</span><span>NVDA · FY2026 REVENUE GUIDANCE</span></div>
+        <p class="stage-try">Try it — click a revision date.</p>
         <div class="memory-layout">
           <div class="timeline-pane">
             <div class="timeline-heading"><span class="live-dot"></span> Truth, at any point in time</div>
@@ -63,6 +55,15 @@
             <p id="selected-label">Initial guidance</p>
             <div class="verified"><span>✓</span> Validity verified at database layer</div>
           </aside>
+        </div>
+      </section>
+
+      <section class="problem-section section-shell">
+        <div class="problem-intro"><span class="section-number">01</span><div><p class="kicker">Why agent memory breaks in regulated work</p><h2>Similarity is not<br />the same as truth.</h2></div></div>
+        <div class="problem-grid">
+          <p class="problem-lede">AI agents need <em>memory</em> — a store of facts they can recall later. Most memory tools retrieve by <em>similarity</em>. But in finance, healthcare, and legal work, facts change: guidance is revised, prescriptions are switched, contracts are amended. Return the most similar fact and the agent acts on a convincing version of the past. Lians returns the fact that was <em>valid</em> when it mattered.</p>
+          <div class="comparison-card old-memory"><p class="card-kicker">CONVENTIONAL MEMORY</p><h3>“Here are all five guidance updates.”</h3><ul><li><span>$28B</span> Jan 15 · relevant</li><li><span>$32B</span> Feb 20 · relevant</li><li><span>$36B</span> May 22 · relevant</li><li><span>$38B</span> Aug 27 · relevant</li><li class="current"><span>$40B</span> Nov 19 · relevant</li></ul><small>Five similar facts, no validity decision.</small></div>
+          <div class="comparison-card lians-memory"><p class="card-kicker">LIANS MEMORY · TODAY</p><h3>“$40B is the current guidance.”</h3><div class="answer-block"><strong>$40B</strong><span>Valid from Nov 19, 2025</span></div><p>Lians filters superseded records before ranking, so stale updates never reach the agent’s context.</p><small><i>✓</i> Provenance and every prior revision remain auditable.</small></div>
         </div>
       </section>
 
