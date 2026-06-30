@@ -1,75 +1,112 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians Memory Governor is self-improving persistent memory with change control for AI agents." />
-    <title>Lians Memory Governor: Persistent memory with integrity</title>
+    <meta name="description" content="Lians Memory Governor is self-improving persistent memory with change control for AI agents — proposed, versioned, audited, and reversible memory updates." />
+    <title>Lians Memory Governor — Persistent memory with integrity</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" /><link rel="stylesheet" href="governor.css" />
+    <link rel="stylesheet" href="lians.css" />
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Lians home"><span class="brand-mark">L</span> Lians</a>
-      <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">Menu</button>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <div class="nav-item">
-          <a class="nav-trigger" href="/product">Product <span class="caret">▾</span></a>
-          <div class="dropdown"><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/sdks">SDKs</a><a href="/memory-governor">Memory Governor</a></div>
-        </div>
-        <div class="nav-item">
-          <a class="nav-trigger" href="/solutions">Solutions <span class="caret">▾</span></a>
-          <div class="dropdown"><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        </div>
-        <a href="/docs">Docs</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/compare">Compare</a>
-        <a class="nav-gh" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub <span>↗</span></a>
-        <a href="/login">Sign in</a>
-        <a class="nav-cta-mobile button button-small button-primary" href="/login">Get API key <span>→</span></a>
-      </nav>
-      <a class="button button-small button-primary nav-cta" href="/login">Get API key <span>→</span></a>
-    </header>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
     <main>
-      <section class="governor-hero section-shell"><p class="eyebrow"><span></span> Lians Memory Governor</p><h1>Self-improving memory<br />with <em>change control.</em></h1><p>Lians Memory Governor lets AI agents remember, improve, and recall information safely by proposing, validating, versioning, auditing, and explaining every memory change.</p><div class="hero-actions"><a class="button button-primary" href="#architecture">View the architecture <span>↓</span></a><a class="text-link" href="#demo">See the demo flow <span>↓</span></a></div><div class="governor-statement"><span>MEMORY UPDATE</span><strong>proposal → policy → audit commit</strong><i>✓ reversible</i></div></section>
-      <section class="governor-problem section-shell"><div><p class="kicker">The risk</p><h2>Remembering more can mean trusting less.</h2></div><p>Generic memory systems absorb facts as they arrive. That leaves agents exposed to stale facts, poisoned instructions, contradictions, overgeneralized preferences, and updates nobody can explain later. In serious environments, memory is not a cache. It is a decision surface.</p></section>
-      <section class="governor-flow section-shell"><p class="kicker">The Lians approach</p><h2>Every update becomes<br />a governed proposal.</h2><div class="flow-rail"><span>Conversation<br />document<br />tool output</span><i>→</i><span>Candidate<br />memories</span><i>→</i><span>Governor<br />decisions</span><i>→</i><span>Policy<br />gates</span><i>→</i><span>Audit<br />commit</span><i>→</i><span>Explainable<br />recall</span></div><p class="flow-note">Lians compares candidates against existing memory, then decides whether to add, confirm, refine, supersede, contradict, quarantine, or ignore - before changing the durable record.</p></section>
-      <section class="governor-interactive section-shell" aria-labelledby="governed-demo-title"><div class="interactive-heading"><div><p class="kicker">Interactive product demo</p><h2 id="governed-demo-title">See governed memory<br />in action.</h2></div><p>Watch Lians turn changing information into proposed, audited, time-aware memory instead of blindly overwriting facts.</p></div><div class="interactive-shell"><div class="demo-controls" role="tablist" aria-label="Memory update steps"><button class="demo-step active" role="tab" aria-selected="true" data-governor-step="1">Step 1 <small>Initial fact</small></button><button class="demo-step" role="tab" aria-selected="false" data-governor-step="2">Step 2 <small>First revision</small></button><button class="demo-step" role="tab" aria-selected="false" data-governor-step="3">Step 3 <small>Second revision</small></button><button class="demo-step recall-control" role="tab" aria-selected="false" data-governor-step="recall">Show recall <small>Explain result</small></button></div><div class="governor-workbench"><div class="workbench-input"><span>INPUT</span><p id="governor-input">“NVDA FY2026 revenue guidance is $28B.”</p></div><div class="workbench-arrow">↓</div><div class="proposal-card"><div class="proposal-top"><span>MEMORY PROPOSAL</span><b id="proposal-badge" class="badge-add">ADD</b></div><strong id="proposal-title">Store $28B guidance</strong><p id="proposal-copy">A new financial fact is proposed with a timestamp, source, and structured key.</p><div class="proposal-meta"><span id="proposal-status">PENDING POLICY</span><span id="proposal-evidence">Evidence linked</span></div></div><div class="workbench-arrow">↓</div><div class="commit-card"><span>AUDIT COMMIT</span><strong id="commit-copy">$28B becomes the active fact</strong><p><i>✓</i> Hash-chain verified <i>✓</i> Version recorded</p></div></div><aside class="recall-console"><div class="recall-console-top"><span>EXPLAINABLE RECALL</span><i id="recall-state">WAITING</i></div><small>CURRENT MEMORY</small><strong id="recall-current">Run the full sequence to inspect recall.</strong><div class="suppressed-list" id="suppressed-list"><p>No suppressed memories yet.</p></div><footer><span>Audit</span><b id="recall-audit">Awaiting governed commits</b></footer></aside></div></section>
-      <section class="governor-features section-shell"><div class="section-intro"><span class="section-number">01</span><div><p class="kicker">Governed by design</p><h2>Memory with a<br />control plane.</h2></div></div><div class="governor-card-grid"><article><b>01</b><h3>Memory Proposals</h3><p>Learned facts start as proposals, like pull requests for memory, not silent mutations.</p></article><article><b>02</b><h3>Temporal Recall</h3><p>Ask what an agent knew at a point in time, not only what it knows now.</p></article><article><b>03</b><h3>Supersession</h3><p>Close stale validity windows so revised facts do not pollute current context.</p></article><article><b>04</b><h3>Audit Chain</h3><p>Commit every change through an append-only, tamper-evident event trail.</p></article><article><b>05</b><h3>Evidence Links</h3><p>Preserve the source and rationale behind material memory changes.</p></article><article><b>06</b><h3>Policy Gates</h3><p>Apply rules before durable memory changes are allowed to commit.</p></article><article><b>07</b><h3>Quarantine</h3><p>Keep suspicious, conflicting, or low-confidence facts out of recall until reviewed.</p></article><article><b>08</b><h3>Explainable Recall</h3><p>Show why a fact was returned, what it superseded, and what was suppressed.</p></article></div></section>
-      <section class="governor-compare section-shell"><div><p class="kicker">Not generic memory</p><h2>Remembering is not<br />governing.</h2></div><div class="compare-table"><div class="compare-head"><span>GENERIC MEMORY</span><span>Lians MEMORY GOVERNOR</span></div><div><p>add / search / update / delete</p><p>propose / commit / audit / recall_at</p></div><div><p>silent updates</p><p>Memory PRs</p></div><div><p>current memory only</p><p>point-in-time recall</p></div><div><p>stale facts can leak</p><p>supersession suppression</p></div><div><p>hard to explain</p><p>explainable recall</p></div><div><p>little governance</p><p>policy gates and quarantine</p></div></div></section>
-      <section id="demo" class="governor-demo section-shell"><div><p class="kicker">Demo scenario</p><h2>What changed, and<br />when?</h2><p>Three updates arrive about NVDA FY2026 revenue guidance. Lians preserves each record but makes the correct one available for the question being asked.</p></div><div class="guidance-demo"><div class="guidance-row muted"><span>01</span><p>NVDA FY2026 revenue guidance is <b>$28B</b>.</p><i>superseded by $32B</i></div><div class="guidance-row muted"><span>02</span><p>NVDA FY2026 revenue guidance was raised to <b>$32B</b>.</p><i>superseded by $40B</i></div><div class="guidance-row current"><span>03</span><p>NVDA FY2026 revenue guidance was raised to <b>$40B</b>.</p><i>current</i></div><div class="recall-answer"><small>PRESENT RECALL</small><strong>NVDA FY2026 revenue guidance is $40B.</strong><p>$28B and $32B are suppressed, not erased. A historical query returns the fact valid on that earlier date.</p></div></div></section>
-      <section class="memory-pr section-shell"><p class="kicker">Memory PRs</p><h2>Let memory changes earn<br />their way into the record.</h2><div class="pr-panel"><div><span class="pr-add">ADD</span><p>User is building Lians as regulated memory infrastructure.</p></div><div><span class="pr-refine">REFINE</span><p>User is evaluating mem0 as a competitor, not just researching it.</p></div><div><span class="pr-procedure">PROCEDURAL</span><p>Give direct founder and product advice.</p></div><div><span class="pr-ignore">IGNORE</span><p>Typo correction has no durable value.</p></div><footer>Developers can approve, reject, or auto-approve proposals according to policy.</footer></div></section>
-      <section class="governor-developer section-shell"><div><p class="kicker">Developer preview</p><h2>Improve memory<br />without guessing.</h2><p>Generate candidate improvements, inspect them, then commit only the proposals that meet your policy.</p></div><pre><code><span class="code-fade">from lian_governor import Memory</span>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / Product / Memory Governor</p>
+        <h1>Self-improving memory with <em>change control</em>.</h1>
+        <p class="lede">Memory Governor lets AI agents remember, improve, and recall safely by proposing, validating, versioning, auditing, and explaining every memory change — instead of silently overwriting facts.</p>
+        <div class="actions"><a class="btn btn-primary" href="/login">Build with Lians →</a><a class="tlink" href="#how">See how it works ↓</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="The risk">
+        <p class="block-label">The risk</p>
+        <h2>Remembering more can mean trusting less.</h2>
+        <div class="prose"><p>Generic memory systems absorb facts as they arrive. That leaves agents exposed to stale facts, poisoned instructions, contradictions, overgeneralized preferences, and updates nobody can explain later. In serious environments, memory is not a cache — it is a decision surface.</p></div>
+      </section>
+
+      <section class="wrap block" id="how" aria-label="The flow">
+        <p class="block-label">The Lians approach</p>
+        <h2>Every update becomes a governed proposal.</h2>
+        <pre class="code">conversation / document / tool output
+   <span class="kw">→</span> candidate memories
+   <span class="kw">→</span> governor decisions
+   <span class="kw">→</span> policy gates
+   <span class="kw">→</span> audit commit
+   <span class="kw">→</span> explainable recall</pre>
+        <p class="metaline">Lians compares candidates against existing memory, then decides whether to add, confirm, refine, supersede, contradict, quarantine, or ignore — before changing the durable record.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Capabilities">
+        <p class="block-label">Governed by design</p>
+        <h2>Memory with a control plane.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Memory proposals</b></span><p>Learned facts start as proposals — like pull requests for memory, not silent mutations.</p></div>
+          <div class="item"><span class="head"><b>Temporal recall</b></span><p>Ask what an agent knew at a point in time, not only what it knows now.</p></div>
+          <div class="item"><span class="head"><b>Supersession</b></span><p>Close stale validity windows so revised facts don't pollute current context.</p></div>
+          <div class="item"><span class="head"><b>Audit chain</b></span><p>Commit every change through an append-only, tamper-evident event trail.</p></div>
+          <div class="item"><span class="head"><b>Evidence links</b></span><p>Preserve the source and rationale behind material memory changes.</p></div>
+          <div class="item"><span class="head"><b>Policy gates</b></span><p>Apply rules before durable memory changes are allowed to commit.</p></div>
+          <div class="item"><span class="head"><b>Quarantine</b></span><p>Keep suspicious, conflicting, or low-confidence facts out of recall until reviewed.</p></div>
+          <div class="item"><span class="head"><b>Explainable recall</b></span><p>Show why a fact was returned, what it superseded, and what was suppressed.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Comparison">
+        <p class="block-label">Not generic memory</p>
+        <h2>Remembering is not governing.</h2>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Generic memory</th><th>Lians Memory Governor</th></tr></thead>
+          <tbody>
+            <tr><td>add / search / update / delete</td><td>propose / commit / audit / recall_at</td></tr>
+            <tr><td>silent updates</td><td>memory PRs</td></tr>
+            <tr><td>current memory only</td><td>point-in-time recall</td></tr>
+            <tr><td>stale facts can leak</td><td>supersession suppression</td></tr>
+            <tr><td>hard to explain</td><td>explainable recall</td></tr>
+            <tr><td>little governance</td><td>policy gates and quarantine</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="wrap block" aria-label="Developer preview">
+        <p class="block-label">Developer preview</p>
+        <h2>Improve memory without guessing.</h2>
+        <pre class="code"><span class="cm">from lian_governor import Memory</span>
 
 memory = Memory()
 
-result = memory.<span class="code-blue">add</span>(
-  messages=[{<span class="code-string">"role"</span>: <span class="code-string">"user"</span>, <span class="code-string">"content"</span>: <span class="code-string">"I am building Lians to compete with mem0."</span>}],
-  user_id=<span class="code-string">"user_123"</span>, auto_commit=<span class="code-pink">False</span>
-)
+result = memory.<span class="kw">add</span>(
+  messages=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"I am building Lians to compete with mem0."</span>}],
+  user_id=<span class="st">"user_123"</span>, auto_commit=False)
 
-proposals = memory.<span class="code-blue">improve_from_interaction</span>(
-  messages=[...], user_id=<span class="code-string">"user_123"</span>, mode=<span class="code-string">"propose"</span>
-)
-memory.<span class="code-blue">commit_proposals</span>([p.id for p in proposals])
-recall = memory.<span class="code-blue">recall</span>(query=<span class="code-string">"What is the user building?"</span>, user_id=<span class="code-string">"user_123"</span>, explain=<span class="code-pink">True</span>)</code></pre></section>
-      <section id="architecture" class="governor-architecture section-shell"><p class="kicker">Architecture</p><h2>Memory built as<br />governed infrastructure.</h2><div class="architecture-line"><span>Raw<br />Episodes</span><i>→</i><span>Candidate<br />Memories</span><i>→</i><span>Governor<br />Decisions</span><i>→</i><span>Memory<br />Proposals</span><i>→</i><span>Policy<br />Gates</span><i>→</i><span>Audit<br />Commit</span><i>→</i><span>Versioned<br />Memory Store</span><i>→</i><span>Explainable<br />Recall</span></div></section>
-      <section class="governor-closing section-shell"><p class="eyebrow"><span></span> Persistent memory, with integrity</p><h2>Lians is not just persistent memory.<br />It is persistent memory with <em>integrity.</em></h2><p>mem0 remembers and updates. Lians remembers, verifies, versions, audits, and improves safely.</p><a class="button button-light" href="/login">Build with Lians <span>→</span></a></section>
+proposals = memory.<span class="kw">improve_from_interaction</span>(
+  messages=[...], user_id=<span class="st">"user_123"</span>, mode=<span class="st">"propose"</span>)
+memory.<span class="kw">commit_proposals</span>([p.id for p in proposals])
+recall = memory.<span class="kw">recall</span>(query=<span class="st">"What is the user building?"</span>, user_id=<span class="st">"user_123"</span>, explain=True)</pre>
+      </section>
     </main>
-    <footer class="site-footer">
-      <div class="footer-top">
-        <a class="brand" href="/"><span class="brand-mark">L</span> Lians</a>
-        <p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p>
-      </div>
-      <div class="footer-cols">
+
+    <section class="band"><div class="wrap"><h2>Persistent memory, with <em>integrity</em>.</h2><a class="btn" href="/login">Build with Lians →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
         <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Compare &amp; pricing</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
       </div>
-    </footer><script src="script.js"></script><script src="governor.js"></script>
+    </div></footer>
+    <script src="lians.js"></script>
   </body>
 </html>

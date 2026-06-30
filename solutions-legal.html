@@ -8,73 +8,55 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="pages.css" />
+    <link rel="stylesheet" href="lians.css" />
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Lians home"><span class="brand-mark">L</span> Lians</a>
-      <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">Menu</button>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <div class="nav-item">
-          <a class="nav-trigger" href="/product">Product <span class="caret">▾</span></a>
-          <div class="dropdown"><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/sdks">SDKs</a><a href="/memory-governor">Memory Governor</a></div>
-        </div>
-        <div class="nav-item">
-          <a class="nav-trigger" href="/solutions">Solutions <span class="caret">▾</span></a>
-          <div class="dropdown"><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        </div>
-        <a href="/docs">Docs</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/compare">Compare</a>
-        <a class="nav-gh" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub <span>↗</span></a>
-        <a href="/login">Sign in</a>
-        <a class="nav-cta-mobile button button-small button-primary" href="/login">Get API key <span>→</span></a>
-      </nav>
-      <a class="button button-small button-primary nav-cta" href="/login">Get API key <span>→</span></a>
-    </header>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
 
     <main>
-      <section class="page-hero section-shell">
+      <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Solutions / Legal</p>
-        <span class="roadmap-badge">● On the roadmap</span>
-        <h1>Matter-scoped memory<br />with privilege cutoffs.</h1>
-        <p class="lede">Legal AI agents must respect matter walls, privilege cutoffs, client confidentiality, chain-of-custody, and conflict-of-interest rules across huge document collections. Lians is designed to give legal agents matter-scoped memory with privilege-date reconstruction, conflict graph queries, and custody-preserving erasure. Finance is our live wedge; the legal adapter is on the roadmap.</p>
-        <div class="hero-actions"><a class="button button-primary" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20legal%20early%20access">Talk to us about early access <span>→</span></a></div>
+        <p style="margin:0 0 16px"><span class="pill">● On the roadmap</span></p>
+        <h1>Matter-scoped memory with privilege <em>cutoffs</em>.</h1>
+        <p class="lede">Legal AI agents must respect matter walls, privilege cutoffs, client confidentiality, chain-of-custody, and conflict-of-interest rules across huge document collections. Lians is designed to give legal agents matter-scoped memory with privilege-date reconstruction and conflict graph queries. Finance is our live wedge; the legal adapter is on the roadmap.</p>
+        <div class="actions"><a class="btn btn-primary" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20legal%20early%20access">Talk to us about early access →</a></div>
       </section>
 
-      <section class="page-section section-shell">
-        <div class="section-head"><p class="kicker">Designed for</p><h2>Walls, cutoffs, custody.</h2><p>The bitemporal engine, audit chain, and graph exist today; the legal adapter and demos are next.</p></div>
-        <ul class="points">
-          <li><b>Matter-level barriers</b>Matter walls enforced at the database layer via row-level security.</li>
-          <li><b>Privilege-date reconstruction</b><code>recall_at</code> for privilege cutoff and production-date reconstruction.</li>
-          <li><b>Chain of custody</b>Tamper-evident audit trail for every access and change.</li>
-          <li><b>Conflict-of-interest paths</b>Reachability from attorney to adverse party through the relationship graph.</li>
-          <li><b>Matter destruction</b>Crypto-shred keyed by matter or client, with custody-preserving erasure.</li>
-          <li><b>Legal adapter (roadmap)</b>Matter, jurisdiction, claim type, party, privilege date, document type.</li>
-        </ul>
-        <p class="pricing-note">Connector priorities (roadmap): iManage, NetDocuments, Relativity, Clio, SharePoint, Box, Microsoft Purview, and eDiscovery exports.</p>
-      </section>
-
-      <section class="cta-band">
-        <h2>Want legal support first? Tell us.</h2>
-        <div class="hero-actions"><a class="button button-small button-outline" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20legal%20early%20access">Request early access <span>→</span></a><a class="text-link" href="/solutions/financial-services">See the live finance solution <span>→</span></a></div>
+      <section class="wrap block" aria-label="Designed for">
+        <p class="block-label">Designed for</p>
+        <h2>Walls, cutoffs, custody.</h2>
+        <p class="intro">The bitemporal engine, audit chain, and graph exist today; the legal adapter and demos are next.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>Matter-level barriers</b></span><p>Matter walls enforced at the database layer via row-level security.</p></div>
+          <div class="item"><span class="head"><b>Privilege-date reconstruction</b></span><p><code class="ic">recall_at</code> for privilege cutoff and production-date reconstruction.</p></div>
+          <div class="item"><span class="head"><b>Chain of custody</b></span><p>Tamper-evident audit trail for every access and change.</p></div>
+          <div class="item"><span class="head"><b>Conflict-of-interest paths</b></span><p>Reachability from attorney to adverse party through the relationship graph.</p></div>
+          <div class="item"><span class="head"><b>Matter destruction</b></span><p>Crypto-shred keyed by matter or client, with custody-preserving erasure.</p></div>
+          <div class="item"><span class="head"><b>Legal adapter</b><span class="meta tag">Roadmap</span></span><p>Matter, jurisdiction, claim type, party, privilege date, document type.</p></div>
+        </div>
+        <p class="metaline">Connector priorities (roadmap): iManage, NetDocuments, Relativity, Clio, SharePoint, Box, Microsoft Purview, and eDiscovery exports.</p>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="footer-top">
-        <a class="brand" href="/"><span class="brand-mark">L</span> Lians</a>
-        <p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p>
-      </div>
-      <div class="footer-cols">
+    <section class="band"><div class="wrap"><h2>Want legal support first? Tell us.</h2><a class="btn" href="/solutions/financial-services">See the live finance solution →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
         <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Compare &amp; pricing</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
       </div>
-    </footer>
-    <script src="script.js"></script>
+    </div></footer>
+    <script src="lians.js"></script>
   </body>
 </html>

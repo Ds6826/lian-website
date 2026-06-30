@@ -26,6 +26,8 @@
     { "src": "app.css", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
     { "src": "pages.css", "use": "@vercel/static" },
+    { "src": "lians.css", "use": "@vercel/static" },
+    { "src": "lians.js", "use": "@vercel/static" },
     { "src": "governor.css", "use": "@vercel/static" }
   ],
   "routes": [
