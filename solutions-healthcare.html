@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians for healthcare (roadmap): patient-scoped, encrypted, reconstructable agent memory with care-team barriers and audit-preserving erasure, designed against HIPAA technical safeguards." />
+    <meta name="description" content="Lians for healthcare: patient-scoped, encrypted, reconstructable agent memory with care-team barriers and audit-preserving erasure, mapped to HIPAA technical safeguards." />
     <title>Healthcare — Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="lians.css" />
+    <link rel="stylesheet" href="/lians.css" />
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
@@ -24,29 +24,48 @@
     <main>
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Solutions / Healthcare</p>
-        <p style="margin:0 0 16px"><span class="pill">● On the roadmap</span></p>
         <h1>Patient-scoped memory that <em>reconstructs</em>.</h1>
-        <p class="lede">Healthcare AI agents can retain PHI, mix care-team context, cite outdated medications, or fail to prove what was known at the time of a decision. Lians is designed to give healthcare agents patient-scoped, encrypted, reconstructable memory. Finance is our live wedge; the healthcare adapter is on the roadmap.</p>
-        <div class="actions"><a class="btn btn-primary" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20healthcare%20early%20access">Talk to us about early access →</a></div>
+        <p class="lede">Healthcare AI agents can retain PHI, mix care-team context, cite outdated medications, or fail to prove what was known at the time of a decision. Lians gives healthcare agents patient-scoped, encrypted, reconstructable memory with care-team barriers and audit-preserving erasure.</p>
+        <div class="actions"><a class="btn btn-primary" href="/login">Get an API key →</a><a class="tlink" href="/compliance">HIPAA mapping →</a></div>
+        <div class="term" style="margin-top:30px" aria-label="Point-in-time recall example">
+<pre class="term-body"><span class="pr">$</span> mem.recall_at(subject=<span class="st">"patient-8821"</span>,
+                query=<span class="st">"anticoagulant"</span>, as_of=<span class="st">"2025-06-01"</span>)
+<span class="cm"># →</span> <span class="out">"Apixaban 5mg"</span> <span class="cm">— the active therapy then, not the discontinued Warfarin</span><span class="cursor"></span></pre>
+        </div>
       </section>
 
-      <section class="wrap block" aria-label="Designed for">
-        <p class="block-label">Designed for</p>
-        <h2>HIPAA-shaped memory.</h2>
-        <p class="intro">The core engine is built today; the healthcare adapter and demos are next.</p>
+      <section class="wrap block" aria-label="Proof points">
+        <p class="block-label">Proof points</p>
+        <h2>Built for the chart.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>Per-subject encryption</b></span><p>AES-256-GCM keyed by patient or member identifier.</p></div>
-          <div class="item"><span class="head"><b>Crypto-shred certificates</b></span><p>For patient-level deletion workflows, with audit survival.</p></div>
-          <div class="item"><span class="head"><b>Care-team barriers</b></span><p>Department / care-team isolation at the database layer.</p></div>
-          <div class="item"><span class="head"><b>Point-in-time clinical timelines</b></span><p>Reconstruct the chart context active on any date.</p></div>
-          <div class="item"><span class="head"><b>HIPAA safeguard mapping</b><span class="meta"><a class="tlink" href="/compliance">compliance →</a></span></span><p>Technical safeguards mapped to controls.</p></div>
-          <div class="item"><span class="head"><b>Healthcare adapter</b><span class="meta tag">Roadmap</span></span><p>Patient, encounter, provider, condition, medication, ICD-10, NPI, CPT, HCPCS.</p></div>
+          <div class="item"><span class="head"><b>Per-subject encryption</b></span><p>AES-256-GCM keyed by patient or member identifier, so memory is segregated by subject at rest.</p></div>
+          <div class="item"><span class="head"><b>Crypto-shred certificates</b></span><p>Patient-level deletion that's provable — destroy the key, keep the audit trail.</p></div>
+          <div class="item"><span class="head"><b>Care-team barriers</b></span><p>Department and care-team isolation enforced at the database layer via row-level security.</p></div>
+          <div class="item"><span class="head"><b>Point-in-time clinical timelines</b></span><p>Reconstruct the chart context that was active on any date — for a decision or a review.</p></div>
+          <div class="item"><span class="head"><b>HIPAA safeguard mapping</b></span><p>Technical safeguards mapped to controls. <a class="tlink" href="/compliance">See compliance →</a></p></div>
+          <div class="item"><span class="head"><b>Healthcare adapter</b></span><p>Patient, encounter, provider, condition, medication, ICD-10, NPI, CPT, and HCPCS normalization.</p></div>
         </div>
-        <p class="metaline">Connector priorities (roadmap): FHIR, HL7, Epic/Cerner export paths, claims systems, provider directories, clinical document stores, identity gateways. Managed Cloud for PHI requires an executed BAA.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Demo and connectors">
+        <div class="split">
+          <div class="prose">
+            <p class="block-label">The demo</p>
+            <h3>Update, scope, reconstruct, erase.</h3>
+            <p>Update a patient's medication dose across encounters, show only the current dose in present recall, reconstruct the chart context at admission time, then crypto-shred the patient subject — every step on the tamper-evident chain.</p>
+          </div>
+          <div class="prose">
+            <p class="block-label">Connector priorities</p>
+            <h3>Where the records live.</h3>
+            <p>FHIR, HL7, Epic / Cerner export paths, claims systems, provider directories, clinical document stores, and identity gateways.</p>
+            <p><a class="tlink" href="/security">Encryption &amp; access model →</a></p>
+          </div>
+        </div>
+        <p class="metaline">Managed Cloud for PHI requires an executed BAA before processing; self-hosted keeps all PHI inside your perimeter.</p>
       </section>
     </main>
 
-    <section class="band"><div class="wrap"><h2>Want healthcare support first? Tell us.</h2><a class="btn" href="/solutions/financial-services">See the live finance solution →</a></div></section>
+    <section class="band"><div class="wrap"><h2>Give clinical agents memory that <em>reconstructs</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
       <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
@@ -57,6 +76,6 @@
         <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
       </div>
     </div></footer>
-    <script src="lians.js"></script>
+    <script src="/lians.js"></script>
   </body>
 </html>

@@ -6,6 +6,7 @@ const billingPage = document.querySelector('#billing-page');
 const upgradePage = document.querySelector('#upgrade-page');
 const consolePage = document.querySelector('#console-page');
 const show = (page) => [authPage, onboardingPage, billingPage, upgradePage, consolePage].forEach((item) => {
+  if (!item) return;
   const active = item === page;
   item.hidden = !active;
   // These route shells live in one HTML document. The inline display guard keeps
@@ -322,6 +323,10 @@ document.querySelector('#billing-sign-out')?.addEventListener('click', doSignOut
 document.querySelector('#upgrade-sign-out')?.addEventListener('click', doSignOut);
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
+// Free users are nudged to the upgrade page on sign-in; the upgrade page has a
+// "Continue to the console" link so they are never trapped.
+const freeUpgradeLanding = (sessionData, base) =>
+  (sessionData?.user?.onboardingComplete && sessionData?.user?.billingPlan === 'free' && base === '/console') ? '/upgrade' : base;
 const setUpgradePage = (sessionData) => {
   const currentPlan = sessionData?.user?.billingPlan || 'free';
   const currentIndex = PLAN_ORDER.indexOf(currentPlan);
@@ -597,7 +602,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
       }
     }
     const sessionData = await readSession();
-    if (sessionData.authenticated) redirectOnce(sessionData.next || '/onboarding/company', 'callback_session_ready');
+    if (sessionData.authenticated) redirectOnce(freeUpgradeLanding(sessionData, sessionData.next || '/onboarding/company'), 'callback_session_ready');
     else redirectOnce('/onboarding/company', 'callback_clerk_signed_in_session_pending');
     return;
   }
@@ -617,7 +622,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     !sessionData.user?.billingPlan ? '/billing' : '/console'
   );
   if (route === '/login') {
-    window.location.assign(destination);
+    window.location.assign(freeUpgradeLanding(sessionData, destination));
     return;
   }
   if (route.startsWith('/console') && destination !== '/console') {
@@ -675,7 +680,7 @@ if (window.__liansClerkStatus?.state === 'error') handleClerkError(window.__lian
 if (window.__liansClerkStatus?.state === 'loading') setAuthButtonsDisabled(true);
 if (window.__liansClerkStatus?.state === 'ready') onClerkReady();
 
-const installContent = { python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> Lians-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'mem.<em>add</em>(agent_id="analyst-1", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="analyst-1", query="NVDA guidance", as_of=...)']], node: [['Install the SDK', 'Add the Node package to your existing agent application.', 'npm <em>install</em> Lians'], ['Create the client', 'Use your local or hosted Lians endpoint.', 'import { <em>LianClient</em> } from "Lians"'], ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'await client.<em>recall</em>({ query: "NVDA guidance" })']], curl: [['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl -X <em>POST</em> /v1/memories'], ['Recall it', 'Use the optional as_of field for historical recall.', 'curl -X <em>POST</em> /v1/recall'], ['Verify the trail', 'Reconstruct the memory state behind an agent decision.', 'curl /v1/audit/<em>reconstruct</em>']] };
+const installContent = { python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> lians-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'mem.<em>add</em>(agent_id="desk", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="desk", query="NVDA guidance", as_of=...)']], node: [['Install the SDK', 'Add the Node package to your existing agent application.', 'npm <em>install</em> @lians-ai/lians'], ['Create the client', 'Point the client at your local or hosted Lians endpoint.', 'import { <em>LiansClient</em> } from "@lians-ai/lians"'], ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'await client.<em>recall</em>({ agent_id: "desk", query: "NVDA guidance" })']], curl: [['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl -X <em>POST</em> /v1/memory'], ['Recall it', 'Use the optional as_of field for historical recall.', 'curl -X <em>POST</em> /v1/recall'], ['Reconstruct the trail', 'Reconstruct the memory state behind an agent decision.', 'curl /v1/audit/<em>reconstruct</em>']] };
 const renderSteps = (language) => { document.querySelector('#install-steps').innerHTML = installContent[language].map((step, index) => `<article class="install-step"><span class="step-number">${index + 1}</span><div><h3>${step[0]}</h3><p>${step[1]}</p></div><div class="code-block"><header>${language}</header><pre>${step[2]}</pre></div></article>`).join(''); };
 renderSteps('python');
 document.querySelectorAll('.language-tabs button').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.language-tabs button').forEach((item) => item.classList.remove('active')); button.classList.add('active'); renderSteps(button.dataset.language); }));
