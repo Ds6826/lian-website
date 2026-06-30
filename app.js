@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v8';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v9';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -193,9 +193,9 @@ const setWizard = async () => {
   Object.assign(selectedAnswers, answers);
   document.querySelectorAll('.wizard-step').forEach((panel) => { panel.hidden = panel.dataset.step !== step; });
   document.querySelectorAll('.wizard-progress i').forEach((item, index) => item.classList.toggle('active', index <= onboardingSteps.indexOf(step)));
-  document.querySelectorAll('.choice-grid button').forEach((button) => button.classList.toggle('active', answers[button.parentElement.dataset.field] === button.textContent));
+  document.querySelectorAll('.choice-grid button').forEach((button) => { const saved = (answers[button.parentElement.dataset.field] || '').split(',').map((s) => s.trim()); button.classList.toggle('active', saved.includes(button.textContent.trim())); });
   const continueButton = document.querySelector(`.wizard-step[data-step="${step}"] .step-next`);
-  if (continueButton && step !== 'context') continueButton.hidden = !selectedAnswers[step];
+  if (continueButton) continueButton.hidden = false;
   if (step === 'context') { document.querySelector('#context').value = answers.context || ''; document.querySelector('#character-count').textContent = (answers.context || '').length; }
   if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '-'}</b></div>`).join('');
 };
@@ -285,9 +285,13 @@ const setBillingPage = () => {
     const startCheckout = clerkBilling?.startCheckout;
     if (clerkPlanId && startCheckout) {
       if (note) note.textContent = 'Opening checkout…';
+      // Non-destructive watchdog: if the checkout window hasn't appeared, give the
+      // user a hint instead of leaving them stuck on "Opening checkout…".
+      const hintTimer = setTimeout(() => { if (note && note.textContent === 'Opening checkout…') note.textContent = 'Still opening checkout… if no window appeared, allow pop-ups and refresh.'; }, 12000);
       try {
         // Clerk v5 billing is a modal — no successUrl/cancelUrl. The Promise resolves when the modal closes.
         await startCheckout.call(window.Clerk.billing, { planId: clerkPlanId });
+        clearTimeout(hintTimer);
         if (note) note.textContent = 'Activating your plan…';
         const syncRes = await authedFetch('/api/billing/sync', { method: 'POST' });
         const syncResult = await syncRes.json().catch(() => ({}));
@@ -298,8 +302,9 @@ const setBillingPage = () => {
         }
         window.location.assign(syncResult.next || '/console');
       } catch (err) {
+        clearTimeout(hintTimer);
         grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-        if (note) note.textContent = '';
+        if (note) note.textContent = 'Could not open checkout. Please refresh and try again.';
         console.error('[Lians billing]', err);
       }
       return;
@@ -394,18 +399,19 @@ const setUpgradePage = (sessionData) => {
 
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
   clearOnboardingError();
-  const field = button.parentElement.dataset.field;
-  selectedAnswers[field] = button.textContent;
-  button.parentElement.querySelectorAll('button').forEach((item) => item.classList.toggle('active', item === button));
-  const continueButton = button.closest('.wizard-step').querySelector('.step-next');
-  if (continueButton) continueButton.hidden = false;
+  // Multi-select: toggle this option, then collect every selected option in the group.
+  button.classList.toggle('active');
+  const grid = button.parentElement;
+  const field = grid.dataset.field;
+  const chosen = [...grid.querySelectorAll('button.active')].map((b) => b.textContent.trim());
+  if (chosen.length) selectedAnswers[field] = chosen.join(', '); else delete selectedAnswers[field];
 }));
 document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
 document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => {
   if (button.dataset.loading === 'true') return;
   const step = pathStep();
   const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step];
-  if (step !== 'context' && !value) return;
+  if (step !== 'context' && !value) { setOnboardingError('Please choose at least one option to continue.'); return; }
   clearOnboardingError();
   const originalHtml = button.innerHTML;
   button.dataset.loading = 'true';
