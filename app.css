@@ -236,6 +236,7 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .billing-lede,.upgrade-sub{font-size:.9rem;line-height:1.6;color:#c3cbd8;max-width:620px;margin:0 0 8px}
 .upgrade-sub strong{font-weight:500;color:var(--ink)}
 .plan-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:34px}
+.clerk-pricing-host{display:block;margin-top:34px;min-height:200px}
 .plan-card{background:var(--paper);border:1px solid var(--line);padding:22px 18px;display:flex;flex-direction:column}
 .plan-card.plan-highlight{border-color:var(--lime);box-shadow:8px 8px 0 var(--lime)}
 .plan-tier{font:500 .58rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--coral);margin:0 0 12px}

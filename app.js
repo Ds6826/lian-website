@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v10';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v11';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -210,6 +210,26 @@ const BILLING_PLANS = [
 const PLAN_NAMES = { free: 'Free', starter: 'Starter', growth: 'Growth', pro: 'Pro', enterprise: 'Enterprise' };
 const PLAN_LIMITS = { free: { memories: '10K', recalls: '10K' }, starter: { memories: '100K', recalls: '50K' }, growth: { memories: '500K', recalls: '250K' }, pro: { memories: '2M', recalls: '1M' }, enterprise: { memories: 'Unlimited', recalls: 'Unlimited' } };
 const VIEW_SCOPE_REQ = { webhooks: 'webhooks', exports: 'compliance' };
+// Mount Clerk's maintained PricingTable (plans + full checkout drawer) into a node.
+// Returns true if mounted; false → caller falls back to the legacy custom flow.
+const mountClerkPricingTable = (node, redirectUrl) => {
+  const clerk = window.Clerk;
+  const mount = clerk?.mountPricingTable || clerk?.__experimental_mountPricingTable;
+  if (typeof mount !== 'function' || !node) return false;
+  try {
+    node.innerHTML = '';
+    node.classList.add('clerk-pricing-host');
+    mount.call(clerk, node, {
+      newSubscriptionRedirectUrl: redirectUrl,
+      appearance: { variables: { colorPrimary: '#4169e1', colorBackground: '#0f1117', colorText: '#e8eaf1', colorTextSecondary: '#8e97aa', colorInputBackground: '#161922', colorInputText: '#e8eaf1', colorNeutral: '#e8eaf1', borderRadius: '0px' } },
+    });
+    return true;
+  } catch (err) {
+    console.error('[Lians billing] mountPricingTable failed; using fallback', err);
+    node.classList.remove('clerk-pricing-host');
+    return false;
+  }
+};
 const setBillingPage = () => {
   const grid = document.querySelector('#plan-grid');
   const note = document.querySelector('#billing-note');
@@ -218,7 +238,7 @@ const setBillingPage = () => {
   // Handle successful return from Clerk checkout
   const params = new URLSearchParams(window.location.search);
   const completedPlan = params.get('billing_complete');
-  if (completedPlan && ['free', 'starter', 'growth', 'pro', 'enterprise'].includes(completedPlan)) {
+  if (completedPlan && (completedPlan === 'sync' || ['free', 'starter', 'growth', 'pro', 'enterprise'].includes(completedPlan))) {
     if (note) note.textContent = 'Activating your plan…';
     const syncPromise = completedPlan === 'free'
       ? authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: completedPlan }) })
@@ -235,6 +255,12 @@ const setBillingPage = () => {
       .catch(() => { if (note) note.textContent = 'Unable to activate plan. Please refresh.'; });
     // No early return — grid renders below so the user can retry if payment fails
   }
+
+  // Preferred path: Clerk's maintained PricingTable renders plans AND runs the full
+  // checkout drawer (incl. Stripe payment). Clerk auto-updates clerk-js via the
+  // floating @5 tag, and newer versions changed billing.startCheckout so the old
+  // "modal" call below no longer opens a payment page. PricingTable is version-safe.
+  if (mountClerkPricingTable(grid, `${location.origin}/billing?billing_complete=sync`)) return;
 
   const clerkPlanIds = window.__lian_config?.billingPlans || {};
   grid.innerHTML = BILLING_PLANS.map((plan) => `
@@ -349,6 +375,8 @@ const setUpgradePage = (sessionData) => {
   const currentLabel = BILLING_PLANS.find((p) => p.id === currentPlan)?.name || 'Free';
   if (sub) sub.innerHTML = `You're on the <strong>${currentLabel}</strong> plan. Upgrade to unlock more of Lians.`;
   if (!grid) return;
+  // Preferred path: Clerk's maintained PricingTable (handles the real checkout).
+  if (mountClerkPricingTable(grid, `${location.origin}/upgrade?billing_complete=sync`)) return;
   if (!upgradable.length) {
     grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Contact us</a> for custom solutions.</p>';
     return;
@@ -754,7 +782,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     // Handle return from Clerk checkout on the upgrade flow
     const upgradeParams = new URLSearchParams(window.location.search);
     const upgradedPlan = upgradeParams.get('billing_complete');
-    if (upgradedPlan && ['starter', 'growth', 'pro', 'enterprise'].includes(upgradedPlan)) {
+    if (upgradedPlan && (upgradedPlan === 'sync' || ['starter', 'growth', 'pro', 'enterprise'].includes(upgradedPlan))) {
       const upgradeNote = document.querySelector('#upgrade-note');
       if (upgradeNote) upgradeNote.textContent = 'Activating your plan…';
       authedFetch('/api/billing/sync', { method: 'POST' })
