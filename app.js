@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v6';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v7';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -607,6 +607,59 @@ const loadConsolePlan = async () => {
     }
   } catch {}
 };
+
+// ── Projects (switch / create / rename / delete, per user) ────────────────────
+const projectsState = { items: [], current: null };
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const renderProjects = () => {
+  const nameEl = document.querySelector('#project-name');
+  const current = projectsState.items.find((p) => p.id === projectsState.current) || projectsState.items[0];
+  if (nameEl && current) nameEl.textContent = current.name;
+  const list = document.querySelector('#project-list');
+  if (list) list.innerHTML = projectsState.items.map((p) => `
+    <div class="project-item${p.id === projectsState.current ? ' active' : ''}">
+      <button class="project-pick" type="button" data-id="${p.id}">${escapeHtml(p.name)}</button>
+      <button class="project-edit" type="button" data-id="${p.id}" title="Rename">✎</button>
+      <button class="project-del" type="button" data-id="${p.id}" title="Delete"${projectsState.items.length <= 1 ? ' disabled' : ''}>✕</button>
+    </div>`).join('');
+};
+const applyProjects = (d) => { if (!d) return; projectsState.items = d.projects || projectsState.items; if (d.currentProjectId) projectsState.current = d.currentProjectId; renderProjects(); };
+const loadProjects = async () => {
+  try { const r = await authedFetch('/api/projects'); if (!r.ok) return; applyProjects(await r.json()); } catch {}
+};
+const selectProject = async (id) => {
+  projectsState.current = id; renderProjects();
+  const menu = document.querySelector('#project-menu'); if (menu) menu.hidden = true;
+  try { const r = await authedFetch('/api/projects/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) }); applyProjects(await r.json().catch(() => null)); } catch {}
+};
+const createProject = async () => {
+  const input = document.querySelector('#project-new-name'); const name = (input?.value || '').trim();
+  if (!name) return;
+  try { const r = await authedFetch('/api/projects', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) }); if (r.ok) { if (input) input.value = ''; applyProjects(await r.json().catch(() => null)); } } catch {}
+};
+const renameProject = async (id) => {
+  const p = projectsState.items.find((x) => x.id === id);
+  const name = window.prompt('Rename project', p?.name || '');
+  if (name === null || !name.trim()) return;
+  try { const r = await authedFetch(`/api/projects/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: name.trim() }) }); applyProjects(await r.json().catch(() => null)); } catch {}
+};
+const deleteProject = async (id) => {
+  if (projectsState.items.length <= 1) return;
+  if (!window.confirm('Delete this project? This cannot be undone.')) return;
+  try { const r = await authedFetch(`/api/projects/${id}`, { method: 'DELETE' }); applyProjects(await r.json().catch(() => null)); } catch {}
+};
+document.querySelector('#project-switcher')?.addEventListener('click', (e) => { e.stopPropagation(); const m = document.querySelector('#project-menu'); if (m) m.hidden = !m.hidden; });
+document.querySelector('#project-create')?.addEventListener('click', createProject);
+document.querySelector('#project-new-name')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); createProject(); } });
+document.querySelector('#project-menu')?.addEventListener('click', (e) => e.stopPropagation());
+document.querySelector('#project-list')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('button'); if (!btn) return; const id = btn.dataset.id; if (!id) return;
+  if (btn.classList.contains('project-pick')) selectProject(id);
+  else if (btn.classList.contains('project-edit')) renameProject(id);
+  else if (btn.classList.contains('project-del')) deleteProject(id);
+});
+document.addEventListener('click', (e) => { const wrap = document.querySelector('.project-wrap'); const m = document.querySelector('#project-menu'); if (m && !m.hidden && wrap && !wrap.contains(e.target)) m.hidden = true; });
+
 const runWorkflowGate = async (reason = 'clerk_ready') => {
   if (workflowState.running && route !== '/sso-callback') return;
   workflowState.running = true;
@@ -654,6 +707,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
   if (route.startsWith('/console') && destination === '/console') {
     document.querySelector('#console-gate')?.classList.add('cleared');
     loadConsolePlan();
+    loadProjects();
     workflowState.running = false;
     return;
   }

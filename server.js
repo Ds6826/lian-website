@@ -432,6 +432,64 @@ const app = async (req, res) => {
     }
     if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop(); const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
 
+    // ── Projects (per-user, persisted in the store + mirrored to Clerk) ───────
+    if (pathname.startsWith('/api/projects')) {
+      const user = await apiOnboarding(req, res); if (!user) return;
+      const store = readStore();
+      store.projects = store.projects || {};
+      // Ensure the user has a projects record; restore from Clerk metadata or seed a default.
+      const existing = store.projects[user.id];
+      if (!existing || !Array.isArray(existing.items) || !existing.items.length) {
+        let restored = null;
+        try {
+          const cu = await clerk.users.getUser(user.clerkUserId);
+          if (Array.isArray(cu.privateMetadata?.projects) && cu.privateMetadata.projects.length) {
+            restored = { items: cu.privateMetadata.projects, current: cu.privateMetadata.currentProjectId || cu.privateMetadata.projects[0].id };
+          }
+        } catch {}
+        store.projects[user.id] = restored || { items: [{ id: crypto.randomUUID(), name: 'default-project', createdAt: new Date().toISOString() }], current: null };
+        if (!store.projects[user.id].current) store.projects[user.id].current = store.projects[user.id].items[0].id;
+        writeStore(store);
+      }
+      const rec = store.projects[user.id];
+      const persist = async () => {
+        writeStore(store);
+        try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, projects: rec.items, currentProjectId: rec.current } }); }
+        catch (err) { log('projects_mirror_failed', req, user, { error: err.message }); }
+      };
+      const reply = () => json(res, 200, { projects: rec.items, currentProjectId: rec.current });
+
+      if (pathname === '/api/projects' && req.method === 'GET') return reply();
+      if (pathname === '/api/projects' && req.method === 'POST') {
+        const body = await readBody(req); const name = String(body.name || '').trim().slice(0, 60);
+        if (!name) return json(res, 400, { error: 'A project name is required.' });
+        const project = { id: crypto.randomUUID(), name, createdAt: new Date().toISOString() };
+        rec.items.unshift(project); rec.current = project.id; await persist();
+        log('project_created', req, user, { id: project.id }); return reply();
+      }
+      if (pathname === '/api/projects/select' && req.method === 'POST') {
+        const body = await readBody(req); const id = String(body.id || '');
+        if (!rec.items.some((p) => p.id === id)) return json(res, 404, { error: 'Project not found.' });
+        rec.current = id; await persist(); return reply();
+      }
+      const idMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
+      if (idMatch && req.method === 'PATCH') {
+        const target = rec.items.find((p) => p.id === idMatch[1]);
+        if (!target) return json(res, 404, { error: 'Project not found.' });
+        const body = await readBody(req); const name = String(body.name || '').trim().slice(0, 60);
+        if (!name) return json(res, 400, { error: 'A project name is required.' });
+        target.name = name; await persist(); log('project_renamed', req, user, { id: target.id }); return reply();
+      }
+      if (idMatch && req.method === 'DELETE') {
+        if (rec.items.length <= 1) return json(res, 400, { error: 'You must keep at least one project.' });
+        if (!rec.items.some((p) => p.id === idMatch[1])) return json(res, 404, { error: 'Project not found.' });
+        rec.items = rec.items.filter((p) => p.id !== idMatch[1]);
+        if (rec.current === idMatch[1]) rec.current = rec.items[0].id;
+        await persist(); log('project_deleted', req, user, { id: idMatch[1] }); return reply();
+      }
+      return json(res, 404, { error: 'Unknown project route.' });
+    }
+
     // Playground demo (uses lian-sdk when available, falls back to fixture)
     if (pathname === '/api/demo/recall' && req.method === 'POST') {
       const user = await userFor(req); if (!user) return json(res, 401, { error: 'Authentication required.' });

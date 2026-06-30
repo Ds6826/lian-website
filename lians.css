@@ -19,14 +19,18 @@ img{max-width:100%}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.04;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-/* fixed grid backdrop behind all content */
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+/* fixed grid backdrop behind all content (large cells, slow rotation) */
+body::before{content:"";position:fixed;top:50%;left:50%;width:300vmax;height:300vmax;
+  transform:translate(-50%,-50%);z-index:-2;pointer-events:none;will-change:transform;
   background-image:
     linear-gradient(rgba(150,165,210,.05) 1px,transparent 1px),
     linear-gradient(90deg,rgba(150,165,210,.05) 1px,transparent 1px);
-  background-size:90px 90px;
-  -webkit-mask-image:radial-gradient(ellipse 75% 65% at 50% 30%,#000 50%,transparent 100%);
-  mask-image:radial-gradient(ellipse 75% 65% at 50% 30%,#000 50%,transparent 100%)}
+  background-size:150px 150px;
+  animation:gridspin 150s linear infinite}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 72% 60% at 50% 32%,transparent 45%,var(--cream) 92%)}
+@keyframes gridspin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){body::before{animation:none}}
 
 .wrap{max-width:880px;margin:0 auto;padding:0 28px}
 
@@ -46,7 +50,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
 .nav .menu-btn{display:none;background:none;border:0;font:500 13px var(--mono);cursor:pointer;color:var(--ink)}
 
 /* ── hero ───────────────────────────────────────────────────────────────── */
-.hero{padding:54px 0 18px}
+.hero{padding:30px 0 18px}
 .eyebrow{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
   display:flex;align-items:center;gap:8px;margin-bottom:22px}
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--coral)}
