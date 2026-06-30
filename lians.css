@@ -2,9 +2,9 @@
    Theme: royal blue on matte black. */
 
 :root{
-  --cream:#0e0f13; --paper:#15171e; --panel-2:#1c1f28; --ink:#edeef3; --lime:#4169e1;
-  --blue-bright:#6f8dff; --coral:#ff7667; --mint:#a8d5bd;
-  --line:rgba(255,255,255,.13); --line-2:rgba(255,255,255,.26); --muted:#99a2b3;
+  --cream:#08090c; --paper:#0f1117; --panel-2:#161922; --ink:#e8eaf1; --lime:#4169e1;
+  --blue-bright:#7188ff; --coral:#ff7667; --mint:#a8d5bd;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.22); --muted:#8e97aa;
   --mono:"DM Mono",monospace; --sans:"Manrope",sans-serif;
 }
 *{box-sizing:border-box}
@@ -18,6 +18,15 @@ img{max-width:100%}
 /* faint grain */
 .grain{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.04;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* fixed grid backdrop behind all content */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(150,165,210,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(150,165,210,.05) 1px,transparent 1px);
+  background-size:90px 90px;
+  -webkit-mask-image:radial-gradient(ellipse 75% 65% at 50% 30%,#000 50%,transparent 100%);
+  mask-image:radial-gradient(ellipse 75% 65% at 50% 30%,#000 50%,transparent 100%)}
 
 .wrap{max-width:880px;margin:0 auto;padding:0 28px}
 

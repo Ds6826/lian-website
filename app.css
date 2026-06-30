@@ -1,12 +1,20 @@
 /* app.css — Lians console. Theme: royal blue on matte black (matches lians.css). */
 :root{
-  --cream:#0e0f13; --paper:#15171e; --panel-2:#1c1f28; --ink:#edeef3; --lime:#4169e1;
-  --blue-bright:#6f8dff; --coral:#ff7667; --mint:#a8d5bd;
-  --line:rgba(255,255,255,.13); --line-2:rgba(255,255,255,.26); --muted:#99a2b3;
+  --cream:#08090c; --paper:#0f1117; --panel-2:#161922; --ink:#e8eaf1; --lime:#4169e1;
+  --blue-bright:#7188ff; --coral:#ff7667; --mint:#a8d5bd;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.22); --muted:#8e97aa;
   --mono:"DM Mono",monospace; --sans:"Manrope",sans-serif;
 }
 *{box-sizing:border-box}
 body{margin:0;font:400 14px/1.6 var(--mono);color:var(--ink);background:var(--cream);-webkit-font-smoothing:antialiased}
+/* fixed grid backdrop behind all content */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(150,165,210,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(150,165,210,.05) 1px,transparent 1px);
+  background-size:90px 90px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,#000 50%,transparent 100%);
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,#000 50%,transparent 100%)}
 ::selection{background:var(--lime);color:#fff}
 h1,h2,h3,p{margin:0}
 a{color:inherit}
@@ -28,7 +36,7 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .auth-page[hidden],.onboarding-page[hidden],.billing-page[hidden],.upgrade-page[hidden],.console-page[hidden]{display:none!important}
 
 /* ── auth (minimal, centered) ────────────────────────────────────────────── */
-.auth-page{min-height:100vh;display:grid;place-items:center;background:var(--cream);padding:40px 24px}
+.auth-page{min-height:100vh;display:grid;place-items:center;background:transparent;padding:40px 24px}
 .auth-aside{display:none}
 .auth-panel{width:min(100%,440px);display:flex;flex-direction:column}
 .auth-panel .console-brand{margin-bottom:46px}
@@ -44,7 +52,7 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .auth-note{font:400 .66rem/1.5 var(--mono);color:var(--muted);margin-top:18px}
 
 /* ── onboarding ──────────────────────────────────────────────────────────── */
-.onboarding-page{min-height:100vh;background:var(--cream);display:block}
+.onboarding-page{min-height:100vh;background:transparent;display:block}
 .onboarding-aside{display:none}
 .onboarding-form-panel{min-height:100vh}
 .onboarding-top{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid var(--line);padding:16px 6vw}
@@ -91,7 +99,7 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .usage i{display:block;width:0;height:100%;background:var(--lime)}
 #sign-out{border:0;background:none;font:500 .64rem var(--mono);margin:18px 8px 0;cursor:pointer;color:var(--muted)}
 #sign-out:hover{color:var(--ink)}
-.console-main{min-width:0;background:var(--cream)}
+.console-main{min-width:0;background:transparent}
 .console-header{height:68px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 3.4vw}
 .breadcrumb{display:flex;align-items:baseline;gap:12px}
 .breadcrumb span{font:500 .56rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -192,7 +200,7 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .plan-capability-list li small{font:500 .55rem var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--panel-2);padding:3px 7px}
 
 /* ── billing + upgrade pages ─────────────────────────────────────────────── */
-.billing-page,.upgrade-page{min-height:100vh;background:var(--cream);color:var(--ink);display:flex;flex-direction:column}
+.billing-page,.upgrade-page{min-height:100vh;background:transparent;color:var(--ink);display:flex;flex-direction:column}
 .billing-top{min-height:78px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 5vw;flex-shrink:0}
 .billing-top-actions{display:flex;align-items:center;gap:18px}
 .upgrade-continue{font:500 .68rem var(--mono);text-decoration:none;color:var(--ink);box-shadow:inset 0 -1px 0 var(--line-2);padding-bottom:1px}
