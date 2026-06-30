@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v3';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v4';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -62,9 +62,11 @@ const renderShellForRoute = (pathname = window.location.pathname) => {
 renderShellForRoute(route);
 // Early cookie-based session check on /login — fires before Clerk JS loads so returning
 // users with a valid session are sent straight to their destination without seeing the form.
-if (route === '/login') {
+const signOutStartedAt = Number(sessionStorage.getItem('lians:signingOutAt') || 0);
+const recentlySignedOut = signOutStartedAt && Date.now() - signOutStartedAt < 12000;
+if (route === '/login' && !recentlySignedOut) {
   fetch('/api/session', { credentials: 'include' }).then((r) => r.ok ? r.json() : null).then((d) => {
-    if (d?.authenticated) window.location.assign(d.next || (d.user?.onboardingComplete ? '/console' : '/onboarding/company'));
+    if (d?.authenticated) window.location.assign(d.next || '/onboarding/company');
   }).catch(() => {});
 }
 
@@ -314,9 +316,15 @@ const setBillingPage = () => {
   }));
 };
 const doSignOut = async () => {
+  sessionStorage.setItem('lians:signingOutAt', String(Date.now()));
+  sessionStorage.removeItem('lians:redirectLoop');
+  window.__liansRedirectingTo = null;
+  runtime.token = null;
+  runtime.tokenAt = 0;
+  runtime.tokenPromise = null;
   try { if (window.Clerk?.signOut) await window.Clerk.signOut(); } catch (e) {}
   await fetch('/api/logout', { method: 'POST' }).catch(() => {});
-  window.location.assign('/login');
+  window.location.replace('/login');
 };
 document.querySelector('#billing-sign-out')?.addEventListener('click', doSignOut);
 document.querySelector('#upgrade-sign-out')?.addEventListener('click', doSignOut);
@@ -612,8 +620,9 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     workflowState.running = false;
     return;
   }
+  const complete = Boolean(sessionData.user?.onboardingComplete && sessionData.user?.completedAt);
   const destination = sessionData.next || (
-    !sessionData.user?.onboardingComplete ? '/onboarding/company' :
+    !complete ? '/onboarding/company' :
     '/console'
   );
   if (route === '/login') {
