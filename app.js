@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-postauth-20260626-v15';
+﻿const LIANS_CLIENT_BUILD = 'workflow-perf-20260630-v1';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -19,6 +19,28 @@ const selectedAnswers = {};
 const authBox = document.querySelector('#auth-box');
 const callbackBox = document.querySelector('#callback-box');
 const workflowState = { running: false, completedCallback: false };
+const runtime = {
+  token: null,
+  tokenAt: 0,
+  tokenPromise: null,
+  inflight: new Map(),
+  keysCache: null,
+  keysCacheAt: 0,
+};
+const PERF_TOKEN_TTL_MS = 45000;
+const KEYS_CACHE_TTL_MS = 30000;
+const perfLog = (event, metadata = {}) => console.info('[Lians perf]', {
+  event,
+  route: window.location.pathname,
+  build: LIANS_CLIENT_BUILD,
+  ...metadata,
+});
+const onceInFlight = async (key, task) => {
+  if (runtime.inflight.has(key)) return runtime.inflight.get(key);
+  const promise = Promise.resolve().then(task).finally(() => runtime.inflight.delete(key));
+  runtime.inflight.set(key, promise);
+  return promise;
+};
 const workflowLog = (metadata) => console.info('[Lians workflow]', {
   pathname: window.location.pathname,
   clerkLoaded: window.__liansClerkStatus?.state === 'ready',
@@ -46,15 +68,32 @@ if (route === '/login') {
   }).catch(() => {});
 }
 
+const getClerkToken = async ({ fresh = false } = {}) => {
+  const now = Date.now();
+  if (!fresh && runtime.token && now - runtime.tokenAt < PERF_TOKEN_TTL_MS) return runtime.token;
+  if (!fresh && runtime.tokenPromise) return runtime.tokenPromise;
+  runtime.tokenPromise = Promise.resolve()
+    .then(() => window.Clerk?.session?.getToken?.(fresh ? { skipCache: true } : undefined))
+    .then((token) => {
+      runtime.token = token || null;
+      runtime.tokenAt = Date.now();
+      return runtime.token;
+    })
+    .catch(() => null)
+    .finally(() => { runtime.tokenPromise = null; });
+  return runtime.tokenPromise;
+};
 const clerkAuthHeaders = async ({ fresh = false } = {}) => {
   try {
-    const token = await window.Clerk?.session?.getToken?.(fresh ? { skipCache: true } : undefined);
+    const token = await getClerkToken({ fresh });
     return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
     return {};
   }
 };
 const authedFetch = async (url, options = {}) => {
+  const startedAt = performance.now();
+  const method = String(options.method || 'GET').toUpperCase();
   const buildRequest = async (fresh = false) => ({
     ...options,
     credentials: 'include',
@@ -64,7 +103,21 @@ const authedFetch = async (url, options = {}) => {
   // Fall back to a fresh token only if the server actually rejects the cached one.
   let response = await fetch(url, await buildRequest(false));
   if (response.status === 401) {
+    console.info('[Lians auth] Retrying mutating request with a fresh Clerk token.', {
+      url,
+      method,
+      clerkLoaded: window.__liansClerkStatus?.state === 'ready',
+      signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
+    });
     response = await fetch(url, await buildRequest(true));
+  }
+  if (/\/api\/(session|onboarding|keys|demo)/.test(url)) {
+    perfLog('api_request', {
+      url,
+      method,
+      status: response.status,
+      durationMs: Math.round(performance.now() - startedAt),
+    });
   }
   return response;
 };
@@ -337,16 +390,23 @@ document.querySelectorAll('.choice-grid button').forEach((button) => button.addE
 }));
 document.querySelector('#context').addEventListener('input', (event) => { document.querySelector('#character-count').textContent = event.target.value.length; });
 document.querySelectorAll('.step-next').forEach((button) => button.addEventListener('click', async () => {
+  if (button.dataset.loading === 'true') return;
   const step = pathStep();
   const value = step === 'context' ? document.querySelector('#context').value : selectedAnswers[step];
   if (step !== 'context' && !value) return;
   clearOnboardingError();
+  const originalHtml = button.innerHTML;
+  button.dataset.loading = 'true';
   button.disabled = true;
+  button.innerHTML = 'Saving… <span>→</span>';
   const endpoint = `/api/onboarding/${step}`;
-  const response = await authedFetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) });
+  const response = await onceInFlight(`onboarding:${step}`, () => authedFetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value }) }));
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
+    button.dataset.loading = 'false';
     button.disabled = false;
+    button.innerHTML = originalHtml;
+    if (result.next) redirectOnce(result.next, 'onboarding_save_server_next');
     return setOnboardingError('We could not save this onboarding step. Please refresh and try again.', {
       endpoint,
       status: response.status,
@@ -359,13 +419,16 @@ document.querySelectorAll('.step-next').forEach((button) => button.addEventListe
 }));
 document.querySelector('.onboarding-submit').addEventListener('click', async () => {
   const button = document.querySelector('.onboarding-submit');
+  if (button.dataset.loading === 'true') return;
   clearOnboardingError();
+  button.dataset.loading = 'true';
   button.disabled = true;
   button.textContent = 'Creating workspace…';
   const endpoint = '/api/onboarding/complete';
-  const response = await authedFetch(endpoint, { method: 'POST' });
+  const response = await onceInFlight('onboarding:complete', () => authedFetch(endpoint, { method: 'POST' }));
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
+    button.dataset.loading = 'false';
     button.disabled = false;
     button.innerHTML = 'Proceed to Console <span>→</span>';
     if (result.next) redirectOnce(result.next, 'onboarding_complete_server_next');
@@ -575,14 +638,126 @@ document.querySelectorAll('.language-tabs button').forEach((button) => button.ad
 document.querySelectorAll('.path-card').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.path-card').forEach((item) => item.classList.remove('active')); button.classList.add('active'); }));
 
 const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], memories: ['ACTIVITY', 'Memories'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
-const activateView = (view, updateUrl = false) => { if (!viewMeta[view]) view = 'get-started'; document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view)); document.querySelectorAll('.view').forEach((item) => item.classList.toggle('active', item.id === `view-${view}`)); document.querySelector('#view-label').textContent = viewMeta[view][0]; document.querySelector('#view-title').textContent = viewMeta[view][1]; if (updateUrl) window.location.assign(`/console/${view}`); if (view === 'api-keys') loadKeys(); };
+const activateView = (view, updateUrl = false) => {
+  if (!viewMeta[view]) view = 'get-started';
+  document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
+  document.querySelectorAll('.view').forEach((item) => item.classList.toggle('active', item.id === `view-${view}`));
+  document.querySelector('#view-label').textContent = viewMeta[view][0];
+  document.querySelector('#view-title').textContent = viewMeta[view][1];
+  if (updateUrl) {
+    const nextUrl = `/console/${view}`;
+    if (window.location.pathname !== nextUrl) window.history.pushState({ view }, '', nextUrl);
+  }
+  if (view === 'api-keys') loadKeys();
+};
 document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.view, true)));
 if (route.startsWith('/console')) activateView(route.split('/')[2] || 'get-started');
-document.querySelector('#run-recall').addEventListener('click', async () => { const answer = document.querySelector('#playground-answer'); const result = await (await authedFetch('/api/demo/recall', { method: 'POST' })).json(); answer.querySelector('strong').textContent = result.value; answer.querySelector('p').textContent = result.content; answer.querySelector('small').textContent = `✓ ${result.audit}`; answer.hidden = false; });
+window.addEventListener('popstate', () => {
+  if (window.location.pathname.startsWith('/console')) activateView(window.location.pathname.split('/')[2] || 'get-started');
+});
+document.querySelector('#run-recall').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  if (button.dataset.loading === 'true') return;
+  button.dataset.loading = 'true';
+  button.disabled = true;
+  const answer = document.querySelector('#playground-answer');
+  try {
+    const result = await (await onceInFlight('demo:recall', () => authedFetch('/api/demo/recall', { method: 'POST' }))).json();
+    answer.querySelector('strong').textContent = result.value;
+    answer.querySelector('p').textContent = result.content;
+    answer.querySelector('small').textContent = `✓ ${result.audit}`;
+    answer.hidden = false;
+  } finally {
+    button.dataset.loading = 'false';
+    button.disabled = false;
+  }
+});
 const formatDate = (value) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
-const renderKeys = (keys) => { const table = document.querySelector('#key-table'); table.querySelectorAll('.key-row').forEach((row) => row.remove()); document.querySelector('#key-state').hidden = keys.length > 0; keys.forEach((key) => { const row = document.createElement('div'); row.className = 'key-row'; row.innerHTML = `<b>${key.label}</b><code>${key.prefix}</code><span>${formatDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${key.id}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`; table.append(row); }); document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => { await authedFetch(`/api/keys/${button.dataset.revoke}`, { method: 'DELETE' }); loadKeys(); })); document.querySelectorAll('[data-rotate]').forEach((button) => button.addEventListener('click', async () => { if (!confirm('Rotate this key? The current key will stop working immediately.')) return; const res = await authedFetch(`/api/keys/${button.dataset.rotate}/rotate`, { method: 'POST' }); if (!res.ok) return; const { rawKey } = await res.json(); document.querySelector('#new-key-secret').textContent = rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#copy-key').textContent = 'Copy'; loadKeys(); })); };
-async function loadKeys() { const response = await authedFetch('/api/keys'); if (!response.ok) return; const { keys, freshKey } = await response.json(); renderKeys(keys); if (freshKey) { document.querySelector('#new-key-secret').textContent = freshKey.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#copy-key').textContent = 'Copy'; } }
-document.querySelector('#key-form').addEventListener('submit', async (event) => { event.preventDefault(); const label = document.querySelector('#key-name').value; const response = await authedFetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label }) }); const result = await response.json(); if (!response.ok) return document.querySelector('#backend-note').textContent = result.error || 'Unable to create key.'; document.querySelector('#new-key-secret').textContent = result.rawKey; document.querySelector('#key-reveal').hidden = false; document.querySelector('#key-name').value = ''; loadKeys(); });
+const renderKeys = (keys) => {
+  const table = document.querySelector('#key-table');
+  table.querySelectorAll('.key-row').forEach((row) => row.remove());
+  document.querySelector('#key-state').hidden = keys.length > 0;
+  keys.forEach((key) => {
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    row.innerHTML = `<b>${key.label}</b><code>${key.prefix}</code><span>${formatDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${key.id}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`;
+    table.append(row);
+  });
+  document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => {
+    if (button.dataset.loading === 'true') return;
+    button.dataset.loading = 'true';
+    button.disabled = true;
+    await onceInFlight(`keys:revoke:${button.dataset.revoke}`, () => authedFetch(`/api/keys/${button.dataset.revoke}`, { method: 'DELETE' }));
+    runtime.keysCache = null;
+    loadKeys({ force: true });
+  }));
+  document.querySelectorAll('[data-rotate]').forEach((button) => button.addEventListener('click', async () => {
+    if (button.dataset.loading === 'true') return;
+    if (!confirm('Rotate this key? The current key will stop working immediately.')) return;
+    button.dataset.loading = 'true';
+    button.disabled = true;
+    const res = await onceInFlight(`keys:rotate:${button.dataset.rotate}`, () => authedFetch(`/api/keys/${button.dataset.rotate}/rotate`, { method: 'POST' }));
+    if (!res.ok) {
+      button.dataset.loading = 'false';
+      button.disabled = false;
+      return;
+    }
+    const { rawKey } = await res.json();
+    document.querySelector('#new-key-secret').textContent = rawKey;
+    document.querySelector('#key-reveal').hidden = false;
+    document.querySelector('#copy-key').textContent = 'Copy';
+    runtime.keysCache = null;
+    loadKeys({ force: true });
+  }));
+};
+async function loadKeys({ force = false } = {}) {
+  const cached = runtime.keysCache && Date.now() - runtime.keysCacheAt < KEYS_CACHE_TTL_MS;
+  if (!force && cached) {
+    renderKeys(runtime.keysCache);
+    return;
+  }
+  const data = await onceInFlight('keys:list', async () => {
+    const response = await authedFetch('/api/keys');
+    if (!response.ok) return null;
+    return response.json();
+  });
+  if (!data) return;
+  const { keys, freshKey } = data;
+  runtime.keysCache = keys;
+  runtime.keysCacheAt = Date.now();
+  renderKeys(keys);
+  if (freshKey) {
+    document.querySelector('#new-key-secret').textContent = freshKey.rawKey;
+    document.querySelector('#key-reveal').hidden = false;
+    document.querySelector('#copy-key').textContent = 'Copy';
+  }
+}
+document.querySelector('#key-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = form.querySelector('button[type="submit"]');
+  if (submit?.dataset.loading === 'true') return;
+  const label = document.querySelector('#key-name').value;
+  if (submit) {
+    submit.dataset.loading = 'true';
+    submit.disabled = true;
+  }
+  try {
+    const response = await onceInFlight('keys:create', () => authedFetch('/api/keys', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ label }) }));
+    const result = await response.json();
+    if (!response.ok) return document.querySelector('#backend-note').textContent = result.error || 'Unable to create key.';
+    document.querySelector('#new-key-secret').textContent = result.rawKey;
+    document.querySelector('#key-reveal').hidden = false;
+    document.querySelector('#key-name').value = '';
+    runtime.keysCache = null;
+    loadKeys({ force: true });
+  } finally {
+    if (submit) {
+      submit.dataset.loading = 'false';
+      submit.disabled = false;
+    }
+  }
+});
 document.querySelector('#copy-key').addEventListener('click', async () => { await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); document.querySelector('#copy-key').textContent = 'Copied'; });
 document.querySelector('#save-settings').addEventListener('click', () => alert('Settings saved.'));
 document.querySelector('#sign-out').addEventListener('click', doSignOut);
