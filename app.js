@@ -1,11 +1,11 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v2';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v3';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
 const billingPage = document.querySelector('#billing-page');
 const upgradePage = document.querySelector('#upgrade-page');
 const consolePage = document.querySelector('#console-page');
-const show = (page) => [authPage, onboardingPage, billingPage, upgradePage, consolePage].forEach((item) => {
+const show = (page) => [authPage, onboardingPage, billingPage, upgradePage, consolePage].filter(Boolean).forEach((item) => {
   const active = item === page;
   item.hidden = !active;
   // These route shells live in one HTML document. The inline display guard keeps
