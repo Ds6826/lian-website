@@ -26,19 +26,19 @@ nodes.forEach((node) => node.addEventListener('click', () => {
 
 const sdkInstallContent = {
   python: [
-    ['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'python', 'pip <em>install</em> Lians-sdk[local]'],
-    ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'python', 'mem.<em>add</em>(agent_id="analyst-1", content="NVDA guidance raised to $40B")'],
-    ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'python', 'mem.<em>recall_at</em>(agent_id="analyst-1", query="NVDA guidance", as_of=...)'],
+    ['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'python', 'pip <em>install</em> lians-sdk[local]'],
+    ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'python', 'mem.<em>add</em>(agent_id="desk", content="NVDA guidance raised to $40B")'],
+    ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'python', 'mem.<em>recall_at</em>(agent_id="desk", query="NVDA guidance", as_of=...)'],
   ],
   node: [
-    ['Install the SDK', 'Add the Node package to your existing agent application.', 'node', 'npm <em>install</em> Lians'],
-    ['Create the client', 'Use your local or hosted Lians endpoint.', 'node', 'import { <em>LianClient</em> } from "Lians"'],
-    ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'node', 'await client.<em>recall</em>({ query: "NVDA guidance" })'],
+    ['Install the SDK', 'Add the Node package to your existing agent application.', 'node', 'npm <em>install</em> @lians-ai/lians'],
+    ['Create the client', 'Point the client at your local or hosted Lians endpoint.', 'node', 'import { <em>LiansClient</em> } from "@lians-ai/lians"'],
+    ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'node', 'await client.<em>recall</em>({ agent_id: "desk", query: "NVDA guidance" })'],
   ],
   curl: [
-    ['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl', 'curl -X <em>POST</em> /v1/memories'],
+    ['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl', 'curl -X <em>POST</em> /v1/memory'],
     ['Recall it', 'Use the optional as_of field for historical recall.', 'curl', 'curl -X <em>POST</em> /v1/recall'],
-    ['Verify the trail', 'Reconstruct the memory state behind an agent decision.', 'curl', 'curl /v1/audit/<em>reconstruct</em>'],
+    ['Reconstruct the trail', 'Reconstruct the memory state behind an agent decision.', 'curl', 'curl /v1/audit/<em>reconstruct</em>'],
   ],
 };
 

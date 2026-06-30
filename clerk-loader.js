@@ -23,7 +23,7 @@
     loadTimeout = window.setTimeout(() => {
       script.remove();
       loadScript(index + 1);
-    }, 8000);
+    }, 3000);
 
     const script = document.createElement('script');
     script.async = true;
