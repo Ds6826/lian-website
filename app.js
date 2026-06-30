@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v1';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v2';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -614,7 +614,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
   }
   const destination = sessionData.next || (
     !sessionData.user?.onboardingComplete ? '/onboarding/company' :
-    !sessionData.user?.billingPlan ? '/billing' : '/console'
+    '/console'
   );
   if (route === '/login') {
     window.location.assign(destination);
@@ -655,7 +655,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     return;
   }
   if (route.startsWith('/onboarding')) {
-    if (destination === '/console' || destination === '/billing') {
+    if (destination === '/console') {
       window.location.assign(destination);
       return;
     }
