@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-billing-20260630-v14';
+﻿const LIANS_CLIENT_BUILD = 'workflow-billing-20260630-v15';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -372,8 +372,28 @@ const setUpgradePage = (sessionData) => {
     return;
   }
   // Our custom cards with Clerk's per-plan CheckoutButton as the CTA; PricingTable fallback.
-  if (checkoutButtonAvailable()) renderPlanCards(grid, upgradable, redirectUrl, note);
-  else mountClerkPricingTable(grid, redirectUrl);
+  // The "Continue to console" option is rendered as a final dark card so the whole row
+  // reads left-to-right with no separate block below.
+  if (checkoutButtonAvailable()) {
+    renderPlanCards(grid, upgradable, redirectUrl, note).then(() => {
+      if (!grid.querySelector('.plan-continue')) grid.appendChild(buildContinueCard());
+    });
+  } else {
+    mountClerkPricingTable(grid, redirectUrl);
+    if (!grid.parentElement.querySelector('.plan-continue')) grid.insertAdjacentElement('afterend', buildContinueCard());
+  }
+};
+// "Skip the upgrade" card — same dark chrome as the plan cards, with a blue CTA.
+const buildContinueCard = () => {
+  const card = document.createElement('div');
+  card.className = 'plan-card plan-continue';
+  card.innerHTML = `
+    <p class="plan-tier">Maybe later</p>
+    <div class="plan-price plan-continue-mark">→</div>
+    <p class="plan-tagline">Not ready to upgrade? Jump straight into the console — you can upgrade anytime from billing.</p>
+    <ul class="plan-features"><li>Full console access on your current plan</li><li>Upgrade whenever you like</li></ul>
+    <a class="plan-cta plan-cta-continue" href="/console">Continue to console <span>→</span></a>`;
+  return card;
 };
 
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
