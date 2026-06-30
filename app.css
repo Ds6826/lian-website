@@ -11,8 +11,8 @@ body{margin:0;font:400 14px/1.6 var(--mono);color:var(--ink);background:var(--cr
 body::before{content:"";position:fixed;top:50%;left:50%;width:300vmax;height:300vmax;
   transform:translate(-50%,-50%);z-index:-2;pointer-events:none;will-change:transform;
   background-image:
-    linear-gradient(rgba(150,165,210,.05) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(150,165,210,.05) 1px,transparent 1px);
+    linear-gradient(rgba(160,180,230,.11) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(160,180,230,.11) 1px,transparent 1px);
   background-size:150px 150px;
   animation:gridspin 150s linear infinite}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
@@ -103,6 +103,13 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .project-new input{height:34px;font:400 .7rem var(--mono);padding:0 9px}
 .project-create{flex-shrink:0;border:1px solid var(--lime);background:var(--lime);color:#fff;font:500 .62rem var(--mono);padding:0 12px;cursor:pointer}
 .project-create:hover{box-shadow:2px 2px 0 var(--blue-bright)}
+.project-item.editing,.project-item.confirming{gap:4px;padding:3px 2px}
+.project-rename-input{flex:1;min-width:0;height:32px;font:400 .7rem var(--mono);padding:0 8px}
+.project-save,.project-cancel,.project-confirm-yes,.project-confirm-no{flex-shrink:0;border:1px solid var(--line-2);background:var(--paper);color:var(--ink);font:500 .62rem var(--mono);padding:7px 9px;cursor:pointer;line-height:1}
+.project-save{border-color:var(--lime);background:var(--lime);color:#fff}
+.project-confirm-text{flex:1;min-width:0;font:500 .64rem var(--mono);color:var(--ink);padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.project-confirm-yes{border-color:#ff8a7a;color:#ff8a7a;background:transparent}
+.project-confirm-yes:hover{background:#ff8a7a;color:#0e0f13}
 .sidebar-nav{margin-top:20px;display:grid;gap:1px}
 .sidebar-nav p{font:500 .56rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#73798a;margin:16px 10px 6px}
 .nav-item{display:flex;align-items:center;gap:10px;border:0;background:none;text-decoration:none;color:#c3cbd8;padding:9px 10px;font:500 .73rem var(--mono);text-align:left;cursor:pointer;border-left:2px solid transparent}

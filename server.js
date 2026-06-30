@@ -54,7 +54,8 @@ const SEC_HEADERS = {
   ...(isProd ? { 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload' } : {}),
   'content-security-policy': [
     "default-src 'self'",
-    `script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
+    // js.stripe.com: Clerk Billing checkout loads Stripe.js to render the payment form.
+    `script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://js.stripe.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     // Clerk JS spawns a blob: Web Worker internally for secure session/billing processing.
     // Without an explicit worker-src, script-src is used as fallback and blocks blob: workers.
     "worker-src 'self' blob:",
@@ -62,7 +63,8 @@ const SEC_HEADERS = {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
     `connect-src 'self' https://challenges.cloudflare.com https://api.stripe.com${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
-    `frame-src https://challenges.cloudflare.com https://js.stripe.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
+    // hooks.stripe.com + m.stripe.network: Stripe 3-D Secure challenge and fraud-signal frames.
+    `frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://m.stripe.network${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -72,11 +74,12 @@ const SEC_HEADERS = {
 // ── rate limiting ─────────────────────────────────────────────────────────────
 
 const rateLimits = new Map();
-const rateLimit = (req, res, { max = 60, windowMs = 60_000 } = {}) => {
-  const ip = req.socket.remoteAddress || 'unknown';
+const rateLimit = (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+  const key = `${bucket}:${ip}`;
   const now = Date.now();
-  let e = rateLimits.get(ip);
-  if (!e || now > e.resetAt) { e = { count: 0, resetAt: now + windowMs }; rateLimits.set(ip, e); }
+  let e = rateLimits.get(key);
+  if (!e || now > e.resetAt) { e = { count: 0, resetAt: now + windowMs }; rateLimits.set(key, e); }
   e.count++;
   if (e.count > max) { res.setHeader('retry-after', Math.ceil((e.resetAt - now) / 1000)); json(res, 429, { error: 'Too many requests.' }); return false; }
   return true;
@@ -284,6 +287,11 @@ const app = async (req, res) => {
 
       return json(res, 200, { ok: true });
     }
+
+    // Best-effort, site-wide flood protection (per IP, per server instance) for
+    // every page and asset request. The stricter per-IP API limit still applies
+    // below. (On serverless this is per-instance; pair with the platform WAF.)
+    if (!rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
 
     // Block cross-origin requests to the API.
     // Allow both apex and www so a misconfigured BASE_URL env var never locks

@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v7';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v8';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -608,27 +608,43 @@ const loadConsolePlan = async () => {
   } catch {}
 };
 
-// ── Projects (switch / create / rename / delete, per user) ────────────────────
-const projectsState = { items: [], current: null };
+// ── Projects (switch / create / rename / delete, per user — all in-page) ──────
+const projectsState = { items: [], current: null, editingId: null, confirmId: null };
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const renderProjects = () => {
   const nameEl = document.querySelector('#project-name');
   const current = projectsState.items.find((p) => p.id === projectsState.current) || projectsState.items[0];
   if (nameEl && current) nameEl.textContent = current.name;
   const list = document.querySelector('#project-list');
-  if (list) list.innerHTML = projectsState.items.map((p) => `
-    <div class="project-item${p.id === projectsState.current ? ' active' : ''}">
-      <button class="project-pick" type="button" data-id="${p.id}">${escapeHtml(p.name)}</button>
-      <button class="project-edit" type="button" data-id="${p.id}" title="Rename">✎</button>
-      <button class="project-del" type="button" data-id="${p.id}" title="Delete"${projectsState.items.length <= 1 ? ' disabled' : ''}>✕</button>
-    </div>`).join('');
+  if (!list) return;
+  list.innerHTML = projectsState.items.map((p) => {
+    if (projectsState.editingId === p.id) return `
+      <div class="project-item editing">
+        <input class="project-rename-input" type="text" maxlength="60" data-id="${p.id}" value="${escapeHtml(p.name)}" />
+        <button class="project-save" type="button" data-id="${p.id}" title="Save">✓</button>
+        <button class="project-cancel" type="button" title="Cancel">✕</button>
+      </div>`;
+    if (projectsState.confirmId === p.id) return `
+      <div class="project-item confirming">
+        <span class="project-confirm-text">Delete “${escapeHtml(p.name)}”?</span>
+        <button class="project-confirm-yes" type="button" data-id="${p.id}">Delete</button>
+        <button class="project-confirm-no" type="button">Keep</button>
+      </div>`;
+    return `
+      <div class="project-item${p.id === projectsState.current ? ' active' : ''}">
+        <button class="project-pick" type="button" data-id="${p.id}">${escapeHtml(p.name)}</button>
+        <button class="project-edit" type="button" data-id="${p.id}" title="Rename">✎</button>
+        <button class="project-del" type="button" data-id="${p.id}" title="Delete"${projectsState.items.length <= 1 ? ' disabled' : ''}>✕</button>
+      </div>`;
+  }).join('');
+  if (projectsState.editingId) { const inp = list.querySelector('.project-rename-input'); if (inp) { inp.focus(); inp.select(); } }
 };
-const applyProjects = (d) => { if (!d) return; projectsState.items = d.projects || projectsState.items; if (d.currentProjectId) projectsState.current = d.currentProjectId; renderProjects(); };
+const applyProjects = (d) => { if (!d) return; projectsState.items = d.projects || projectsState.items; if (d.currentProjectId) projectsState.current = d.currentProjectId; projectsState.editingId = null; projectsState.confirmId = null; renderProjects(); };
 const loadProjects = async () => {
   try { const r = await authedFetch('/api/projects'); if (!r.ok) return; applyProjects(await r.json()); } catch {}
 };
 const selectProject = async (id) => {
-  projectsState.current = id; renderProjects();
+  projectsState.current = id; projectsState.editingId = null; projectsState.confirmId = null; renderProjects();
   const menu = document.querySelector('#project-menu'); if (menu) menu.hidden = true;
   try { const r = await authedFetch('/api/projects/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) }); applyProjects(await r.json().catch(() => null)); } catch {}
 };
@@ -637,28 +653,38 @@ const createProject = async () => {
   if (!name) return;
   try { const r = await authedFetch('/api/projects', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) }); if (r.ok) { if (input) input.value = ''; applyProjects(await r.json().catch(() => null)); } } catch {}
 };
-const renameProject = async (id) => {
-  const p = projectsState.items.find((x) => x.id === id);
-  const name = window.prompt('Rename project', p?.name || '');
-  if (name === null || !name.trim()) return;
-  try { const r = await authedFetch(`/api/projects/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: name.trim() }) }); applyProjects(await r.json().catch(() => null)); } catch {}
+const saveRename = async (id, value) => {
+  const name = (value || '').trim();
+  if (!name) { projectsState.editingId = null; renderProjects(); return; }
+  try { const r = await authedFetch(`/api/projects/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) }); applyProjects(await r.json().catch(() => null)); } catch { projectsState.editingId = null; renderProjects(); }
 };
 const deleteProject = async (id) => {
-  if (projectsState.items.length <= 1) return;
-  if (!window.confirm('Delete this project? This cannot be undone.')) return;
   try { const r = await authedFetch(`/api/projects/${id}`, { method: 'DELETE' }); applyProjects(await r.json().catch(() => null)); } catch {}
 };
+const startEdit = (id) => { projectsState.editingId = id; projectsState.confirmId = null; renderProjects(); };
+const startDelete = (id) => { if (projectsState.items.length <= 1) return; projectsState.confirmId = id; projectsState.editingId = null; renderProjects(); };
+const cancelEdits = () => { projectsState.editingId = null; projectsState.confirmId = null; renderProjects(); };
+
 document.querySelector('#project-switcher')?.addEventListener('click', (e) => { e.stopPropagation(); const m = document.querySelector('#project-menu'); if (m) m.hidden = !m.hidden; });
 document.querySelector('#project-create')?.addEventListener('click', createProject);
 document.querySelector('#project-new-name')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); createProject(); } });
 document.querySelector('#project-menu')?.addEventListener('click', (e) => e.stopPropagation());
 document.querySelector('#project-list')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('button'); if (!btn) return; const id = btn.dataset.id; if (!id) return;
+  const btn = e.target.closest('button'); if (!btn) return; const id = btn.dataset.id;
   if (btn.classList.contains('project-pick')) selectProject(id);
-  else if (btn.classList.contains('project-edit')) renameProject(id);
-  else if (btn.classList.contains('project-del')) deleteProject(id);
+  else if (btn.classList.contains('project-edit')) startEdit(id);
+  else if (btn.classList.contains('project-del')) startDelete(id);
+  else if (btn.classList.contains('project-save')) { const inp = document.querySelector(`.project-rename-input[data-id="${id}"]`); saveRename(id, inp?.value); }
+  else if (btn.classList.contains('project-cancel')) cancelEdits();
+  else if (btn.classList.contains('project-confirm-yes')) deleteProject(id);
+  else if (btn.classList.contains('project-confirm-no')) cancelEdits();
 });
-document.addEventListener('click', (e) => { const wrap = document.querySelector('.project-wrap'); const m = document.querySelector('#project-menu'); if (m && !m.hidden && wrap && !wrap.contains(e.target)) m.hidden = true; });
+document.querySelector('#project-list')?.addEventListener('keydown', (e) => {
+  if (!e.target.classList?.contains('project-rename-input')) return;
+  if (e.key === 'Enter') { e.preventDefault(); saveRename(e.target.dataset.id, e.target.value); }
+  else if (e.key === 'Escape') { e.preventDefault(); cancelEdits(); }
+});
+document.addEventListener('click', (e) => { const wrap = document.querySelector('.project-wrap'); const m = document.querySelector('#project-menu'); if (m && !m.hidden && wrap && !wrap.contains(e.target)) { m.hidden = true; cancelEdits(); } });
 
 const runWorkflowGate = async (reason = 'clerk_ready') => {
   if (workflowState.running && route !== '/sso-callback') return;

@@ -23,8 +23,8 @@ img{max-width:100%}
 body::before{content:"";position:fixed;top:50%;left:50%;width:300vmax;height:300vmax;
   transform:translate(-50%,-50%);z-index:-2;pointer-events:none;will-change:transform;
   background-image:
-    linear-gradient(rgba(150,165,210,.05) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(150,165,210,.05) 1px,transparent 1px);
+    linear-gradient(rgba(160,180,230,.11) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(160,180,230,.11) 1px,transparent 1px);
   background-size:150px 150px;
   animation:gridspin 150s linear infinite}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
