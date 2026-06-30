@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-perf-20260630-v1';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v1';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -450,29 +450,73 @@ const setAuthButtonsDisabled = (disabled) => authButtons.forEach((button) => {
   button.setAttribute('aria-disabled', String(disabled));
   button.tabIndex = disabled ? -1 : 0;
 });
-const beginSocialSignIn = async (provider) => {
+const waitForClerkReady = async ({ timeoutMs = 10000 } = {}) => {
+  if (window.__liansClerkStatus?.state === 'ready' && window.Clerk) return true;
+  const startedAt = Date.now();
+  return new Promise((resolve) => {
+    const done = (ready) => {
+      window.removeEventListener('lians:clerk-ready', onReady);
+      window.removeEventListener('lians:clerk-error', onError);
+      resolve(ready);
+    };
+    const onReady = () => done(true);
+    const onError = () => done(false);
+    window.addEventListener('lians:clerk-ready', onReady, { once: true });
+    window.addEventListener('lians:clerk-error', onError, { once: true });
+    const tick = () => {
+      if (window.__liansClerkStatus?.state === 'ready' && window.Clerk) return done(true);
+      if (Date.now() - startedAt >= timeoutMs) return done(false);
+      window.setTimeout(tick, 150);
+    };
+    tick();
+  });
+};
+const startClerkOAuth = async (provider) => {
+  const redirectUrl = `${window.location.origin}/sso-callback`;
+  const options = {
+    strategy: `oauth_${provider}`,
+    redirectUrl,
+    redirectUrlComplete: redirectUrl,
+    continueSignIn: true,
+    continueSignUp: true,
+  };
+  const signIn = window.Clerk?.client?.signIn || window.Clerk?.signIn;
+  if (typeof signIn?.authenticateWithRedirect === 'function') return signIn.authenticateWithRedirect(options);
+  if (typeof window.Clerk?.authenticateWithRedirect === 'function') return window.Clerk.authenticateWithRedirect(options);
+  if (typeof signIn?.create === 'function') return signIn.create(options);
+  throw new Error('Clerk OAuth is unavailable on this page. Refresh and try again.');
+};
+const beginSocialSignIn = async (provider, button) => {
+  if (button?.dataset.loading === 'true') return;
+  button.dataset.loading = 'true';
+  const originalText = button.textContent;
+  button.setAttribute('aria-disabled', 'true');
+  button.textContent = `Opening ${provider === 'google' ? 'Google' : 'GitHub'}…`;
   const status = window.__liansClerkStatus?.state;
-  if (status === 'error') return setAuthMessage(window.__liansClerkStatus.detail);
-  if (!window.Clerk || status !== 'ready') return setAuthMessage('Secure sign-in is loading. Please wait a moment.');
-  // window.location.origin is always the right host here — the server-side 301 ensures the user
-  // is already on www.lians.ai (or localhost) before this code runs.
   try {
-    await window.Clerk.client.signIn.authenticateWithRedirect({
-      strategy: `oauth_${provider}`,
-      redirectUrl: `${window.location.origin}/sso-callback`,
-      redirectUrlComplete: `${window.location.origin}/sso-callback`,
-      continueSignIn: true,
-      continueSignUp: true,
+    if (status === 'error') throw new Error(window.__liansClerkStatus.detail);
+    const ready = await waitForClerkReady();
+    if (!ready) throw new Error(window.__liansClerkStatus?.detail || 'Secure sign-in is still loading. Please refresh and try again.');
+    console.info('[Lians login debug]', {
+      route: window.location.pathname,
+      clerkExists: Boolean(window.Clerk),
+      clerkLoaded: Boolean(window.Clerk?.loaded),
+      hasSession: Boolean(window.Clerk?.session),
+      provider,
     });
+    await startClerkOAuth(provider);
   } catch (error) {
     const clerkError = error?.errors?.[0]?.longMessage || error?.errors?.[0]?.message || error?.message;
     const message = /Origin header must be equal to or a subdomain/i.test(clerkError || '')
       ? 'This Clerk key is configured for the production domain. For local testing, use Clerk development keys or configure localhost in Clerk.'
       : clerkError;
     setAuthMessage(message || `Unable to continue with ${provider === 'google' ? 'Google' : 'GitHub'}. Check that this connection is enabled in Clerk.`);
+    button.dataset.loading = 'false';
+    button.setAttribute('aria-disabled', 'false');
+    button.textContent = originalText;
   }
 };
-authButtons.forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); beginSocialSignIn(button.dataset.authProvider); }));
+authButtons.forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); beginSocialSignIn(button.dataset.authProvider, button); }));
 const setCallbackMessage = (msg) => { const el = document.querySelector('#callback-note'); if (el) el.textContent = msg; };
 const handleClerkError = (message) => {
   setAuthButtonsDisabled(true);
