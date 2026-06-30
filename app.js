@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v4';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v5';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -580,8 +580,22 @@ const loadConsolePlan = async () => {
     if (!r.ok) return;
     const { plan = 'free', scopes = [] } = await r.json();
     const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    const planName = PLAN_NAMES[plan] || plan;
+    const planMeta = BILLING_PLANS.find((p) => p.id === plan);
+    const priceLabel = planMeta ? `${planMeta.price}${planMeta.period || ''}` : '';
     const usageEl = document.querySelector('.usage');
-    if (usageEl) usageEl.innerHTML = `<span>${PLAN_NAMES[plan] || plan} plan</span><p>Memories <b>0 / ${limits.memories}</b></p><div><i></i></div><p>Recall <b>0 / ${limits.recalls}</b></p><div><i></i></div>`;
+    if (usageEl) usageEl.innerHTML = `<span>${planName} plan</span><p>Memories <b>0 / ${limits.memories}</b></p><div><i></i></div><p>Recall <b>0 / ${limits.recalls}</b></p><div><i></i></div>`;
+    // Reflect the real plan in Usage & billing
+    const planLine = document.querySelector('#billing-plan-line');
+    if (planLine) planLine.innerHTML = `You're on the <strong>${planName}</strong> plan${priceLabel ? ` · ${priceLabel}` : ''}.`;
+    const billingMetrics = document.querySelector('#console-billing-metrics');
+    if (billingMetrics) billingMetrics.innerHTML = `<article><span>MEMORY WRITES</span><strong>0</strong><small>of ${limits.memories} / mo</small></article><article><span>RECALLS</span><strong>0</strong><small>of ${limits.recalls} / mo</small></article><article><span>PLAN</span><strong>${planName}</strong><small>${priceLabel || '&nbsp;'}</small></article>`;
+    const billingActions = document.querySelector('#console-billing-actions');
+    if (billingActions) billingActions.innerHTML = plan === 'enterprise'
+      ? '<a class="plan-cta-link" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Contact us ↗</a>'
+      : `<button class="console-button" onclick="window.location.assign('/upgrade')">${plan === 'free' ? 'Upgrade your plan' : 'Change plan'} <span>→</span></button>`;
+    // Top-tier users don't need the upgrade nudge in the header
+    if (plan === 'enterprise') document.querySelector('.upgrade-button')?.setAttribute('hidden', '');
     for (const [view, scope] of Object.entries(VIEW_SCOPE_REQ)) {
       if (scopes.includes(scope)) continue;
       document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('locked');

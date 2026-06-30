@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/app.css?v=workflow-loginfix-20260630-v4" />
+    <link rel="stylesheet" href="/app.css?v=workflow-loginfix-20260630-v5" />
   </head>
   <body>
     <main class="auth-page" id="auth-page">
@@ -53,7 +53,7 @@
         <div class="view" id="view-webhooks"><div class="view-wrap"><p class="console-eyebrow">ACTIVITY</p><h1>Webhooks</h1><div class="empty-state"><i>⌁</i><h3>No webhooks configured</h3><p>Send signed events to your systems when memories are added, superseded, or erased.</p></div></div></div>
         <div class="view" id="view-exports"><div class="view-wrap"><p class="console-eyebrow">ACTIVITY</p><h1>Memory exports</h1><div class="empty-state"><i>⇥</i><h3>No exports yet</h3><p>Create controlled exports of memory and audit metadata for internal review.</p></div></div></div>
         <div class="view" id="view-settings"><div class="view-wrap"><p class="console-eyebrow">ACCOUNT</p><h1>Settings</h1><div class="settings-card"><label>Workspace name<input id="settings-workspace" /></label><label>Default retention<select><option>Customer defined</option><option>90 days</option><option>1 year</option></select></label><button class="console-button" id="save-settings">Save changes</button></div></div></div>
-        <div class="view" id="view-billing"><div class="view-wrap"><p class="console-eyebrow">ACCOUNT</p><h1>Usage & billing</h1><div class="metric-grid"><article><span>MEMORY WRITES</span><strong>0</strong><small>of 10,000 included</small></article><article><span>RECALLS</span><strong>0</strong><small>of 1,000 included</small></article><article><span>PLAN</span><strong>Dev</strong><small>Local development</small></article></div></div></div>
+        <div class="view" id="view-billing"><div class="view-wrap"><p class="console-eyebrow">ACCOUNT</p><h1>Usage &amp; billing</h1><p class="view-lede" id="billing-plan-line">Loading your plan…</p><div class="metric-grid" id="console-billing-metrics"><article><span>MEMORY WRITES</span><strong>0</strong><small>of — / mo</small></article><article><span>RECALLS</span><strong>0</strong><small>of — / mo</small></article><article><span>PLAN</span><strong>—</strong><small>&nbsp;</small></article></div><div class="billing-actions" id="console-billing-actions"></div></div></div>
       </section>
     </main>
 
@@ -88,8 +88,8 @@
         <a class="upgrade-skip" href="/console">Maybe later — continue to the console →</a>
       </section>
     </main>
-    <script src="/config.js?v=workflow-loginfix-20260630-v4"></script>
-    <script src="/clerk-loader.js?v=workflow-loginfix-20260630-v4"></script>
-    <script src="/app.js?v=workflow-loginfix-20260630-v4"></script>
+    <script src="/config.js?v=workflow-loginfix-20260630-v5"></script>
+    <script src="/clerk-loader.js?v=workflow-loginfix-20260630-v5"></script>
+    <script src="/app.js?v=workflow-loginfix-20260630-v5"></script>
   </body>
 </html>
