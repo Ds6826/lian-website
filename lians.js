@@ -18,3 +18,24 @@ termTabs.forEach((tab) => tab.addEventListener('click', () => {
   });
   termBodies.forEach((b) => { b.hidden = b.dataset.term !== lang; });
 }));
+
+// Theme toggle (light / dark), persisted in localStorage. Injected into the nav.
+(function () {
+  const root = document.documentElement;
+  const isLight = () => root.getAttribute('data-theme') === 'light';
+  const label = () => (isLight() ? '☾ Dark' : '☀ Light');
+  const links = document.querySelector('.nav .links');
+  if (!links) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'theme-toggle';
+  btn.setAttribute('aria-label', 'Toggle light or dark mode');
+  btn.textContent = label();
+  btn.addEventListener('click', () => {
+    const next = isLight() ? 'dark' : 'light';
+    if (next === 'light') root.setAttribute('data-theme', 'light'); else root.removeAttribute('data-theme');
+    try { localStorage.setItem('lians-theme', next); } catch (e) {}
+    btn.textContent = label();
+  });
+  links.insertBefore(btn, links.querySelector('.cta') || null);
+})();

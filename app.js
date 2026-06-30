@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v12';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v13';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -275,7 +275,8 @@ const renderPlanCards = (gridNode, plans, redirectUrl, note) => {
     const response = await authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'free' }) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) { btn.disabled = false; if (note) note.textContent = result.error || 'Unable to select plan.'; return; }
-    window.location.assign(result.next || '/console');
+    // Free plan selected → show the upgrade ask before dropping into the console.
+    window.location.assign('/upgrade');
   });
 };
 const setBillingPage = () => {
@@ -555,6 +556,7 @@ const loadConsolePlan = async () => {
       : `<button class="console-button" onclick="window.location.assign('/upgrade')">${plan === 'free' ? 'Upgrade your plan' : 'Change plan'} <span>→</span></button>`;
     // Top-tier users don't need the upgrade nudge in the header
     if (plan === 'enterprise') document.querySelector('.upgrade-button')?.setAttribute('hidden', '');
+    renderFeatureTiers(plan);
     for (const [view, scope] of Object.entries(VIEW_SCOPE_REQ)) {
       if (scopes.includes(scope)) continue;
       document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('locked');
@@ -873,3 +875,55 @@ document.querySelector('#save-settings').addEventListener('click', () => alert('
 document.querySelector('#sign-out').addEventListener('click', doSignOut);
 document.querySelector('.upgrade-button')?.addEventListener('click', () => window.location.assign('/upgrade'));
 document.querySelector('.mobile-menu').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
+
+// Theme toggle (light / dark) in the console header.
+(function () {
+  const root = document.documentElement;
+  const isLight = () => root.getAttribute('data-theme') === 'light';
+  const label = () => (isLight() ? '☾ Dark' : '☀ Light');
+  const actions = document.querySelector('.header-actions');
+  if (!actions) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'theme-toggle';
+  btn.setAttribute('aria-label', 'Toggle light or dark mode');
+  btn.textContent = label();
+  btn.addEventListener('click', () => {
+    const next = isLight() ? 'dark' : 'light';
+    if (next === 'light') root.setAttribute('data-theme', 'light'); else root.removeAttribute('data-theme');
+    try { localStorage.setItem('lians-theme', next); } catch (e) {}
+    btn.textContent = label();
+  });
+  actions.insertBefore(btn, actions.firstChild);
+})();
+
+// Feature → tier availability, rendered in Usage & billing for the current plan.
+const FEATURE_TIERS = [
+  { name: 'Domain adapters (finance, healthcare, legal)', tier: 'starter' },
+  { name: 'Audit log & memory lineage', tier: 'starter' },
+  { name: 'Conflict detection', tier: 'growth' },
+  { name: 'Webhooks', tier: 'growth' },
+  { name: 'Compliance reports', tier: 'growth' },
+  { name: 'Merkle audit chain', tier: 'growth' },
+  { name: 'Information barriers (RLS)', tier: 'pro' },
+  { name: 'HIPAA encryption', tier: 'pro' },
+  { name: 'GDPR erasure certificates', tier: 'pro' },
+  { name: 'Backtest contamination check', tier: 'pro' },
+  { name: 'Prometheus metrics', tier: 'pro' },
+  { name: 'Air-gap mode', tier: 'enterprise' },
+  { name: 'Custom KMS (AWS / Azure / Vault)', tier: 'enterprise' },
+];
+const renderFeatureTiers = (plan) => {
+  const host = document.querySelector('#feature-tiers');
+  if (!host) return;
+  const curIdx = PLAN_ORDER.indexOf(plan);
+  host.innerHTML = `<p class="console-eyebrow ftier-head">Feature availability · what unlocks where</p>
+    <ul class="ftier-list">${FEATURE_TIERS.map((f) => {
+      const included = curIdx >= PLAN_ORDER.indexOf(f.tier);
+      return `<li class="${included ? 'ftier-on' : 'ftier-off'}">
+        <i>${included ? '✓' : '◌'}</i><span>${f.name}</span>${
+          included ? '<b class="ftier-have">Included</b>' : `<b class="ftier-need">${PLAN_NAMES[f.tier]}</b>`}
+      </li>`;
+    }).join('')}</ul>
+    ${curIdx < PLAN_ORDER.length - 1 ? '<button class="console-button" type="button" onclick="window.location.assign(\'/upgrade\')" style="width:max-content;margin-top:18px">Upgrade for more <span>→</span></button>' : ''}`;
+};

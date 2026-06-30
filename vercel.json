@@ -24,6 +24,7 @@
     { "src": "solutions-legal.html", "use": "@vercel/static" },
     { "src": "console-api.js", "use": "@vercel/static" },
     { "src": "app.css", "use": "@vercel/static" },
+    { "src": "favicon.svg", "use": "@vercel/static" },
     { "src": "styles.css", "use": "@vercel/static" },
     { "src": "pages.css", "use": "@vercel/static" },
     { "src": "lians.css", "use": "@vercel/static" },
