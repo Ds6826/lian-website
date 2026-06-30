@@ -20,10 +20,14 @@
   const loadScript = (index = 0) => {
     if (!clerkScriptUrls[index]) return fail();
     window.clearTimeout(loadTimeout);
+    // Failover timer covers only the script DOWNLOAD. It must be cleared the moment
+    // onload fires — otherwise it can fire during the (network-bound) Clerk.load()
+    // call below, rip out clerk-js v5 (which has the billing API) and fall back to
+    // the v4 CDN, leaving window.Clerk half-initialized and billing checkout broken.
     loadTimeout = window.setTimeout(() => {
       script.remove();
       loadScript(index + 1);
-    }, 3000);
+    }, 6000);
 
     const script = document.createElement('script');
     script.async = true;
@@ -32,9 +36,9 @@
     script.dataset.clerkPublishableKey = config.clerkPublishableKey;
     script.src = clerkScriptUrls[index];
     script.onload = async () => {
+      window.clearTimeout(loadTimeout);
       try {
         await window.Clerk.load({ publishableKey: config.clerkPublishableKey });
-        window.clearTimeout(loadTimeout);
         setStatus('ready');
       } catch (error) {
         window.clearTimeout(loadTimeout);
