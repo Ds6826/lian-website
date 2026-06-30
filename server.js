@@ -55,7 +55,9 @@ const SEC_HEADERS = {
   'content-security-policy': [
     "default-src 'self'",
     // js.stripe.com: Clerk Billing checkout loads Stripe.js to render the payment form.
-    `script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://js.stripe.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
+    // sha256 hash whitelists the inline no-flash theme script in every page <head>
+    // (reads localStorage('lians-theme') before paint to avoid a light/dark flash).
+    `script-src 'self' 'sha256-oM3fK1wB/KZpRi+zI+8vJ+5IU+jYT4jY9m7pTRZLHCc=' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://js.stripe.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     // Clerk JS spawns a blob: Web Worker internally for secure session/billing processing.
     // Without an explicit worker-src, script-src is used as fallback and blocks blob: workers.
     "worker-src 'self' blob:",

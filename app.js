@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v13';
+﻿const LIANS_CLIENT_BUILD = 'workflow-billing-20260630-v14';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -230,32 +230,59 @@ const mountClerkPricingTable = (node, redirectUrl) => {
     return false;
   }
 };
-// Mount Clerk's per-plan CheckoutButton (opens the real checkout drawer) into a node.
-const checkoutButtonAvailable = () => typeof (window.Clerk?.mountCheckoutButton || window.Clerk?.__experimental_mountCheckoutButton) === 'function';
-const mountClerkCheckoutButton = (node, planId, redirectUrl) => {
+// This clerk-js build (v5) exposes no vanilla CheckoutButton mount. Instead it ships
+// clerk.billing.getPlans() (real plan ids + slugs) and clerk.__internal_openCheckout()
+// (the same themed drawer opener that powers <CheckoutButton>). We use those so our own
+// card UI can open a working, on-theme checkout WITHOUT any plan ids configured in env.
+let clerkPlansPromise = null;
+const getClerkUserPlans = () => {
+  if (clerkPlansPromise) return clerkPlansPromise;
   const clerk = window.Clerk;
-  const mount = clerk?.mountCheckoutButton || clerk?.__experimental_mountCheckoutButton;
-  if (typeof mount !== 'function' || !node || !planId) return false;
+  if (typeof clerk?.billing?.getPlans !== 'function') return Promise.resolve([]);
+  clerkPlansPromise = Promise.resolve(clerk.billing.getPlans({ for: 'user' }))
+    .then((res) => res?.data || (Array.isArray(res) ? res : []))
+    .catch((err) => { console.error('[Lians billing] getPlans failed', err); clerkPlansPromise = null; return []; });
+  return clerkPlansPromise;
+};
+// True when this build can open the checkout drawer programmatically + list plans.
+const checkoutButtonAvailable = () =>
+  typeof window.Clerk?.__internal_openCheckout === 'function' && typeof window.Clerk?.billing?.getPlans === 'function';
+// Map one of our card plans (free/starter/growth/pro/enterprise) to its live Clerk plan.
+const matchClerkPlan = (clerkPlans, plan) => {
+  const want = plan.id.toLowerCase();
+  return clerkPlans.find((p) => (p.slug || '').toLowerCase() === want)
+    || clerkPlans.find((p) => (p.name || '').toLowerCase() === plan.name.toLowerCase())
+    || null;
+};
+// Open Clerk's themed checkout drawer for a given Clerk plan id.
+const openClerkCheckout = (planId, redirectUrl) => {
+  const clerk = window.Clerk;
+  if (typeof clerk?.__internal_openCheckout !== 'function' || !planId) return false;
   try {
-    mount.call(clerk, node, {
+    clerk.__internal_openCheckout({
+      for: 'user',
       planId,
+      planPeriod: 'month',
       newSubscriptionRedirectUrl: redirectUrl,
-      appearance: { variables: { colorPrimary: '#4169e1', colorText: '#e8eaf1', colorBackground: '#0f1117', borderRadius: '0px' } },
+      appearance: { variables: { colorPrimary: '#4169e1', colorBackground: '#0f1117', colorText: '#e8eaf1', colorTextSecondary: '#8e97aa', colorInputBackground: '#161922', colorInputText: '#e8eaf1', colorNeutral: '#e8eaf1', borderRadius: '0px' } },
     });
     return true;
-  } catch (err) { console.error('[Lians billing] mountCheckoutButton failed', err); return false; }
+  } catch (err) { console.error('[Lians billing] openCheckout failed', err); return false; }
 };
-// Build our custom plan cards. Paid plans get a Clerk CheckoutButton mounted as the CTA;
+// Build our custom plan cards. Paid plans open the themed Clerk checkout drawer on click;
 // free uses our select endpoint; enterprise is a contact link.
-const renderPlanCards = (gridNode, plans, redirectUrl, note) => {
-  const clerkPlanIds = window.__lian_config?.billingPlans || {};
+const renderPlanCards = async (gridNode, plans, redirectUrl, note) => {
   gridNode.classList.remove('clerk-pricing-host');
+  const clerkPlans = await getClerkUserPlans();
   gridNode.innerHTML = plans.map((plan) => {
+    const matched = plan.contact || plan.id === 'free' ? null : matchClerkPlan(clerkPlans, plan);
     const cta = plan.contact
       ? `<a class="plan-cta plan-cta-link" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">${plan.cta} →</a>`
       : plan.id === 'free'
         ? `<button class="plan-cta" type="button" data-plan="free">${plan.cta}</button>`
-        : `<div class="plan-cta plan-cta-clerk" data-clerk-plan="${clerkPlanIds[plan.id] || ''}" data-plan="${plan.id}"></div>`;
+        : matched
+          ? `<button class="plan-cta" type="button" data-checkout-plan="${matched.id}">${plan.cta}</button>`
+          : `<button class="plan-cta" type="button" disabled>Unavailable</button>`;
     return `<div class="plan-card${plan.highlight ? ' plan-highlight' : ''}">
       <p class="plan-tier">${plan.name}</p>
       <div class="plan-price">${plan.price}${plan.period ? `<small> ${plan.period}</small>` : ''}</div>
@@ -264,12 +291,10 @@ const renderPlanCards = (gridNode, plans, redirectUrl, note) => {
       ${cta}
     </div>`;
   }).join('');
-  gridNode.querySelectorAll('.plan-cta-clerk[data-clerk-plan]').forEach((slot) => {
-    if (!slot.dataset.clerkPlan || !mountClerkCheckoutButton(slot, slot.dataset.clerkPlan, redirectUrl)) {
-      // No Clerk plan id / mount failed → leave a hint rather than a dead button.
-      slot.outerHTML = `<button class="plan-cta" type="button" disabled>${'Unavailable'}</button>`;
-    }
-  });
+  gridNode.querySelectorAll('.plan-cta[data-checkout-plan]').forEach((btn) => btn.addEventListener('click', () => {
+    if (note) note.textContent = '';
+    if (!openClerkCheckout(btn.dataset.checkoutPlan, redirectUrl) && note) note.textContent = 'Unable to open checkout. Please refresh and try again.';
+  }));
   gridNode.querySelector('.plan-cta[data-plan="free"]')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget; if (note) note.textContent = ''; btn.disabled = true;
     const response = await authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'free' }) });
