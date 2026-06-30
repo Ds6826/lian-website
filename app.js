@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v11';
+﻿const LIANS_CLIENT_BUILD = 'workflow-loginfix-20260630-v12';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -230,6 +230,54 @@ const mountClerkPricingTable = (node, redirectUrl) => {
     return false;
   }
 };
+// Mount Clerk's per-plan CheckoutButton (opens the real checkout drawer) into a node.
+const checkoutButtonAvailable = () => typeof (window.Clerk?.mountCheckoutButton || window.Clerk?.__experimental_mountCheckoutButton) === 'function';
+const mountClerkCheckoutButton = (node, planId, redirectUrl) => {
+  const clerk = window.Clerk;
+  const mount = clerk?.mountCheckoutButton || clerk?.__experimental_mountCheckoutButton;
+  if (typeof mount !== 'function' || !node || !planId) return false;
+  try {
+    mount.call(clerk, node, {
+      planId,
+      newSubscriptionRedirectUrl: redirectUrl,
+      appearance: { variables: { colorPrimary: '#4169e1', colorText: '#e8eaf1', colorBackground: '#0f1117', borderRadius: '0px' } },
+    });
+    return true;
+  } catch (err) { console.error('[Lians billing] mountCheckoutButton failed', err); return false; }
+};
+// Build our custom plan cards. Paid plans get a Clerk CheckoutButton mounted as the CTA;
+// free uses our select endpoint; enterprise is a contact link.
+const renderPlanCards = (gridNode, plans, redirectUrl, note) => {
+  const clerkPlanIds = window.__lian_config?.billingPlans || {};
+  gridNode.classList.remove('clerk-pricing-host');
+  gridNode.innerHTML = plans.map((plan) => {
+    const cta = plan.contact
+      ? `<a class="plan-cta plan-cta-link" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">${plan.cta} →</a>`
+      : plan.id === 'free'
+        ? `<button class="plan-cta" type="button" data-plan="free">${plan.cta}</button>`
+        : `<div class="plan-cta plan-cta-clerk" data-clerk-plan="${clerkPlanIds[plan.id] || ''}" data-plan="${plan.id}"></div>`;
+    return `<div class="plan-card${plan.highlight ? ' plan-highlight' : ''}">
+      <p class="plan-tier">${plan.name}</p>
+      <div class="plan-price">${plan.price}${plan.period ? `<small> ${plan.period}</small>` : ''}</div>
+      <p class="plan-tagline">${plan.tagline}</p>
+      <ul class="plan-features">${plan.features.map((f) => `<li>${f}</li>`).join('')}</ul>
+      ${cta}
+    </div>`;
+  }).join('');
+  gridNode.querySelectorAll('.plan-cta-clerk[data-clerk-plan]').forEach((slot) => {
+    if (!slot.dataset.clerkPlan || !mountClerkCheckoutButton(slot, slot.dataset.clerkPlan, redirectUrl)) {
+      // No Clerk plan id / mount failed → leave a hint rather than a dead button.
+      slot.outerHTML = `<button class="plan-cta" type="button" disabled>${'Unavailable'}</button>`;
+    }
+  });
+  gridNode.querySelector('.plan-cta[data-plan="free"]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget; if (note) note.textContent = ''; btn.disabled = true;
+    const response = await authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan: 'free' }) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) { btn.disabled = false; if (note) note.textContent = result.error || 'Unable to select plan.'; return; }
+    window.location.assign(result.next || '/console');
+  });
+};
 const setBillingPage = () => {
   const grid = document.querySelector('#plan-grid');
   const note = document.querySelector('#billing-note');
@@ -256,95 +304,12 @@ const setBillingPage = () => {
     // No early return — grid renders below so the user can retry if payment fails
   }
 
-  // Preferred path: Clerk's maintained PricingTable renders plans AND runs the full
-  // checkout drawer (incl. Stripe payment). Clerk auto-updates clerk-js via the
-  // floating @5 tag, and newer versions changed billing.startCheckout so the old
-  // "modal" call below no longer opens a payment page. PricingTable is version-safe.
-  if (mountClerkPricingTable(grid, `${location.origin}/billing?billing_complete=sync`)) return;
-
-  const clerkPlanIds = window.__lian_config?.billingPlans || {};
-  grid.innerHTML = BILLING_PLANS.map((plan) => `
-    <div class="plan-card${plan.highlight ? ' plan-highlight' : ''}">
-      <p class="plan-tier">${plan.name}</p>
-      <div class="plan-price">${plan.price}${plan.period ? `<small> ${plan.period}</small>` : ''}</div>
-      <p class="plan-tagline">${plan.tagline}</p>
-      <ul class="plan-features">${plan.features.map((f) => `<li>${f}</li>`).join('')}</ul>
-      ${plan.contact
-        ? `<a class="plan-cta plan-cta-link" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">${plan.cta} ↗</a>`
-        : `<button class="plan-cta" data-plan="${plan.id}">${plan.cta}</button>`}
-    </div>`).join('');
-
-  grid.querySelectorAll('.plan-cta[data-plan]').forEach((btn) => btn.addEventListener('click', async () => {
-    const plan = btn.dataset.plan;
-    if (note) note.textContent = '';
-    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = true; });
-
-    // Free plan: record immediately, no payment needed
-    if (plan === 'free') {
-      const response = await authedFetch('/api/billing/select', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ plan }) });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-        if (note) note.textContent = result.error || 'Unable to select plan. Please refresh and try again.';
-        return;
-      }
-      window.location.assign(result.next || '/console');
-      return;
-    }
-
-    // Paid plans: launch Clerk billing checkout
-    const clerkPlanId = clerkPlanIds[plan];
-    const origin = window.__lian_config?.canonicalOrigin || window.location.origin;
-    const clerkBilling = window.Clerk?.billing;
-    const clerkAllKeys = window.Clerk ? Object.getOwnPropertyNames(window.Clerk).filter((k) => /bill|sub|checkout|payment|plan/i.test(k)) : [];
-    console.info('[Lians billing debug]', {
-      plan,
-      clerkPlanId,
-      hasBillingNs: Boolean(clerkBilling),
-      billingType: typeof clerkBilling,
-      billingOwnKeys: clerkBilling ? Object.getOwnPropertyNames(clerkBilling) : [],
-      billingProtoKeys: clerkBilling ? Object.getOwnPropertyNames(Object.getPrototypeOf(clerkBilling) || {}) : [],
-      hasStartCheckout: typeof clerkBilling?.startCheckout,
-      clerkBillingRelatedKeys: clerkAllKeys,
-      clerkVersion: window.Clerk?.version,
-    });
-    const startCheckout = clerkBilling?.startCheckout;
-    if (clerkPlanId && startCheckout) {
-      if (note) note.textContent = 'Opening checkout…';
-      // Non-destructive watchdog: if the checkout window hasn't appeared, give the
-      // user a hint instead of leaving them stuck on "Opening checkout…".
-      const hintTimer = setTimeout(() => { if (note && note.textContent === 'Opening checkout…') note.textContent = 'Still opening checkout… if no window appeared, allow pop-ups and refresh.'; }, 12000);
-      try {
-        // Clerk v5 billing is a modal — no successUrl/cancelUrl. The Promise resolves when the modal closes.
-        await startCheckout.call(window.Clerk.billing, { planId: clerkPlanId });
-        clearTimeout(hintTimer);
-        if (note) note.textContent = 'Activating your plan…';
-        const syncRes = await authedFetch('/api/billing/sync', { method: 'POST' });
-        const syncResult = await syncRes.json().catch(() => ({}));
-        if (!syncRes.ok) {
-          grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-          if (note) note.textContent = syncResult.error || 'Payment not completed. Please try again.';
-          return;
-        }
-        window.location.assign(syncResult.next || '/console');
-      } catch (err) {
-        clearTimeout(hintTimer);
-        grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-        if (note) note.textContent = 'Could not open checkout. Please refresh and try again.';
-        console.error('[Lians billing]', err);
-      }
-      return;
-    }
-
-    // Clerk billing SDK not available — most likely cause: Stripe is not connected to
-    // your Clerk account. Go to Clerk Dashboard → Configure → Billing → Connect Stripe.
-    console.error('[Lians billing] window.Clerk.billing.startCheckout is not available.', {
-      billing: window.Clerk?.billing,
-      clerkVersion: window.Clerk?.version,
-    });
-    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-    if (note) note.textContent = 'Billing checkout is not available. Please refresh and try again.';
-  }));
+  const redirectUrl = `${location.origin}/billing?billing_complete=sync`;
+  // Our custom card UI, with Clerk's per-plan CheckoutButton as the CTA (opens the
+  // real checkout drawer). If this clerk-js build doesn't expose CheckoutButton,
+  // fall back to Clerk's full PricingTable so checkout always works.
+  if (checkoutButtonAvailable()) renderPlanCards(grid, BILLING_PLANS, redirectUrl, note);
+  else mountClerkPricingTable(grid, redirectUrl);
 };
 const doSignOut = async () => {
   sessionStorage.setItem('lians:signingOutAt', String(Date.now()));
@@ -375,54 +340,14 @@ const setUpgradePage = (sessionData) => {
   const currentLabel = BILLING_PLANS.find((p) => p.id === currentPlan)?.name || 'Free';
   if (sub) sub.innerHTML = `You're on the <strong>${currentLabel}</strong> plan. Upgrade to unlock more of Lians.`;
   if (!grid) return;
-  // Preferred path: Clerk's maintained PricingTable (handles the real checkout).
-  if (mountClerkPricingTable(grid, `${location.origin}/upgrade?billing_complete=sync`)) return;
+  const redirectUrl = `${location.origin}/upgrade?billing_complete=sync`;
   if (!upgradable.length) {
-    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Contact us</a> for custom solutions.</p>';
+    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">Contact us</a> for custom solutions.</p>';
     return;
   }
-  const clerkPlanIds = window.__lian_config?.billingPlans || {};
-  grid.innerHTML = upgradable.map((plan) => `
-    <div class="plan-card${plan.highlight ? ' plan-highlight' : ''}">
-      <p class="plan-tier">${plan.name}</p>
-      <div class="plan-price">${plan.price}${plan.period ? `<small> ${plan.period}</small>` : ''}</div>
-      <p class="plan-tagline">${plan.tagline}</p>
-      <ul class="plan-features">${plan.features.map((f) => `<li>${f}</li>`).join('')}</ul>
-      ${plan.contact
-        ? `<a class="plan-cta plan-cta-link" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">${plan.cta} ↗</a>`
-        : `<button class="plan-cta" data-plan="${plan.id}">${plan.cta}</button>`}
-    </div>`).join('');
-  grid.querySelectorAll('.plan-cta[data-plan]').forEach((btn) => btn.addEventListener('click', async () => {
-    const plan = btn.dataset.plan;
-    if (note) note.textContent = '';
-    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = true; });
-    const clerkPlanId = clerkPlanIds[plan];
-    const origin = window.__lian_config?.canonicalOrigin || window.location.origin;
-    const startCheckoutUpgrade = window.Clerk?.billing?.startCheckout;
-    if (clerkPlanId && startCheckoutUpgrade) {
-      if (note) note.textContent = 'Opening checkout…';
-      try {
-        await startCheckoutUpgrade.call(window.Clerk.billing, { planId: clerkPlanId });
-        if (note) note.textContent = 'Activating your plan…';
-        const syncRes = await authedFetch('/api/billing/sync', { method: 'POST' });
-        const syncResult = await syncRes.json().catch(() => ({}));
-        if (!syncRes.ok) {
-          grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-          if (note) note.textContent = syncResult.error || 'Payment not completed. Please try again.';
-          return;
-        }
-        window.location.assign('/console');
-      } catch (err) {
-        grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-        if (note) note.textContent = '';
-        console.error('[Lians upgrade]', err);
-      }
-      return;
-    }
-    console.error('[Lians upgrade] window.Clerk.billing.startCheckout is not available.', { billing: window.Clerk?.billing });
-    grid.querySelectorAll('.plan-cta').forEach((b) => { b.disabled = false; });
-    if (note) note.textContent = 'Billing checkout is not available. Please refresh and try again.';
-  }));
+  // Our custom cards with Clerk's per-plan CheckoutButton as the CTA; PricingTable fallback.
+  if (checkoutButtonAvailable()) renderPlanCards(grid, upgradable, redirectUrl, note);
+  else mountClerkPricingTable(grid, redirectUrl);
 };
 
 document.querySelectorAll('.choice-grid button').forEach((button) => button.addEventListener('click', () => {
