@@ -29,6 +29,17 @@ const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
 
+// Error monitoring (Sentry). Only initialised when SENTRY_DSN is set, so local dev and
+// unconfigured deploys run without it. The DSN is safe to expose (it's also used client-side).
+let Sentry = null;
+if (process.env.SENTRY_DSN) {
+  try {
+    Sentry = require('@sentry/node');
+    Sentry.init({ dsn: process.env.SENTRY_DSN, environment: isProd ? 'production' : 'development', tracesSampleRate: 0 });
+    process.on('unhandledRejection', (err) => Sentry.captureException(err));
+  } catch (err) { console.error('[Lians] Sentry init failed:', err.message); Sentry = null; }
+}
+
 // ── security headers ──────────────────────────────────────────────────────────
 
 // Derive Clerk's frontend API origin from the publishable key for a tight CSP
@@ -57,14 +68,14 @@ const SEC_HEADERS = {
     // js.stripe.com: Clerk Billing checkout loads Stripe.js to render the payment form.
     // sha256 hash whitelists the inline no-flash theme script in every page <head>
     // (reads localStorage('lians-theme') before paint to avoid a light/dark flash).
-    `script-src 'self' 'sha256-oM3fK1wB/KZpRi+zI+8vJ+5IU+jYT4jY9m7pTRZLHCc=' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://js.stripe.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
+    `script-src 'self' 'sha256-oM3fK1wB/KZpRi+zI+8vJ+5IU+jYT4jY9m7pTRZLHCc=' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://js.stripe.com https://browser.sentry-cdn.com${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     // Clerk JS spawns a blob: Web Worker internally for secure session/billing processing.
     // Without an explicit worker-src, script-src is used as fallback and blocks blob: workers.
     "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self' https://challenges.cloudflare.com https://api.stripe.com${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
+    `connect-src 'self' https://challenges.cloudflare.com https://api.stripe.com https://*.ingest.us.sentry.io${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
     // hooks.stripe.com + m.stripe.network: Stripe 3-D Secure challenge and fraud-signal frames.
     `frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://m.stripe.network${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     "object-src 'none'",
@@ -308,7 +319,7 @@ const app = async (req, res) => {
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, canonicalOrigin: baseUrl, billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
       return;
     }
 
@@ -536,7 +547,11 @@ const app = async (req, res) => {
     const file = path.resolve(root, relative);
     if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
     return serveFile(res, file);
-  } catch (error) { log('server_error', req, null, { message: error.message, stack: error.stack }); return json(res, 500, { error: 'Unexpected server error.' }); }
+  } catch (error) {
+    log('server_error', req, null, { message: error.message, stack: error.stack });
+    if (Sentry) { Sentry.captureException(error); try { await Sentry.flush(2000); } catch {} }
+    return json(res, 500, { error: 'Unexpected server error.' });
+  }
 };
 
 module.exports = app;

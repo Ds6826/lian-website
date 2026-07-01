@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-billing-20260630-v15';
+﻿const LIANS_CLIENT_BUILD = 'workflow-sentry-20260630-v16';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');

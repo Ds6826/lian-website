@@ -8,6 +8,7 @@
     },
     { "src": "app.js", "use": "@vercel/static" },
     { "src": "clerk-loader.js", "use": "@vercel/static" },
+    { "src": "sentry-init.js", "use": "@vercel/static" },
     { "src": "script.js", "use": "@vercel/static" },
     { "src": "governor.js", "use": "@vercel/static" },
     { "src": "memory-governor.html", "use": "@vercel/static" },
