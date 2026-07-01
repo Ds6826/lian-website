@@ -40,6 +40,30 @@ if (process.env.SENTRY_DSN) {
   } catch (err) { console.error('[Lians] Sentry init failed:', err.message); Sentry = null; }
 }
 
+// ── Lians backend (agentmem) admin client ───────────────────────────────────────
+// The console provisions real API keys against the self-hosted Lians backend via its
+// admin API (X-Admin-Secret). When these env vars are unset (e.g. local dev), the key
+// endpoints fall back to locally-generated placeholder keys.
+const LIANS_API_URL = (process.env.LIANS_API_URL || '').replace(/\/+$/, '');
+const LIANS_ADMIN_SECRET = process.env.LIANS_ADMIN_SECRET || '';
+const liansConfigured = () => Boolean(LIANS_API_URL && LIANS_ADMIN_SECRET);
+// One namespace per user isolates each user's keys/memories in the backend.
+const liansNamespace = (user) => `ns_${user.id}`;
+const liansAdmin = async (apiPath, { method = 'GET', body } = {}) => {
+  const resp = await fetch(`${LIANS_API_URL}/v1/admin${apiPath}`, {
+    method,
+    headers: { 'X-Admin-Secret': LIANS_ADMIN_SECRET, ...(body ? { 'content-type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await resp.text();
+  let data = null; try { data = text ? JSON.parse(text) : null; } catch { /* non-JSON */ }
+  if (!resp.ok) { const e = new Error((data && (data.detail || data.error)) || `Lians API ${resp.status}`); e.status = resp.status; throw e; }
+  return data;
+};
+// Backend list responses never include the secret; the plaintext key is only shown at
+// create/rotate time. Present a masked prefix for listed keys.
+const liansKeyView = (k) => ({ id: k.id, label: k.label || 'Key', scopes: k.scopes || [], createdAt: k.created_at, revokedAt: k.revoked_at || null, lastUsedAt: null, prefix: 'agentmem_••••••••' });
+
 // ── security headers ──────────────────────────────────────────────────────────
 
 // Derive Clerk's frontend API origin from the publishable key for a tight CSP
@@ -403,6 +427,13 @@ const app = async (req, res) => {
     // API keys
     if (pathname === '/api/keys' && req.method === 'GET') {
       const user = await apiOnboarding(req, res); if (!user) return;
+      if (liansConfigured()) {
+        try {
+          const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
+          const keys = (Array.isArray(list) ? list : []).filter((k) => !k.revoked_at).map(liansKeyView);
+          return json(res, 200, { keys, freshKey: null });
+        } catch (err) { log('lians_keys_list_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to reach the Lians API. Please try again.' }); }
+      }
       const keys = readStore().apiKeys.filter((key) => key.userId === user.id).map(({ hashedKey, ...key }) => key);
       // Check for one-time pending key from Clerk webhook provisioning
       let freshKey = null;
@@ -433,10 +464,29 @@ const app = async (req, res) => {
       } catch (err) { log('pending_key_check_failed', req, user, { error: err.message }); }
       return json(res, 200, { keys, freshKey });
     }
-    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' }); const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
+    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' });
+      if (liansConfigured()) {
+        try {
+          const tier = user.billingPlan || 'free';
+          const scopes = TIER_SCOPES[tier] || TIER_SCOPES.free;
+          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace: liansNamespace(user), scopes, label: label.trim() } });
+          log('api_key_created', req, user, { keyId: created.id, tier });
+          return json(res, 201, { key: { ...liansKeyView(created), prefix: `${String(created.key).slice(0, 16)}…` }, rawKey: created.key });
+        } catch (err) { log('lians_key_create_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to create key via the Lians API. Please try again.' }); }
+      }
+      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
     if (pathname.match(/^\/api\/keys\/[^/]+\/rotate$/) && req.method === 'POST') {
       const user = await apiOnboarding(req, res); if (!user) return;
       const id = pathname.split('/')[3];
+      if (liansConfigured()) {
+        try {
+          const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
+          if (!(Array.isArray(owned) && owned.find((k) => k.id === id))) return json(res, 404, { error: 'Key not found.' });
+          const rotated = await liansAdmin(`/api-keys/${encodeURIComponent(id)}/rotate`, { method: 'POST' });
+          log('api_key_rotated', req, user, { oldId: id, newId: rotated.id });
+          return json(res, 200, { key: { ...liansKeyView(rotated), prefix: `${String(rotated.key).slice(0, 16)}…` }, rawKey: rotated.key });
+        } catch (err) { log('lians_key_rotate_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to rotate key. Please try again.' }); }
+      }
       const store = readStore();
       const old = store.apiKeys.find((k) => k.id === id && k.userId === user.id);
       if (!old || old.revokedAt) return json(res, 404, { error: 'Key not found.' });
@@ -451,7 +501,17 @@ const app = async (req, res) => {
       log('api_key_rotated', req, user, { oldId: id, newPrefix: newKey.prefix });
       return json(res, 200, { key: safeKey, rawKey });
     }
-    if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop(); const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
+    if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop();
+      if (liansConfigured()) {
+        try {
+          const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
+          if (!(Array.isArray(owned) && owned.find((k) => k.id === id))) return json(res, 404, { error: 'Key not found.' });
+          await liansAdmin(`/api-keys/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          log('api_key_deleted', req, user, { keyId: id });
+          return json(res, 200, { ok: true });
+        } catch (err) { log('lians_key_delete_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to delete key. Please try again.' }); }
+      }
+      const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
 
     // ── Projects (per-user, persisted in the store + mirrored to Clerk) ───────
     if (pathname.startsWith('/api/projects')) {
