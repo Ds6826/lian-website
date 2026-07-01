@@ -83,14 +83,15 @@ slug didn't match — send me the names you used.
 
 ---
 
-## 6. Error monitoring — ⚠️ ACTION NEEDED (recommended)
-**What you do:**
-1. Create a free **Sentry** project (Node/JS).
-2. Copy the **DSN**, set env var `SENTRY_DSN`.
-3. Tell me — I'll add the SDK + capture server errors and client exceptions.
+## 6. Error monitoring — ✅ DONE
+Sentry is wired for **both** the server (`@sentry/node` — captures unexpected request
+errors + unhandled rejections) and the **browser console** (official Sentry CDN SDK,
+initialised from `sentryDsn` in `/config.js`). `SENTRY_DSN` is set in Vercel (Production).
+Events now flow to your Sentry project automatically.
 
-Until then, your only visibility is Vercel's function logs (Vercel → project →
-**Logs**), which is fine for now but not alerting.
+**Note:** instrumented on the *console app* + server. Marketing pages aren't (they're
+mostly static) — say the word if you want them covered too.
+Vercel function logs remain available at Vercel → project → **Logs**.
 
 ---
 
