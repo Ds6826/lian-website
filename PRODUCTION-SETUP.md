@@ -58,17 +58,23 @@ Clerk `privateMetadata`* so it survives. But the JSON file lives in `/tmp`, whic
 
 ---
 
-## 4. Real API keys + live usage — ⚠️ ACTION NEEDED (currently cosmetic)
+## 4. Real API keys — ✅ DONE / live usage — ⚠️ pending a backend endpoint
 
-**Done in code:** the console generates/display keys and shows usage numbers, but they're
-placeholders — there's no live Lians backend wired in yet.
+**Backend:** deployed on Render at `https://agentmem-api.onrender.com` (Postgres + Redis +
+all migrations). `LIANS_API_URL` and `LIANS_ADMIN_SECRET` are set in Vercel (Production).
 
-**What you do:**
-1. Stand up / point to your Lians backend (the `Lians-ai/Lians` server).
-2. Set env vars:
-   - `LIANS_API_URL` = base URL of that backend (e.g. `https://api.lians.ai`)
-   - `LIANS_ADMIN_SECRET` = an admin token the website uses to provision keys / read usage
-3. Tell me, and I'll wire key provisioning + real usage metering to those endpoints.
+**Done:** the console now provisions **real API keys** against the backend admin API
+(`/v1/admin/api-keys`, `X-Admin-Secret`) — create / list / rotate / delete, one namespace
+per user (`ns_<userId>`), scopes derived from the user's tier. Verified end-to-end: a
+minted key authenticates on `/v1/*` with `X-API-Key`.
+
+**Still pending — live usage numbers:** the backend has no per-namespace usage-count
+endpoint (only `/v1/admin/billing/{ns}` = Stripe mapping). So the console's usage figures
+aren't live yet. To finish this we need a backend endpoint that returns write/recall counts
+per namespace (a small addition to the Lians server), then I wire the console to it.
+
+**Cold start:** on Render Starter the API can spin down when idle; the first request may
+take a few seconds. Add a keep-warm ping later if needed.
 
 ---
 
