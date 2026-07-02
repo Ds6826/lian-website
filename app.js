@@ -1,4 +1,4 @@
-﻿const LIANS_CLIENT_BUILD = 'workflow-sentry-20260630-v16';
+﻿const LIANS_CLIENT_BUILD = 'governor-20260702-v17';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
@@ -597,7 +597,7 @@ const loadConsolePlan = async () => {
     if (billingMetrics) billingMetrics.innerHTML = `<article><span>MEMORY WRITES</span><strong>0</strong><small>of ${limits.memories} / mo</small></article><article><span>RECALLS</span><strong>0</strong><small>of ${limits.recalls} / mo</small></article><article><span>PLAN</span><strong>${planName}</strong><small>${priceLabel || '&nbsp;'}</small></article>`;
     const billingActions = document.querySelector('#console-billing-actions');
     if (billingActions) billingActions.innerHTML = plan === 'enterprise'
-      ? '<a class="plan-cta-link" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Contact us ↗</a>'
+      ? '<a class="plan-cta-link" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">Contact us ↗</a>'
       : `<button class="console-button" onclick="window.location.assign('/upgrade')">${plan === 'free' ? 'Upgrade your plan' : 'Change plan'} <span>→</span></button>`;
     // Top-tier users don't need the upgrade nudge in the header
     if (plan === 'enterprise') document.querySelector('.upgrade-button')?.setAttribute('hidden', '');
@@ -794,7 +794,7 @@ renderSteps('python');
 document.querySelectorAll('.language-tabs button').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.language-tabs button').forEach((item) => item.classList.remove('active')); button.classList.add('active'); renderSteps(button.dataset.language); }));
 document.querySelectorAll('.path-card').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.path-card').forEach((item) => item.classList.remove('active')); button.classList.add('active'); }));
 
-const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], memories: ['ACTIVITY', 'Memories'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
+const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], governance: ['MEMORY GOVERNOR', 'Governance review'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], memories: ['ACTIVITY', 'Memories'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
 const activateView = (view, updateUrl = false) => {
   if (!viewMeta[view]) view = 'get-started';
   document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
@@ -806,27 +806,162 @@ const activateView = (view, updateUrl = false) => {
     if (window.location.pathname !== nextUrl) window.history.pushState({ view }, '', nextUrl);
   }
   if (view === 'api-keys') loadKeys();
+  if (view === 'governance') loadGovernance();
 };
 document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.view, true)));
 if (route.startsWith('/console')) activateView(route.split('/')[2] || 'get-started');
 window.addEventListener('popstate', () => {
   if (window.location.pathname.startsWith('/console')) activateView(window.location.pathname.split('/')[2] || 'get-started');
 });
-document.querySelector('#run-recall').addEventListener('click', async (event) => {
+// ── Playground: live writes + scored recall against the user's own namespace ──
+// Falls back to the canned NVDA fixture when the Lians backend isn't configured.
+const playgroundNote = (message, isError = false) => {
+  const note = document.querySelector('#playground-write-note');
+  if (!note) return;
+  note.textContent = message;
+  note.classList.toggle('is-error', isError);
+  note.hidden = !message;
+};
+const renderRecallResults = (result) => {
+  const host = document.querySelector('#playground-results');
+  const fixture = document.querySelector('#playground-answer');
+  if (!host) return;
+  if (fixture) fixture.hidden = true;
+  const memories = result.memories || [];
+  if (!memories.length) {
+    host.innerHTML = '<div class="pg-empty">No memories matched. Write a fact above, then recall it — supersession and scoring apply live.</div>';
+    host.hidden = false;
+    return;
+  }
+  host.innerHTML = memories.map((m) => {
+    const score = typeof m.score === 'number' ? `<b class="pg-score">${(m.score * 100).toFixed(0)}%</b>` : '';
+    const superseded = m.valid_to ? '<span class="pg-flag">superseded</span>' : '<span class="pg-flag pg-flag-live">current</span>';
+    return `<article class="pg-result">${score}<p>${escapeHtml(m.content || '(erased)')}</p><small>${superseded} · event ${escapeHtml(String(m.event_time || '').slice(0, 10))}</small></article>`;
+  }).join('') + `<p class="pg-meta">✓ ${memories.length} of ${result.total_candidates ?? memories.length} candidates · relevance-scored · audit event logged</p>`;
+  host.hidden = false;
+};
+document.querySelector('#run-recall')?.addEventListener('click', async (event) => {
   const button = event.currentTarget;
   if (button.dataset.loading === 'true') return;
   button.dataset.loading = 'true';
   button.disabled = true;
+  const query = document.querySelector('#playground-query')?.value?.trim() || 'What is NVDA guidance?';
   const answer = document.querySelector('#playground-answer');
   try {
+    const live = await onceInFlight('playground:recall', () => authedFetch('/api/console/playground/recall', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) }));
+    if (live.ok) { renderRecallResults(await live.json()); return; }
+    // Backend not configured (503) or unreachable → canned demo answer.
     const result = await (await onceInFlight('demo:recall', () => authedFetch('/api/demo/recall', { method: 'POST' }))).json();
-    answer.querySelector('strong').textContent = result.value;
-    answer.querySelector('p').textContent = result.content;
-    answer.querySelector('small').textContent = `✓ ${result.audit}`;
-    answer.hidden = false;
+    if (answer) {
+      answer.querySelector('strong').textContent = result.value;
+      answer.querySelector('p').textContent = result.content;
+      answer.querySelector('small').textContent = `✓ ${result.audit}`;
+      answer.hidden = false;
+    }
   } finally {
     button.dataset.loading = 'false';
     button.disabled = false;
+  }
+});
+document.querySelector('#run-write')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  if (button.dataset.loading === 'true') return;
+  const input = document.querySelector('#playground-write');
+  const content = input?.value?.trim();
+  if (!content) { playgroundNote('Write something to remember first.', true); return; }
+  button.dataset.loading = 'true';
+  button.disabled = true;
+  playgroundNote('');
+  try {
+    const response = await onceInFlight('playground:write', () => authedFetch('/api/console/playground/write', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ content }) }));
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) { playgroundNote(result.error || 'Unable to write this memory.', true); return; }
+    if (input) input.value = '';
+    const m = result.memory || {};
+    const superseding = m.superseded_by ? ' · superseded a prior fact' : '';
+    playgroundNote(`✓ Remembered${superseding}. Auto-metadata, admission control, and supersession applied — try a recall.`);
+  } catch {
+    playgroundNote('Unable to reach the memory service. Please try again.', true);
+  } finally {
+    button.dataset.loading = 'false';
+    button.disabled = false;
+  }
+});
+
+// ── Memory Governor: supersession review + admission queue ───────────────────
+const govState = { loading: false };
+const relationLabel = (relation) => ({ SUPERSEDES: 'supersedes', REFINES: 'refines · narrowing', CONFIRMS: 'confirms', CONTRADICTS_SAME_TIME: 'contradiction' }[relation] || (relation || '').toLowerCase());
+const renderGovernance = (data) => {
+  const superHost = document.querySelector('#gov-supersessions');
+  const admissionHost = document.querySelector('#gov-admissions');
+  const superCount = document.querySelector('#gov-super-count');
+  const admissionCount = document.querySelector('#gov-admission-count');
+  if (!superHost || !admissionHost) return;
+  if (!data.configured) {
+    const unconfigured = '<div class="empty-state"><h3>Backend not connected</h3><p>Governance review lights up when this deployment is connected to a Lians backend.</p></div>';
+    superHost.innerHTML = unconfigured;
+    admissionHost.innerHTML = unconfigured;
+    return;
+  }
+  const items = data.supersessions?.items || [];
+  if (superCount) { superCount.textContent = String(data.supersessions?.total ?? items.length); superCount.hidden = false; }
+  superHost.innerHTML = items.length ? items.map((item) => `
+    <article class="gov-card" data-memory="${escapeHtml(String(item.memory_id))}">
+      <header><span class="gov-relation gov-relation-${escapeHtml(String(item.relation || '').toLowerCase())}">${escapeHtml(relationLabel(item.relation))}</span><b class="gov-confidence">${Math.round((item.confidence || 0) * 100)}% confidence</b><time>${escapeHtml(formatDate(item.created_at))}</time></header>
+      <p>${escapeHtml(item.rationale || 'The engine was uncertain whether the new fact genuinely supersedes the old one.')}</p>
+      <small>memory ${escapeHtml(String(item.memory_id).slice(0, 8))}… ${item.superseded_by ? `→ superseded by ${escapeHtml(String(item.superseded_by).slice(0, 8))}…` : ''} · adjudication stage ${escapeHtml(String(item.adjudication_stage ?? '—'))}</small>
+      <div class="gov-actions"><button class="gov-confirm" data-super-action="confirm">Confirm supersession</button><button class="gov-reject" data-super-action="reject">Reject · restore old fact</button></div>
+    </article>`).join('')
+    : `<div class="empty-state"><h3>Nothing awaiting review</h3><p>Supersessions below the ${Math.round((data.supersessions?.threshold ?? 0.75) * 100)}% confidence threshold will queue here for confirmation before the old fact is treated as stale.</p></div>`;
+  const pending = data.admissions?.pending || [];
+  if (admissionCount) { admissionCount.textContent = String(data.admissions?.total ?? pending.length); admissionCount.hidden = false; }
+  admissionHost.innerHTML = data.admissions?.available === false
+    ? '<div class="empty-state"><h3>Review unavailable for this workspace key</h3><p>Your console key predates admission review. Rotate any API key (or contact support) to refresh access.</p></div>'
+    : pending.length ? pending.map((item) => `
+    <article class="gov-card" data-pending="${escapeHtml(String(item.id))}">
+      <header><span class="gov-relation gov-relation-held">held</span>${(item.risk_tags || []).map((t) => `<span class="gov-tag">${escapeHtml(t)}</span>`).join('')}<time>${escapeHtml(formatDate(item.created_at))}</time></header>
+      <p>${escapeHtml(item.content)}</p>
+      <small>${escapeHtml((item.reasons || []).join(' · ') || 'held by admission policy')} · agent ${escapeHtml(item.agent_id || '—')}${item.source ? ` · source ${escapeHtml(item.source)}` : ''}</small>
+      <div class="gov-actions"><button class="gov-confirm" data-admission-action="approve">Approve · create memory</button><button class="gov-reject" data-admission-action="reject">Reject</button></div>
+    </article>`).join('')
+    : '<div class="empty-state"><h3>No held writes</h3><p>Writes flagged by the admission policy gate (PII, PHI, MNPI, prompt injection, vagueness) queue here in enforce mode.</p></div>';
+};
+async function loadGovernance({ force = false } = {}) {
+  if (govState.loading && !force) return;
+  govState.loading = true;
+  try {
+    const response = await onceInFlight('governance:load', () => authedFetch('/api/console/governance'));
+    if (!response.ok) throw new Error(String(response.status));
+    renderGovernance(await response.json());
+  } catch {
+    const failed = '<div class="empty-state"><h3>Unable to load the review queue</h3><p>The Lians backend could not be reached. Refresh to try again.</p></div>';
+    const superHost = document.querySelector('#gov-supersessions');
+    const admissionHost = document.querySelector('#gov-admissions');
+    if (superHost) superHost.innerHTML = failed;
+    if (admissionHost) admissionHost.innerHTML = failed;
+  } finally {
+    govState.loading = false;
+  }
+}
+document.querySelector('#view-governance')?.addEventListener('click', async (e) => {
+  const button = e.target.closest('button[data-super-action],button[data-admission-action]');
+  if (!button || button.dataset.loading === 'true') return;
+  const card = button.closest('.gov-card');
+  const superAction = button.dataset.superAction;
+  const admissionAction = button.dataset.admissionAction;
+  const url = superAction
+    ? `/api/console/supersessions/${encodeURIComponent(card?.dataset.memory || '')}`
+    : `/api/console/admissions/${encodeURIComponent(card?.dataset.pending || '')}`;
+  button.dataset.loading = 'true';
+  card?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+  try {
+    const response = await authedFetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: superAction || admissionAction }) });
+    if (!response.ok) throw new Error(String(response.status));
+    card?.classList.add('gov-resolved');
+    setTimeout(() => loadGovernance({ force: true }), 350);
+  } catch {
+    card?.querySelectorAll('button').forEach((b) => { b.disabled = false; });
+    button.dataset.loading = 'false';
   }
 });
 const formatDate = (value) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -916,9 +1051,20 @@ document.querySelector('#key-form').addEventListener('submit', async (event) => 
   }
 });
 document.querySelector('#copy-key').addEventListener('click', async () => { await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); document.querySelector('#copy-key').textContent = 'Copied'; });
-document.querySelector('#save-settings').addEventListener('click', () => alert('Settings saved.'));
+// Settings persist locally (no server-side settings store yet); the button gives
+// real feedback instead of a blocking alert.
+const workspaceInput = document.querySelector('#settings-workspace');
+if (workspaceInput) { try { workspaceInput.value = localStorage.getItem('lians-workspace-name') || workspaceInput.value; } catch {} }
+document.querySelector('#save-settings').addEventListener('click', (event) => {
+  try { localStorage.setItem('lians-workspace-name', workspaceInput?.value || ''); } catch {}
+  const button = event.currentTarget;
+  const original = button.innerHTML;
+  button.textContent = '✓ Saved';
+  setTimeout(() => { button.innerHTML = original; }, 1500);
+});
 document.querySelector('#sign-out').addEventListener('click', doSignOut);
 document.querySelector('.upgrade-button')?.addEventListener('click', () => window.location.assign('/upgrade'));
+document.querySelector('.avatar')?.addEventListener('click', () => activateView('settings', true));
 document.querySelector('.mobile-menu').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
 
 // Theme toggle (light / dark) in the console header.

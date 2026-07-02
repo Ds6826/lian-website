@@ -222,3 +222,9 @@ html{overflow-x:hidden}
 .theme-toggle{border:1px solid var(--line-2);background:none;color:var(--ink);cursor:pointer;font:500 11px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:7px 11px;display:inline-flex;align-items:center;gap:7px;line-height:1}
 .theme-toggle:hover{border-color:var(--blue-bright)}
 .theme-toggle .ic{width:13px;height:13px;display:inline-block}
+/* ── announcement strip (homepage) ───────────────────────────────────────── */
+.announce{display:flex;align-items:center;justify-content:center;gap:10px;width:min(100% - 48px,1080px);margin:18px auto 0;padding:11px 18px;border:1px solid var(--lime);background:rgba(65,105,225,.12);color:var(--ink);text-decoration:none;font:400 12.5px/1.5 var(--mono)}
+.announce b{flex-shrink:0;background:var(--lime);color:#fff;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:3px 7px}
+.announce span{flex-shrink:0;color:var(--blue-bright)}
+.announce:hover{background:rgba(65,105,225,.2)}
+@media(max-width:680px){.announce{flex-wrap:wrap}}

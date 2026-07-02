@@ -63,6 +63,15 @@ const liansAdmin = async (apiPath, { method = 'GET', body } = {}) => {
 // Backend list responses never include the secret; the plaintext key is only shown at
 // create/rotate time. Present a masked prefix for listed keys.
 const liansKeyView = (k) => ({ id: k.id, label: k.label || 'Key', scopes: k.scopes || [], createdAt: k.created_at, revokedAt: k.revoked_at || null, lastUsedAt: null, prefix: 'agentmem_••••••••' });
+// Data-plane client for the console's Memory Governor views + live playground.
+// Holds one server-side key per user (never shown); see lians-console.js.
+const { createLiansConsole, CONSOLE_KEY_LABEL } = require('./lians-console');
+const liansConsole = createLiansConsole({
+  apiUrl: LIANS_API_URL,
+  adminSecret: LIANS_ADMIN_SECRET,
+  clerk,
+  log: (event, metadata) => console.log(JSON.stringify({ timestamp: new Date().toISOString(), event, ...metadata })),
+});
 
 // ── security headers ──────────────────────────────────────────────────────────
 
@@ -430,7 +439,8 @@ const app = async (req, res) => {
       if (liansConfigured()) {
         try {
           const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
-          const keys = (Array.isArray(list) ? list : []).filter((k) => !k.revoked_at).map(liansKeyView);
+          // The console-internal key is server infrastructure, not a user key — never list it.
+          const keys = (Array.isArray(list) ? list : []).filter((k) => !k.revoked_at && k.label !== CONSOLE_KEY_LABEL).map(liansKeyView);
           return json(res, 200, { keys, freshKey: null });
         } catch (err) { log('lians_keys_list_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to reach the Lians API. Please try again.' }); }
       }
@@ -481,7 +491,7 @@ const app = async (req, res) => {
       if (liansConfigured()) {
         try {
           const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
-          if (!(Array.isArray(owned) && owned.find((k) => k.id === id))) return json(res, 404, { error: 'Key not found.' });
+          if (!(Array.isArray(owned) && owned.find((k) => k.id === id && k.label !== CONSOLE_KEY_LABEL))) return json(res, 404, { error: 'Key not found.' });
           const rotated = await liansAdmin(`/api-keys/${encodeURIComponent(id)}/rotate`, { method: 'POST' });
           log('api_key_rotated', req, user, { oldId: id, newId: rotated.id });
           return json(res, 200, { key: { ...liansKeyView(rotated), prefix: `${String(rotated.key).slice(0, 16)}…` }, rawKey: rotated.key });
@@ -505,7 +515,7 @@ const app = async (req, res) => {
       if (liansConfigured()) {
         try {
           const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
-          if (!(Array.isArray(owned) && owned.find((k) => k.id === id))) return json(res, 404, { error: 'Key not found.' });
+          if (!(Array.isArray(owned) && owned.find((k) => k.id === id && k.label !== CONSOLE_KEY_LABEL))) return json(res, 404, { error: 'Key not found.' });
           await liansAdmin(`/api-keys/${encodeURIComponent(id)}`, { method: 'DELETE' });
           log('api_key_deleted', req, user, { keyId: id });
           return json(res, 200, { ok: true });
@@ -569,6 +579,65 @@ const app = async (req, res) => {
         await persist(); log('project_deleted', req, user, { id: idMatch[1] }); return reply();
       }
       return json(res, 404, { error: 'Unknown project route.' });
+    }
+
+    // ── Console data plane: Memory Governor review queues + live playground ──
+    // All backed by a per-user, server-held API key on the user's own namespace.
+    if (pathname.startsWith('/api/console/')) {
+      const user = await apiOnboarding(req, res); if (!user) return;
+      if (!liansConsole.configured()) {
+        // Governance view renders an unconfigured empty state instead of erroring.
+        if (pathname === '/api/console/governance' && req.method === 'GET') {
+          return json(res, 200, { configured: false, supersessions: { items: [], total: 0 }, admissions: { pending: [], total: 0, available: false } });
+        }
+        return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
+      }
+      try {
+        if (pathname === '/api/console/governance' && req.method === 'GET') {
+          return json(res, 200, await liansConsole.governance(user));
+        }
+        const superMatch = pathname.match(/^\/api\/console\/supersessions\/([^/]+)$/);
+        if (superMatch && req.method === 'POST') {
+          const body = await readBody(req);
+          const action = String(body.action || '');
+          if (!['confirm', 'reject'].includes(action)) return json(res, 400, { error: 'Action must be confirm or reject.' });
+          const result = await liansConsole.resolveSupersession(user, superMatch[1], action, String(body.note || '').slice(0, 500));
+          log('governance_supersession_resolved', req, user, { memoryId: superMatch[1], action });
+          return json(res, 200, result);
+        }
+        const admissionMatch = pathname.match(/^\/api\/console\/admissions\/([^/]+)$/);
+        if (admissionMatch && req.method === 'POST') {
+          const body = await readBody(req);
+          const action = String(body.action || '');
+          if (!['approve', 'reject'].includes(action)) return json(res, 400, { error: 'Action must be approve or reject.' });
+          const result = await liansConsole.resolveAdmission(user, admissionMatch[1], action, String(body.note || '').slice(0, 500));
+          log('governance_admission_resolved', req, user, { pendingId: admissionMatch[1], action });
+          return json(res, 200, result);
+        }
+        if (pathname === '/api/console/playground/write' && req.method === 'POST') {
+          const body = await readBody(req);
+          const content = String(body.content || '').trim().slice(0, 2000);
+          if (!content) return json(res, 400, { error: 'Write something to remember first.' });
+          const memory = await liansConsole.playgroundWrite(user, content);
+          log('playground_memory_written', req, user, { memoryId: memory.id });
+          return json(res, 201, { memory });
+        }
+        if (pathname === '/api/console/playground/recall' && req.method === 'POST') {
+          const body = await readBody(req);
+          const query = String(body.query || '').trim().slice(0, 500);
+          if (!query) return json(res, 400, { error: 'Enter a query to recall.' });
+          const asOf = body.as_of ? String(body.as_of) : null;
+          const result = await liansConsole.playgroundRecall(user, query, asOf);
+          return json(res, 200, { configured: true, ...result });
+        }
+        return json(res, 404, { error: 'Unknown console route.' });
+      } catch (err) {
+        // 4xx from the backend is the caller's problem (bad id, already resolved…);
+        // anything else is an upstream outage.
+        const status = err.status >= 400 && err.status < 500 ? err.status : 502;
+        log('console_data_request_failed', req, user, { route: pathname, error: err.message, status: err.status });
+        return json(res, status, { error: status === 502 ? 'Unable to reach the Lians backend. Please try again.' : err.message });
+      }
     }
 
     // Playground demo (uses lian-sdk when available, falls back to fixture)
