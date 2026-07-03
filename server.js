@@ -263,6 +263,23 @@ const userFor = async (req) => {
     if (target) target.onboardingComplete = false;
     writeStore(store);
     log('onboarding_completion_downgraded', req, user, { reason: 'missing_completed_at' });
+  } else if (!hasCompletedOnboarding(user, store)) {
+    // Upgrade path, mirror of the downgrade above: another lambda may have
+    // processed /api/onboarding/complete, so this instance's file-store copy is
+    // stale. Clerk privateMetadata is the durable record — sync from it once,
+    // persist, and every later request on this instance is served locally.
+    try {
+      const cu = await clerk.users.getUser(clerkUserId);
+      const completedAt = cu.privateMetadata?.onboardingCompletedAt || cu.privateMetadata?.onboardingAnswers?.completedAt || null;
+      if (cu.privateMetadata?.onboardingComplete && completedAt) {
+        user.onboardingComplete = true;
+        store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), ...(cu.privateMetadata.onboardingAnswers || {}), completedAt };
+        const target = store.users.find((u) => u.id === user.id);
+        if (target) target.onboardingComplete = true;
+        writeStore(store);
+        log('onboarding_completion_upgraded', req, user, { source: 'clerk_metadata' });
+      }
+    } catch (err) { log('onboarding_upgrade_check_failed', req, user, { error: err.message }); }
   }
   return user;
 };
