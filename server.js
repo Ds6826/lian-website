@@ -24,6 +24,14 @@ const TIER_SCOPES = {
   enterprise: ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance', 'barriers', 'hipaa', 'erasure', 'backtest', 'metrics', 'airgap', 'kms'],
 };
 const validSteps = [...requiredSteps, 'context'];
+// Monthly metered allowances per tier (writes = add + supersede; null = unlimited).
+const TIER_USAGE_LIMITS = {
+  free:       { writes: 10_000,    recalls: 10_000 },
+  starter:    { writes: 100_000,   recalls: 50_000 },
+  growth:     { writes: 500_000,   recalls: 250_000 },
+  pro:        { writes: 2_000_000, recalls: 1_000_000 },
+  enterprise: { writes: null,      recalls: null },
+};
 const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-20260625-v3';
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
@@ -230,7 +238,16 @@ const userFor = async (req) => {
     const restoredCompletedAt = clerkUser.privateMetadata?.onboardingCompletedAt || clerkUser.privateMetadata?.onboardingAnswers?.completedAt || null;
     const restoredComplete = Boolean(clerkUser.privateMetadata?.onboardingComplete && restoredCompletedAt);
     const restoredBillingPlan = clerkUser.privateMetadata?.billingPlan || null;
-    user = { id: crypto.randomUUID(), clerkUserId, email, name, avatarUrl: clerkUser.imageUrl || '', createdAt: new Date().toISOString(), onboardingComplete: restoredComplete, billingPlan: restoredBillingPlan };
+    // The local id feeds liansNamespace(user) — it must survive lambda recycling,
+    // or a reconstituted user gets a fresh namespace and loses sight of their
+    // keys/usage. Reuse the id pinned in Clerk metadata; pin it on first create.
+    const restoredId = clerkUser.privateMetadata?.liansUserId || null;
+    user = { id: restoredId || crypto.randomUUID(), clerkUserId, email, name, avatarUrl: clerkUser.imageUrl || '', createdAt: new Date().toISOString(), onboardingComplete: restoredComplete, billingPlan: restoredBillingPlan };
+    if (!restoredId) {
+      try {
+        await clerk.users.updateUserMetadata(clerkUserId, { privateMetadata: { ...clerkUser.privateMetadata, liansUserId: user.id } });
+      } catch (err) { log('lians_user_id_pin_failed', req, user, { error: err.message }); }
+    }
     store.users.push(user);
     if (clerkUser.privateMetadata?.onboardingAnswers) {
       store.onboarding[user.id] = clerkUser.privateMetadata.onboardingAnswers;
@@ -378,6 +395,16 @@ const app = async (req, res) => {
       '/solutions/financial-services': 'solutions-financial-services.html',
       '/solutions/healthcare': 'solutions-healthcare.html',
       '/solutions/legal': 'solutions-legal.html',
+      '/privacy': 'privacy.html',
+      '/terms': 'terms.html',
+      '/changelog': 'changelog.html',
+      '/about': 'about.html',
+      '/status': 'status.html',
+      '/compare/mem0': 'compare-mem0.html',
+      '/compare/zep': 'compare-zep.html',
+      '/compare/letta': 'compare-letta.html',
+      '/compare/hindsight': 'compare-hindsight.html',
+      '/compare/supermemory': 'compare-supermemory.html',
     };
     if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, CONTENT_PAGES[pathname]));
     if (pathname.endsWith('.html')) {
@@ -429,7 +456,7 @@ const app = async (req, res) => {
     // Onboarding
     if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; const complete = hasCompletedOnboarding(user); return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: complete, nextStep: complete ? null : firstIncomplete(user) }); }
     if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected) return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingAnswers: { ...store.onboarding[user.id] } } }); } catch (err) { log('clerk_answers_backup_failed', req, user, { error: err.message }); } return json(res, 200, { next: `/onboarding/${next}` }); }
-    if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; const completedAt = new Date().toISOString(); target.onboardingCompletedAt = completedAt; store.onboarding[user.id] = { ...answers, completedAt }; writeStore(store); log('onboarding_completed', req, target); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingComplete: true, onboardingCompletedAt: completedAt, onboardingAnswers: store.onboarding[user.id] } }); } catch (err) { log('clerk_complete_sync_failed', req, user, { error: err.message }); } return json(res, 200, { next: '/console' }); }
+    if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; const completedAt = new Date().toISOString(); target.onboardingCompletedAt = completedAt; store.onboarding[user.id] = { ...answers, completedAt }; writeStore(store); log('onboarding_completed', req, target); for (let attempt = 0; attempt < 2; attempt++) { try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingComplete: true, onboardingCompletedAt: completedAt, onboardingAnswers: store.onboarding[user.id] } }); break; } catch (err) { log('clerk_complete_sync_failed', req, user, { error: err.message, attempt }); } } return json(res, 200, { next: '/console' }); }
     if (pathname === '/api/billing/select' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding before selecting a plan.' }); const body = await readBody(req); const plan = String(body.plan || '').toLowerCase(); if (!['free', 'starter', 'growth', 'pro', 'enterprise'].includes(plan)) return json(res, 400, { error: 'Invalid plan.' }); if (plan !== 'free') { try { const sub = await clerk.users.getUserBillingSubscription(user.clerkUserId); const clerkPlan = sub?.data?.plan?.slug; if (!clerkPlan || clerkPlan === 'free') return json(res, 403, { error: 'No active paid subscription found. Please complete checkout.' }); } catch (err) { log('billing_select_verify_warning', req, user, { error: err.message, plan }); return json(res, 503, { error: 'Unable to verify subscription status. Please try again.' }); } } const store = readStore(); const target = store.users.find((item) => item.id === user.id); target.billingPlan = plan; target.billingSelectedAt = new Date().toISOString(); writeStore(store); log('billing_plan_selected', req, target, { plan }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: plan, billingSelectedAt: target.billingSelectedAt } }); } catch (err) { log('billing_metadata_sync_failed', req, user, { error: err.message }); } return json(res, 200, { next: '/console', plan }); }
     if (pathname === '/api/billing/sync' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding first.' }); try { const sub = await clerk.users.getUserBillingSubscription(user.clerkUserId); const planSlug = sub?.data?.plan?.slug; if (!planSlug || planSlug === 'free') return json(res, 402, { error: 'No active paid subscription found. Please complete checkout.' }); const store = readStore(); const target = store.users.find((item) => item.id === user.id); if (target) { target.billingPlan = planSlug; target.billingUpdatedAt = new Date().toISOString(); writeStore(store); } try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: planSlug } }); } catch (err) { log('billing_sync_metadata_failed', req, user, { error: err.message }); } log('billing_synced', req, user, { plan: planSlug }); return json(res, 200, { plan: planSlug, next: '/console' }); } catch (err) { log('billing_sync_failed', req, user, { error: err.message }); return json(res, 500, { error: 'Unable to sync billing status. Please refresh and try again.' }); } }
 
@@ -650,6 +677,24 @@ const app = async (req, res) => {
         return json(res, 200, result);
       } catch {
         return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' });
+      }
+    }
+
+    // Current-month usage from the Lians engine's event log (writes + recalls).
+    if (pathname === '/api/usage' && req.method === 'GET') {
+      // Auth-only gate: usage is a harmless read the console shell shows in the
+      // sidebar. Requiring onboarding here made meters silently 403 → 0/10K when
+      // a reload landed on a lambda whose store hadn't seen the completion yet.
+      const user = await apiAuth(req, res); if (!user) return;
+      const plan = user.billingPlan || 'free';
+      const limits = TIER_USAGE_LIMITS[plan] || TIER_USAGE_LIMITS.free;
+      if (!liansConfigured()) return json(res, 200, { configured: false, plan, limits, writes: 0, recalls: 0 });
+      try {
+        const usage = await liansAdmin(`/usage/${encodeURIComponent(liansNamespace(user))}`);
+        return json(res, 200, { configured: true, plan, limits, writes: usage.writes || 0, recalls: usage.recalls || 0, periodStart: usage.period_start || null });
+      } catch (err) {
+        log('usage_fetch_failed', req, user, { error: err.message, status: err.status });
+        return json(res, 200, { configured: false, plan, limits, writes: 0, recalls: 0 });
       }
     }
 
