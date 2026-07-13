@@ -2,7 +2,7 @@
 
 > Lians is regulated AI memory infrastructure: an open-source (Apache 2.0), self-hostable memory control plane for AI agents working on time-sensitive, audited, and confidential data. Every fact is bitemporal (event time + ingestion time), every change enters a tamper-evident SHA-256 audit chain, and erasure is a provable per-subject crypto-shred.
 
-Benchmarks: 92.9% LLM-judged QA accuracy on LOCOMO, scored end-to-end by the unmodified mem0ai/memory-benchmarks harness (gpt-5 judge) — above mem0's published 91.6 on the same benchmark (run 2026-07-09; report in the repo at agentmem/docs/benchmarks/locomo-judged-2026-07-09.md). Regulated-memory eval: Lians 5.0/5 vs next best 2.0/5 (run 2026-07-04, mem0 OSS and Graphiti OSS executed live).
+Benchmarks: 92.9% LLM-judged QA accuracy on LOCOMO, scored end-to-end by the unmodified mem0ai/memory-benchmarks harness (gpt-5 judge) — above mem0's published 91.6 on the same benchmark (run 2026-07-09; report in the repo at agentmem/docs/benchmarks/locomo-judged-2026-07-09.md). LongMemEval-S: 89.4% at top-50 through the same harness (mem0 publishes 94.8; disclosed, with the failure analysis, at /compare). Retrieval payloads run ~5-6k tokens per top-200 call — the same token band mem0's "token-efficient" positioning claims. Regulated-memory eval: Lians 5.0/5 vs next best 2.0/5 (run 2026-07-04, mem0 OSS and Graphiti OSS executed live).
 
 Key differentiators vs general-purpose memory stores (mem0, Zep/Graphiti, Letta, Hindsight, Supermemory):
 - Bitemporal point-in-time recall: `recall_at(query, as_of=T)` returns what was valid and knowable at T, not what is similar today.
@@ -16,6 +16,10 @@ Key differentiators vs general-purpose memory stores (mem0, Zep/Graphiti, Letta,
 - Audited degraded retrieval: on embedding-provider outage, recall proceeds lexical-only with `retrieval_degraded` declared on results, audit events, and metrics; availability without silent quality loss.
 - Signed memory statement: `GET /v1/snapshot/markdown` exports a human-readable point-in-time knowledge state whose SHA-256 is anchored in the audit chain; erased facts appear as explicit crypto-shred markers.
 - Pre-compaction flush: the SDK harness (`flush_before_compaction()` + `CompactionGuard`, LangGraph node, OpenAI Agents / CrewAI / AutoGen tools) persists durable facts into governed memory before host frameworks summarize them away.
+- Context-expanded recall: `recall(include_context=True)` attaches each hit's temporally-adjacent neighbors (`context_before`/`context_after`) — the other half of a dialogue exchange — for consumers that feed memories to an LLM; `token_estimate` on every recall result for prompt budgeting.
+- Opt-in fact distillation with provenance: `add_from_messages(distill=True)` stores LLM-extracted, dated, speaker-attributed facts alongside the verbatim transcript in the bitemporal log — extraction like mem0's, but every derived fact keeps its auditable raw source. The default ingest path stays LLM-free and deterministic.
+- Optional cross-encoder rerank stage (`RECALL_RERANKER_MODEL`) for maximum-precision recall; local recall p50 ~160ms at ~700 memories on CPU, no LLM anywhere in the default retrieval path.
+- Framework integrations: LangChain, LangGraph, CrewAI, OpenAI Agents SDK, AutoGen v0.4 (`pip install lians-sdk[langchain|langgraph|crewai|...]`).
 - Deployment: Python library mode (SQLite, in-process), self-hosted (Postgres 16 + pgvector, air-gap mode), or managed cloud.
 - SDKs: Python (`pip install lians-sdk`), TypeScript (`npm install @lians-ai/lians`), Go, Java, C, plus a native MCP server (`uvx --from 'lians-sdk[mcp]' lians-mcp`).
 
