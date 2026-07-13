@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="What shipped in the Lians engine, SDKs, MCP server, console, and site, in the open, release by release." />
+    <title>Changelog · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / Changelog</p>
+        <h1>Changelog.</h1>
+        <p class="lede">Everything ships in the open: engine, five SDKs, MCP server, console, and this site. Full detail in the <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer">repo changelog ↗</a>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="LOCOMO benchmark result">
+        <p class="block-label">2026-07-09 · benchmarks</p>
+        <h2>LOCOMO, LLM-judged: 92.9% — above mem0's published 91.6.</h2>
+        <p class="metaline">Scored end-to-end by the unmodified mem0ai/memory-benchmarks harness (gpt-5 answerer + judge) over Lians retrieval · arctic-embed-l-v2.0 + tuned hybrid ranking · <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">full report ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="Memory lifecycle release">
+        <p class="block-label">2026-07-06 · v0.4.0</p>
+        <h2>The memory-lifecycle release: flush, resurface, decay, degrade, export.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Pre-compaction memory flush</b><span class="meta tag">New</span></span><p>Durable facts persist into governed memory before the host framework compacts context, automatic via <code class="ic">CompactionGuard</code>, with flush nodes/tools for LangGraph, the OpenAI Agents SDK, CrewAI, and AutoGen.</p></div>
+          <div class="item"><span class="head"><b>Signed Markdown memory statement</b><span class="meta tag">New</span></span><p>An agent's point-in-time knowledge state as a human-readable document, its SHA-256 anchored in the audit chain, so the statement you hand an examiner is itself tamper-evident.</p></div>
+          <div class="item"><span class="head"><b>Open conflicts resurface until adjudicated</b><span class="meta tag">New</span></span><p>Unresolved conflicts ride at the top of every assembled context block as explicit "X disagrees with Y" lines.</p></div>
+          <div class="item"><span class="head"><b>Audited degraded retrieval</b><span class="meta tag">New</span></span><p>Embedding outages no longer take recall down: queries proceed lexical-only, with the degradation declared on every result and audit event.</p></div>
+          <div class="item"><span class="head"><b>Materiality-weighted retrieval decay</b><span class="meta tag">New</span></span><p>Retrieval half-life scales with materiality: passing preferences fade in 7 days, critical flags hold for 365.</p></div>
+        </div>
+        <p class="metaline">Live on PyPI, npm, the Go module proxy, and Maven Central; deployed to managed cloud 2026-07-06. <a class="tlink" href="https://github.com/ebeirne/Lians2/releases/tag/v0.4.0" target="_blank" rel="noreferrer">GitHub Release ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="v0.3.3 and v0.3.4">
+        <p class="block-label">2026-07-03 → 07-04 · v0.3.3–v0.3.4</p>
+        <h2>Install integrity, recall correctness, evidence-backed benchmarks.</h2>
+        <p class="metaline">Local mode fixed on installed wheels · Unicode-aware BM25 · CONFIRMS / REFINES on the keyed fast path · full crypto-shred in snapshots · live-executed competitor benchmarks and the <a class="tlink" href="https://github.com/ebeirne/lookahead-bias-demo" target="_blank" rel="noreferrer">lookahead-bias demo ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="v0.3.2">
+        <p class="block-label">2026-07-02 · v0.3.2 + site</p>
+        <h2>Cross-language validation, expanded eval, interactive site.</h2>
+        <p class="metaline">Regulated eval expanded to five competitors · usage metering API · MCP tool fixes (all 8 validated) · Java SDK connectivity · the interactive explainer and live demos on this site</p>
+      </section>
+
+      <section class="wrap block" aria-label="v0.3.1">
+        <p class="block-label">2026-07-01 · v0.3.1</p>
+        <h2>Tenant isolation hardening + the Governor vocabulary.</h2>
+        <p class="metaline">Cross-tenant subject-key isolation fix (security) · REFINES supersession relation · vagueness admission filter · scored recall</p>
+      </section>
+
+      <section class="wrap block" aria-label="v0.3.0">
+        <p class="block-label">2026-06-29 · v0.3.0</p>
+        <h2>The production-readiness release.</h2>
+        <p class="metaline">Five SDKs in lock-step · relationship graph · database-layer information barriers · idempotent writes, RBAC, SIEM streaming · agent memory harness + token-budgeted context endpoint</p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Watch it evolve in the open.</h2><a class="btn" href="https://github.com/ebeirne/Lians2">Star the repo ↗</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+# Lians
+
+> Lians is regulated AI memory infrastructure: an open-source (Apache 2.0), self-hostable memory control plane for AI agents working on time-sensitive, audited, and confidential data. Every fact is bitemporal (event time + ingestion time), every change enters a tamper-evident SHA-256 audit chain, and erasure is a provable per-subject crypto-shred.
+
+Benchmarks: 92.9% LLM-judged QA accuracy on LOCOMO, scored end-to-end by the unmodified mem0ai/memory-benchmarks harness (gpt-5 judge) — above mem0's published 91.6 on the same benchmark (run 2026-07-09; report in the repo at agentmem/docs/benchmarks/locomo-judged-2026-07-09.md). Regulated-memory eval: Lians 5.0/5 vs next best 2.0/5 (run 2026-07-04, mem0 OSS and Graphiti OSS executed live).
+
+Key differentiators vs general-purpose memory stores (mem0, Zep/Graphiti, Letta, Hindsight, Supermemory):
+- Bitemporal point-in-time recall: `recall_at(query, as_of=T)` returns what was valid and knowable at T, not what is similar today.
+- Deterministic supersession: revised facts close their stale versions (SUPERSEDES / REFINES / CONFIRMS), so old figures don't contaminate recall.
+- Backtest contamination detection: flags FUTURE_EVENT and LATE_REVISION memories relative to a simulation checkpoint (`POST /v1/backtest/check`).
+- Tamper-evident audit: append-only SHA-256 hash chain, point-in-time snapshot reconstruction (SEC 17a-4 / WORM aligned).
+- Provable erasure: per-subject AES-256-GCM keys; destroying a key erases content while preserving the audit trail (GDPR Art. 17).
+- Memory admission control: policy gate on writes (PII/PHI/MNPI detection, source trust, prompt-injection quarantine).
+- Conflict resurfacing: `/v1/context` pushes open conflicts to the top of every assembled block ("X DISAGREES WITH Y", oldest first) until adjudicated; contested facts are never silently blended.
+- Materiality-weighted retrieval decay: `metadata.materiality` scales a fact's retrieval half-life (low 7d / standard 30d / high 120d / critical 365d); compliance flags outlive passing preferences.
+- Audited degraded retrieval: on embedding-provider outage, recall proceeds lexical-only with `retrieval_degraded` declared on results, audit events, and metrics; availability without silent quality loss.
+- Signed memory statement: `GET /v1/snapshot/markdown` exports a human-readable point-in-time knowledge state whose SHA-256 is anchored in the audit chain; erased facts appear as explicit crypto-shred markers.
+- Pre-compaction flush: the SDK harness (`flush_before_compaction()` + `CompactionGuard`, LangGraph node, OpenAI Agents / CrewAI / AutoGen tools) persists durable facts into governed memory before host frameworks summarize them away.
+- Deployment: Python library mode (SQLite, in-process), self-hosted (Postgres 16 + pgvector, air-gap mode), or managed cloud.
+- SDKs: Python (`pip install lians-sdk`), TypeScript (`npm install @lians-ai/lians`), Go, Java, C, plus a native MCP server (`uvx --from 'lians-sdk[mcp]' lians-mcp`).
+
+## Pages
+
+- [Product](https://www.lians.ai/product): How the memory control plane works: admission, supersession, recall, graph.
+- [Research](https://www.lians.ai/research): The regulated-memory eval: methodology, honest-recall definitions, five invariants, dated results, one-command reproduction.
+- [Compare](https://www.lians.ai/compare): LOCOMO 92.9 vs mem0's 91.6 on mem0's own harness, plus the head-to-head regulated eval vs mem0, Zep/Graphiti, Letta, Hindsight, Supermemory (Lians 5.0/5, next best 2.0/5, mem0 0.5/5 live, last run 2026-07-04).
+- [Compliance](https://www.lians.ai/compliance): SEC 17a-4, GDPR Art. 17, HIPAA-aligned architecture mapping.
+- [Security](https://www.lians.ai/security): PostgreSQL RLS information barriers, per-subject encryption with KMS, RBAC, SSO, SIEM streaming.
+- [Trust center](https://www.lians.ai/trust): Compliance status, encryption posture, subprocessor list, disclosure policy.
+- [Solutions · Financial services](https://www.lians.ai/solutions/financial-services): Point-in-time trading memory, MNPI barriers, SEC/FINRA audit export.
+- [Solutions · Healthcare](https://www.lians.ai/solutions/healthcare): Patient-scoped memory with audit-preserving erasure.
+- [Solutions · Legal](https://www.lians.ai/solutions/legal): Matter-scoped memory with privilege-date reconstruction.
+- [SDKs](https://www.lians.ai/sdks): Install guides for Python, TypeScript, Go, Java, C, and MCP.
+- [Docs](https://www.lians.ai/docs): Quickstart and API reference.
+- [Changelog](https://www.lians.ai/changelog): What shipped, release by release (current: v0.4.0, 2026-07-06).
+- [Pricing](https://www.lians.ai/pricing): Free tier, pro, and enterprise/self-hosted.
+- [Blog](https://www.lians.ai/blog): Writing on regulated AI memory, including backtest lookahead contamination.
+
+## Source
+
+- [GitHub repository](https://github.com/ebeirne/Lians2): Full engine source, benchmark harness (`python -m benchmarks.compare_regulated`), security whitepaper, threat model.
+
+## Elsewhere
+
+- [X](https://x.com/Liansdev): Release notes and engineering threads.
+- [LinkedIn](https://www.linkedin.com/company/lians-ai): Company updates and hiring.

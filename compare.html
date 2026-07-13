@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians vs mem0 vs Zep on the regulated-memory invariants that accumulate-everything stores fail by design: stale suppression, point-in-time recall, provable erasure, lookahead guard, and audit snapshot." />
-    <title>Compare — Lians vs mem0 vs Zep</title>
+    <meta name="description" content="Lians vs mem0, Zep, Letta, Hindsight, and Supermemory on the regulated-memory invariants that accumulate-everything stores fail by design: stale suppression, point-in-time recall, provable erasure, lookahead guard, and audit snapshot." />
+    <title>Compare · Lians vs mem0, Zep, Letta, Hindsight &amp; Supermemory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
@@ -27,35 +28,57 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Compare</p>
         <h1>Win the bake-off on the <em>numbers</em>.</h1>
-        <p class="lede">General memory benchmarks measure conversational recall. They don't measure what a regulated buyer must guarantee. This eval scores five hard invariants an accumulate-everything store fails by design — each a turnkey primitive a product either has an API for, or doesn't.</p>
+        <p class="lede">Recall quality on LOCOMO judged by mem0's own harness, plus five regulated invariants scored across six products — all reproducible from the open repo.</p>
         <div class="actions"><a class="btn btn-primary" href="https://github.com/ebeirne/Lians2/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Methodology ↗</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="LOCOMO benchmark">
+        <p class="block-label">Recall quality · LOCOMO · run 2026-07-09</p>
+        <h2>Their benchmark. Their harness. Our number.</h2>
+        <div class="stats">
+          <span class="s"><b>92.9%</b><span>Lians · LLM-judged QA accuracy</span></span>
+          <span class="s"><b>91.6%</b><span>mem0 · their published score</span></span>
+        </div>
+        <p class="metaline">Lians retrieval scored end-to-end by the unmodified <a class="tlink" href="https://github.com/mem0ai/memory-benchmarks" target="_blank" rel="noreferrer">mem0ai/memory-benchmarks ↗</a> harness (gpt-5 answerer + judge), all 10 LOCOMO conversations. <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">Full report ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="LongMemEval benchmark">
+        <p class="block-label">Recall quality · LongMemEval-S · run 2026-07-12</p>
+        <h2>LongMemEval: they lead, we publish it anyway.</h2>
+        <div class="stats">
+          <span class="s"><b>89.4%</b><span>Lians · LLM-judged, all 500 questions</span></span>
+          <span class="s"><b>94.8%</b><span>mem0 · their published score</span></span>
+        </div>
+        <p class="metaline">Same unmodified harness, same models. Retrieval already surfaces the answer sessions for 97% of questions — the gap is answer assembly, and the fix is in progress on the open repo.</p>
       </section>
 
       <section class="wrap block" aria-label="Eval">
         <p class="block-label">Regulated-memory eval · head-to-head</p>
         <h2>Five invariants. One winner.</h2>
+        <div data-viz="evalchart" style="margin-bottom:26px"></div>
         <div class="table-wrap"><table class="tbl">
-          <thead><tr><th>Regulated invariant</th><th>Lians</th><th>mem0</th><th>Zep / Graphiti</th></tr></thead>
+          <thead><tr><th>Regulated invariant</th><th class="col-lians">Lians</th><th>Zep / Graphiti</th><th>Letta</th><th>Hindsight</th><th>Supermemory</th><th>mem0</th></tr></thead>
           <tbody>
-            <tr><td>Stale revision suppressed</td><td class="yes">pass</td><td class="partial">partial</td><td class="partial">partial</td></tr>
-            <tr><td>Point-in-time (as-of) recall</td><td class="yes">pass</td><td class="no">absent</td><td class="partial">partial</td></tr>
-            <tr><td>Provable erasure (crypto-shred + cert)</td><td class="yes">pass</td><td class="partial">partial</td><td class="partial">partial</td></tr>
-            <tr><td>Lookahead / backtest guard</td><td class="yes">pass</td><td class="no">absent</td><td class="no">absent</td></tr>
-            <tr><td>Audit-state snapshot at T</td><td class="yes">pass</td><td class="no">absent</td><td class="partial">partial</td></tr>
+            <tr><td>Stale revision suppressed</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="partial">partial</td><td class="partial">partial</td><td class="partial">partial</td><td class="no">fail</td></tr>
+            <tr><td>Point-in-time (as-of) recall</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="no">absent</td><td class="partial">partial</td><td class="no">absent</td><td class="no">absent</td></tr>
+            <tr><td>Provable erasure (crypto-shred + cert)</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="partial">partial</td><td class="no">absent</td><td class="partial">partial</td><td class="partial">partial</td></tr>
+            <tr><td>Lookahead / backtest guard</td><td class="yes col-lians">pass</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td></tr>
+            <tr><td>Audit-state snapshot at T</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td></tr>
           </tbody>
-          <tfoot><tr><td>Score (pass = 1, partial = ½)</td><td>5.0 / 5</td><td>1.0 / 5</td><td>2.0 / 5</td></tr></tfoot>
+          <tfoot><tr><td>Score (pass = 1, partial = ½)</td><td class="col-lians">5.0 / 5</td><td>2.0 / 5</td><td>1.0 / 5</td><td>1.0 / 5</td><td>1.0 / 5</td><td>0.5 / 5</td></tr></tfoot>
         </table></div>
-        <p class="metaline">Lians executed live against the same engine as the server; mem0 and Zep scored against their public API surface (a thrown invariant is a failure — there is no API to call). Reproduce: <code class="ic">python -m benchmarks.compare_regulated</code>.</p>
+        <p class="metaline">Lians, mem0 OSS, and Graphiti OSS executed live in their default documented configs; Letta, Hindsight, and Supermemory via real-SDK capability adapters. Last run 2026-07-04. <a class="tlink" href="/research">Methodology →</a></p>
       </section>
 
       <section class="wrap block" aria-label="Why audit matters">
         <p class="block-label">Why audit matters</p>
         <h2>Storage is not the moat.</h2>
         <div class="list">
-          <a class="item" href="https://github.com/ebeirne/Lians2/blob/master/docs/compare-mem0.md" target="_blank" rel="noreferrer"><span class="head"><b>vs mem0</b><span class="meta">full comparison ↗</span></span><p>mem0 is ADD-oriented, so revised facts pile up and contaminate recall. Lians excludes stale versions deterministically and adds encryption-at-rest, RBAC, and audit trails.</p></a>
-          <a class="item" href="https://github.com/ebeirne/Lians2/blob/master/docs/compare-zep.md" target="_blank" rel="noreferrer"><span class="head"><b>vs Zep / Graphiti</b><span class="meta">full comparison ↗</span></span><p>The knowledge graph is strong but lacks access control, multi-tenancy, audit, and compliance by design. Lians keeps the graph on an open compliance spine.</p></a>
-          <div class="item"><span class="head"><b>Deterministic supersession</b></span><p>Stale suppression is keyed and reproducible — not LLM/graph invalidation that depends on extraction quality.</p></div>
-          <div class="item"><span class="head"><b>Database-layer barriers</b></span><p>Chinese-wall isolation is enforced by PostgreSQL RLS, verified in CI against a non-superuser role — not an application check a bug can bypass.</p></div>
+          <a class="item" href="/compare/mem0"><span class="head"><b>vs mem0</b><span class="meta">full comparison →</span></span><p>92.9 vs their 91.6 on LOCOMO through their own harness; live-run stale suppression fails, no as-of recall, no audit trail.</p></a>
+          <a class="item" href="/compare/zep"><span class="head"><b>vs Zep / Graphiti</b><span class="meta">full comparison →</span></span><p>Strong knowledge graph without access control, multi-tenancy, or audit by design.</p></a>
+          <a class="item" href="/compare/letta"><span class="head"><b>vs Letta</b><span class="meta">full comparison →</span></span><p>Excellent self-editing context, but edits are silent overwrites with no validity windows.</p></a>
+          <a class="item" href="/compare/hindsight"><span class="head"><b>vs Hindsight</b><span class="meta">full comparison →</span></span><p>Temporal-aware episodic banks without validity-gated supersession or provable erasure.</p></a>
+          <a class="item" href="/compare/supermemory"><span class="head"><b>vs Supermemory</b><span class="meta">full comparison →</span></span><p>Fast ingestion and retrieval, but accumulate-and-rank, with no point-in-time reconstruction.</p></a>
         </div>
       </section>
     </main>
@@ -63,14 +86,16 @@
     <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
   </body>
 </html>

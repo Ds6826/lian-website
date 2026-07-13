@@ -1,7 +1,7 @@
 // ── Lians console data-plane client ──────────────────────────────────────────
 // The console's Memory Governor views (supersession review, admission queue)
 // and the live playground read a user's own namespace on the Lians backend.
-// Those are data-plane endpoints (X-API-Key), not admin endpoints — so we mint
+// Those are data-plane endpoints (X-API-Key), not admin endpoints - so we mint
 // ONE server-held key per user (label "console-internal", scopes read/write/admin,
 // namespace ns_<user.id>) via the admin API and keep the secret in Clerk private
 // metadata. It is never shown to the user and never leaves the server.
@@ -62,7 +62,7 @@ const createLiansConsole = ({ apiUrl = '', adminSecret = '', clerk, log = () => 
   };
 
   // Data-plane call as the user's console key. A 401 means the stored key was
-  // revoked/rotated out from under us — re-mint once and retry.
+  // revoked/rotated out from under us - re-mint once and retry.
   const dataRequest = async (user, path, opts = {}) => {
     const call = async (key) => request(path, { ...opts, headers: { 'X-API-Key': key } });
     const key = await consoleKeyFor(user);

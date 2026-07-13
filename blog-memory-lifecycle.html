@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Lians v0.4.0: pre-compaction flush, conflict resurfacing, materiality-weighted decay, audited degraded retrieval, and a signed Markdown memory statement. Memory as a lifecycle, not a table." />
+    <title>Memory is a lifecycle, not a table · Lians v0.4.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / The memory lifecycle</p>
+        <h1>Memory is a lifecycle, not a <em>table</em>.</h1>
+        <p class="lede">A fact in an agent's memory is born, contested, ages, survives bad days, and eventually has to account for itself. v0.4.0 gives every one of those stages a mechanism.</p>
+        <p class="metaline">2026-07-06 · Ethan Beirne · 5 min read</p>
+      </section>
+
+      <section class="wrap block" aria-label="Birth">
+        <p class="block-label">Birth · pre-compaction flush</p>
+        <h2>Facts die at the context cliff.</h2>
+        <p class="intro">Long-running agents lose what they learned the moment the host framework summarizes old turns: whatever the summary drops is gone, and nothing logged that it existed. The SDK now flushes durable facts into governed memory <em>before</em> compaction: automatically at a token threshold via <code class="ic">CompactionGuard</code>, as a LangGraph node before your summarize step, or as a tool the model calls in the OpenAI Agents SDK, CrewAI, and AutoGen. Every flush is audit-tagged, so the record shows when the agent externalized what it knew.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Contest">
+        <p class="block-label">Contested · conflict resurfacing</p>
+        <h2>Disagreements don't get to hide.</h2>
+        <p class="intro">When two facts contradict and no one has adjudicated, most stores quietly return whichever ranks higher. Lians now pushes open conflicts to the top of every assembled context block, oldest first as explicit "X disagrees with Y" lines, so the model treats contested facts as contested. Overflow is an explicit "+N more", never a silent drop.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Aging">
+        <p class="block-label">Aging · materiality-weighted decay</p>
+        <h2>A compliance flag should outlive a lunch preference.</h2>
+        <p class="intro">Uniform recency decay treats "client is vegetarian this week" and "client is a restricted person" identically. Retrieval half-life now scales with a fact's declared materiality (7 days for the passing, 365 for the critical) while storage never decays and point-in-time queries honor the same weights.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Bad days">
+        <p class="block-label">Bad days · audited degraded retrieval</p>
+        <h2>Outages degrade loudly, not silently.</h2>
+        <p class="intro">When the embedding provider goes down, recall proceeds lexical-only, and says so on every result, in the audit event, and in the metrics, so "the agent answered from weaker recall that afternoon" is a fact you can establish later rather than guess. Degraded results are never cached; recovery is immediate.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Accounting">
+        <p class="block-label">Accounting · the signed memory statement</p>
+        <h2>Hand the examiner a document, not a database.</h2>
+        <p class="intro">One call renders an agent's exhaustive point-in-time knowledge state as human-readable Markdown: provenance, validity window, and materiality per fact, erased facts shown as explicit crypto-shred markers. The document's SHA-256 is anchored in the tamper-evident audit chain, and the footer states the offline verification procedure, so the statement itself can't be quietly edited after the fact.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Get it">
+        <p class="block-label">Try it</p>
+        <h2>Live everywhere, today.</h2>
+        <div class="term" aria-label="Install v0.4.0">
+          <div class="term-tabs"><div class="term-dots" aria-hidden="true" style="margin-left:0;padding:14px"><i></i><i></i><i></i></div></div>
+<pre class="term-body"><span class="pr">$</span> pip install lians-sdk==0.4.0   <span class="cm"># also npm · Go proxy · Maven Central</span>
+
+<span class="kw">from</span> lians <span class="kw">import</span> LiansMemoryHarness, CompactionGuard
+guard = CompactionGuard(harness, context_limit_tokens=<span class="out">120_000</span>)
+guard.observe_and_maybe_flush(messages)   <span class="cm"># fires once per window, audit-tagged</span></pre>
+        </div>
+        <p class="metaline">All five SDKs in lock-step at v0.4.0, live-tested against managed cloud. <a class="tlink" href="/changelog">Full changelog →</a></p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Give your agents memory with a <em>lifecycle</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

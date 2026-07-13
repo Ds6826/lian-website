@@ -60,7 +60,7 @@ const renderShellForRoute = (pathname = window.location.pathname) => {
   }
 };
 renderShellForRoute(route);
-// Early cookie-based session check on /login — fires before Clerk JS loads so returning
+// Early cookie-based session check on /login - fires before Clerk JS loads so returning
 // users with a valid session are sent straight to their destination without seeing the form.
 const signOutStartedAt = Number(sessionStorage.getItem('lians:signingOutAt') || 0);
 const recentlySignedOut = signOutStartedAt && Date.now() - signOutStartedAt < 12000;
@@ -101,7 +101,7 @@ const authedFetch = async (url, options = {}) => {
     credentials: 'include',
     headers: { ...(options.headers || {}), ...(await clerkAuthHeaders({ fresh })) },
   });
-  // Always try the cached token first — forcing skipCache contacts clerk.lians.ai which can fail.
+  // Always try the cached token first - forcing skipCache contacts clerk.lians.ai which can fail.
   // Fall back to a fresh token only if the server actually rejects the cached one.
   let response = await fetch(url, await buildRequest(false));
   if (response.status === 401) {
@@ -277,7 +277,7 @@ const renderPlanCards = async (gridNode, plans, redirectUrl, note) => {
   gridNode.innerHTML = plans.map((plan) => {
     const matched = plan.contact || plan.id === 'free' ? null : matchClerkPlan(clerkPlans, plan);
     const cta = plan.contact
-      ? `<a class="plan-cta plan-cta-link" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">${plan.cta} →</a>`
+      ? `<a class="plan-cta plan-cta-link" href="/about#contact" target="_blank" rel="noreferrer">${plan.cta} →</a>`
       : plan.id === 'free'
         ? `<button class="plan-cta" type="button" data-plan="free">${plan.cta}</button>`
         : matched
@@ -327,7 +327,7 @@ const setBillingPage = () => {
         window.location.assign(result.next || '/console');
       })
       .catch(() => { if (note) note.textContent = 'Unable to activate plan. Please refresh.'; });
-    // No early return — grid renders below so the user can retry if payment fails
+    // No early return - grid renders below so the user can retry if payment fails
   }
 
   const redirectUrl = `${location.origin}/billing?billing_complete=sync`;
@@ -368,7 +368,7 @@ const setUpgradePage = (sessionData) => {
   if (!grid) return;
   const redirectUrl = `${location.origin}/upgrade?billing_complete=sync`;
   if (!upgradable.length) {
-    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">Contact us</a> for custom solutions.</p>';
+    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="/about#contact" target="_blank" rel="noreferrer">Contact us</a> for custom solutions.</p>';
     return;
   }
   // Our custom cards with Clerk's per-plan CheckoutButton as the CTA; PricingTable fallback.
@@ -383,14 +383,14 @@ const setUpgradePage = (sessionData) => {
     if (!grid.parentElement.querySelector('.plan-continue')) grid.insertAdjacentElement('afterend', buildContinueCard());
   }
 };
-// "Skip the upgrade" card — same dark chrome as the plan cards, with a blue CTA.
+// "Skip the upgrade" card - same dark chrome as the plan cards, with a blue CTA.
 const buildContinueCard = () => {
   const card = document.createElement('div');
   card.className = 'plan-card plan-continue';
   card.innerHTML = `
     <p class="plan-tier">Maybe later</p>
     <div class="plan-price plan-continue-mark">→</div>
-    <p class="plan-tagline">Not ready to upgrade? Jump straight into the console — you can upgrade anytime from billing.</p>
+    <p class="plan-tagline">Not ready to upgrade? Jump straight into the console - you can upgrade anytime from billing.</p>
     <ul class="plan-features"><li>Full console access on your current plan</li><li>Upgrade whenever you like</li></ul>
     <a class="plan-cta plan-cta-continue" href="/console">Continue to console <span>→</span></a>`;
   return card;
@@ -459,6 +459,25 @@ document.querySelector('.onboarding-submit').addEventListener('click', async () 
   window.location.assign(result.next);
 });
 document.querySelector('#back-to-auth').addEventListener('click', doSignOut);
+// Skip setup: complete the wizard with placeholder answers (editable later in
+// Settings) so a developer can reach the console and an API key in one click.
+document.querySelector('#skip-setup')?.addEventListener('click', async (event) => {
+  const btn = event.currentTarget;
+  btn.disabled = true; btn.textContent = 'Skipping…';
+  try {
+    for (let i = 0; i < onboardingSteps.length; i++) {
+      const state = await (await authedFetch('/api/onboarding')).json();
+      if (state.onboardingComplete) break;
+      const step = state.nextStep;
+      if (!step || step === 'review') break;
+      const resp = await authedFetch(`/api/onboarding/${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value: step === 'context' ? '' : 'Skipped; answer later' }) });
+      if (!resp.ok) break;
+    }
+    const done = await authedFetch('/api/onboarding/complete', { method: 'POST' });
+    if (done.ok) { window.location.assign('/console'); return; }
+  } catch (err) { console.warn('[Lians onboarding] skip failed', err); }
+  btn.disabled = false; btn.textContent = 'Skip setup →';
+});
 
 const authButtons = document.querySelectorAll('[data-auth-provider]');
 const authNote = document.querySelector('.auth-note');
@@ -549,11 +568,11 @@ const completeClerkCallback = async () => {
   // Quick sanity check: warn if the current origin doesn't match the canonical origin.
   const canonicalOrigin = window.__lian_config?.canonicalOrigin;
   if (canonicalOrigin && !canonicalOrigin.includes(window.location.hostname)) {
-    console.warn('[sso-callback] Origin mismatch: page is on', window.location.hostname, 'but BASE_URL is', canonicalOrigin, '— session cookies may not apply.');
+    console.warn('[sso-callback] Origin mismatch: page is on', window.location.hostname, 'but BASE_URL is', canonicalOrigin, '- session cookies may not apply.');
   }
-  // Check that Clerk got redirect params — if the URL has no Clerk markers, something went wrong upstream.
+  // Check that Clerk got redirect params - if the URL has no Clerk markers, something went wrong upstream.
   const hasClerkParams = window.location.href.includes('__clerk') || window.location.hash.includes('__clerk');
-  if (!hasClerkParams) console.warn('[sso-callback] No Clerk redirect parameters found in URL — OAuth may not have completed.');
+  if (!hasClerkParams) console.warn('[sso-callback] No Clerk redirect parameters found in URL - OAuth may not have completed.');
   try {
     // Clerk JS v5 processes the OAuth callback inside Clerk.load() and sets Clerk.user before
     // the ready event fires. Calling handleRedirectCallback after that throws "no pending redirect".
@@ -573,31 +592,38 @@ const completeClerkCallback = async () => {
   } catch (err) {
     const detail = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || String(err);
     console.error('[sso-callback] Clerk callback error:', detail);
-    // Clerk v5 may throw AND have already signed the user in — check before showing error.
+    // Clerk v5 may throw AND have already signed the user in - check before showing error.
     if (window.Clerk?.user || window.Clerk?.session) { await runWorkflowGate('callback_error_signed_in'); return; }
     const friendly = /no pending/i.test(detail) ? 'Sign-in session was not found after redirect. Try signing in again.' : detail || 'We could not complete secure sign-in. Please try again.';
     setCallbackMessage(friendly);
   }
 };
+const fmtCount = (n) => (n >= 1_000_000 ? (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + 'M' : n >= 1_000 ? (n / 1_000).toFixed(n % 1_000 ? 1 : 0) + 'K' : String(n));
 const loadConsolePlan = async () => {
   try {
-    const r = await authedFetch('/api/billing');
+    const [r, ur] = await Promise.all([authedFetch('/api/billing'), authedFetch('/api/usage')]);
     if (!r.ok) return;
     const { plan = 'free', scopes = [] } = await r.json();
+    const usage = ur.ok ? await ur.json() : { writes: 0, recalls: 0 };
+    const writes = usage.writes || 0;
+    const recalls = usage.recalls || 0;
     const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
     const planName = PLAN_NAMES[plan] || plan;
     const planMeta = BILLING_PLANS.find((p) => p.id === plan);
     const priceLabel = planMeta ? `${planMeta.price}${planMeta.period || ''}` : '';
+    const wCap = usage.limits?.writes ?? null;
+    const rCap = usage.limits?.recalls ?? null;
+    const pct = (n, cap) => (cap ? Math.min(100, Math.round((n / cap) * 100)) : 0);
     const usageEl = document.querySelector('.usage');
-    if (usageEl) usageEl.innerHTML = `<span>${planName} plan</span><p>Memories <b>0 / ${limits.memories}</b></p><div><i></i></div><p>Recall <b>0 / ${limits.recalls}</b></p><div><i></i></div>`;
+    if (usageEl) usageEl.innerHTML = `<span>${planName} plan</span><p>Memories <b>${fmtCount(writes)} / ${limits.memories}</b></p><div><i style="width:${pct(writes, wCap)}%"></i></div><p>Recall <b>${fmtCount(recalls)} / ${limits.recalls}</b></p><div><i style="width:${pct(recalls, rCap)}%"></i></div>`;
     // Reflect the real plan in Usage & billing
     const planLine = document.querySelector('#billing-plan-line');
     if (planLine) planLine.innerHTML = `You're on the <strong>${planName}</strong> plan${priceLabel ? ` · ${priceLabel}` : ''}.`;
     const billingMetrics = document.querySelector('#console-billing-metrics');
-    if (billingMetrics) billingMetrics.innerHTML = `<article><span>MEMORY WRITES</span><strong>0</strong><small>of ${limits.memories} / mo</small></article><article><span>RECALLS</span><strong>0</strong><small>of ${limits.recalls} / mo</small></article><article><span>PLAN</span><strong>${planName}</strong><small>${priceLabel || '&nbsp;'}</small></article>`;
+    if (billingMetrics) billingMetrics.innerHTML = `<article><span>MEMORY WRITES</span><strong>${fmtCount(writes)}</strong><small>of ${limits.memories} / mo${usage.configured ? '' : ' · engine not connected'}</small></article><article><span>RECALLS</span><strong>${fmtCount(recalls)}</strong><small>of ${limits.recalls} / mo</small></article><article><span>PLAN</span><strong>${planName}</strong><small>${priceLabel || '&nbsp;'}</small></article>`;
     const billingActions = document.querySelector('#console-billing-actions');
     if (billingActions) billingActions.innerHTML = plan === 'enterprise'
-      ? '<a class="plan-cta-link" href="mailto:ethan.g.beirne@gmail.com?subject=Lians%20Enterprise">Contact us ↗</a>'
+      ? '<a class="plan-cta-link" href="/about#contact" target="_blank" rel="noreferrer">Contact us ↗</a>'
       : `<button class="console-button" onclick="window.location.assign('/upgrade')">${plan === 'free' ? 'Upgrade your plan' : 'Change plan'} <span>→</span></button>`;
     // Top-tier users don't need the upgrade nudge in the header
     if (plan === 'enterprise') document.querySelector('.upgrade-button')?.setAttribute('hidden', '');
@@ -614,7 +640,7 @@ const loadConsolePlan = async () => {
   } catch {}
 };
 
-// ── Projects (switch / create / rename / delete, per user — all in-page) ──────
+// ── Projects (switch / create / rename / delete, per user - all in-page) ──────
 const projectsState = { items: [], current: null, editingId: null, confirmId: null };
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const renderProjects = () => {
@@ -795,6 +821,10 @@ document.querySelectorAll('.language-tabs button').forEach((button) => button.ad
 document.querySelectorAll('.path-card').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.path-card').forEach((item) => item.classList.remove('active')); button.classList.add('active'); }));
 
 const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], governance: ['MEMORY GOVERNOR', 'Governance review'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], memories: ['ACTIVITY', 'Memories'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
+// Declared before activateView: the top-level route handler below runs during
+// script evaluation, and landing directly on /console/governance would hit
+// loadGovernance() -> govState while it was still in the temporal dead zone.
+const govState = { loading: false };
 const activateView = (view, updateUrl = false) => {
   if (!viewMeta[view]) view = 'get-started';
   document.querySelectorAll('.nav-item[data-view]').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
@@ -829,7 +859,7 @@ const renderRecallResults = (result) => {
   if (fixture) fixture.hidden = true;
   const memories = result.memories || [];
   if (!memories.length) {
-    host.innerHTML = '<div class="pg-empty">No memories matched. Write a fact above, then recall it — supersession and scoring apply live.</div>';
+    host.innerHTML = '<div class="pg-empty">No memories matched. Write a fact above, then recall it - supersession and scoring apply live.</div>';
     host.hidden = false;
     return;
   }
@@ -879,7 +909,7 @@ document.querySelector('#run-write')?.addEventListener('click', async (event) =>
     if (input) input.value = '';
     const m = result.memory || {};
     const superseding = m.superseded_by ? ' · superseded a prior fact' : '';
-    playgroundNote(`✓ Remembered${superseding}. Auto-metadata, admission control, and supersession applied — try a recall.`);
+    playgroundNote(`✓ Remembered${superseding}. Auto-metadata, admission control, and supersession applied - try a recall.`);
   } catch {
     playgroundNote('Unable to reach the memory service. Please try again.', true);
   } finally {
@@ -889,7 +919,6 @@ document.querySelector('#run-write')?.addEventListener('click', async (event) =>
 });
 
 // ── Memory Governor: supersession review + admission queue ───────────────────
-const govState = { loading: false };
 const relationLabel = (relation) => ({ SUPERSEDES: 'supersedes', REFINES: 'refines · narrowing', CONFIRMS: 'confirms', CONTRADICTS_SAME_TIME: 'contradiction' }[relation] || (relation || '').toLowerCase());
 const renderGovernance = (data) => {
   const superHost = document.querySelector('#gov-supersessions');
@@ -909,7 +938,7 @@ const renderGovernance = (data) => {
     <article class="gov-card" data-memory="${escapeHtml(String(item.memory_id))}">
       <header><span class="gov-relation gov-relation-${escapeHtml(String(item.relation || '').toLowerCase())}">${escapeHtml(relationLabel(item.relation))}</span><b class="gov-confidence">${Math.round((item.confidence || 0) * 100)}% confidence</b><time>${escapeHtml(formatDate(item.created_at))}</time></header>
       <p>${escapeHtml(item.rationale || 'The engine was uncertain whether the new fact genuinely supersedes the old one.')}</p>
-      <small>memory ${escapeHtml(String(item.memory_id).slice(0, 8))}… ${item.superseded_by ? `→ superseded by ${escapeHtml(String(item.superseded_by).slice(0, 8))}…` : ''} · adjudication stage ${escapeHtml(String(item.adjudication_stage ?? '—'))}</small>
+      <small>memory ${escapeHtml(String(item.memory_id).slice(0, 8))}… ${item.superseded_by ? `→ superseded by ${escapeHtml(String(item.superseded_by).slice(0, 8))}…` : ''} · adjudication stage ${escapeHtml(String(item.adjudication_stage ?? '-'))}</small>
       <div class="gov-actions"><button class="gov-confirm" data-super-action="confirm">Confirm supersession</button><button class="gov-reject" data-super-action="reject">Reject · restore old fact</button></div>
     </article>`).join('')
     : `<div class="empty-state"><h3>Nothing awaiting review</h3><p>Supersessions below the ${Math.round((data.supersessions?.threshold ?? 0.75) * 100)}% confidence threshold will queue here for confirmation before the old fact is treated as stale.</p></div>`;
@@ -921,7 +950,7 @@ const renderGovernance = (data) => {
     <article class="gov-card" data-pending="${escapeHtml(String(item.id))}">
       <header><span class="gov-relation gov-relation-held">held</span>${(item.risk_tags || []).map((t) => `<span class="gov-tag">${escapeHtml(t)}</span>`).join('')}<time>${escapeHtml(formatDate(item.created_at))}</time></header>
       <p>${escapeHtml(item.content)}</p>
-      <small>${escapeHtml((item.reasons || []).join(' · ') || 'held by admission policy')} · agent ${escapeHtml(item.agent_id || '—')}${item.source ? ` · source ${escapeHtml(item.source)}` : ''}</small>
+      <small>${escapeHtml((item.reasons || []).join(' · ') || 'held by admission policy')} · agent ${escapeHtml(item.agent_id || '-')}${item.source ? ` · source ${escapeHtml(item.source)}` : ''}</small>
       <div class="gov-actions"><button class="gov-confirm" data-admission-action="approve">Approve · create memory</button><button class="gov-reject" data-admission-action="reject">Reject</button></div>
     </article>`).join('')
     : '<div class="empty-state"><h3>No held writes</h3><p>Writes flagged by the admission policy gate (PII, PHI, MNPI, prompt injection, vagueness) queue here in enforce mode.</p></div>';
@@ -1051,6 +1080,30 @@ document.querySelector('#key-form').addEventListener('submit', async (event) => 
   }
 });
 document.querySelector('#copy-key').addEventListener('click', async () => { await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); document.querySelector('#copy-key').textContent = 'Copied'; });
+// Agent-ready integration prompt (Get started view): copy + show/hide.
+document.querySelectorAll('[data-copy-target]').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    const src = document.getElementById(btn.getAttribute('data-copy-target'));
+    if (!src) return;
+    let ok = false;
+    try { await navigator.clipboard.writeText(src.textContent.trim()); ok = true; } catch {}
+    const orig = btn.getAttribute('data-label') || btn.textContent;
+    btn.setAttribute('data-label', orig);
+    btn.textContent = ok ? '✓ Copied' : 'Copy failed';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2200);
+  });
+});
+document.querySelectorAll('[data-toggle-target]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const src = document.getElementById(btn.getAttribute('data-toggle-target'));
+    if (!src) return;
+    const show = src.hidden;
+    src.hidden = !show;
+    btn.textContent = show ? 'Hide prompt' : 'Show prompt';
+    btn.setAttribute('aria-expanded', String(show));
+  });
+});
 // Settings persist locally (no server-side settings store yet); the button gives
 // real feedback instead of a blocking alert.
 const workspaceInput = document.querySelector('#settings-workspace');

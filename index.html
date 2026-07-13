@@ -3,12 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians is regulated AI memory infrastructure: a memory control plane for agents on time-sensitive, audited, and confidential data — bitemporal, tamper-evident, and crypto-shreddable." />
-    <title>Lians — Regulated AI memory infrastructure</title>
+    <meta name="description" content="Lians is regulated AI memory infrastructure: a memory control plane for agents on time-sensitive, audited, and confidential data: bitemporal, tamper-evident, and crypto-shreddable." />
+    <link rel="alternate" type="application/rss+xml" title="Lians Blog" href="https://www.lians.ai/feed.xml" />
+    <title>Lians · Regulated AI memory infrastructure</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
@@ -35,17 +37,19 @@
     </header>
 
     <main>
-      <a class="announce" href="/memory-governor"><b>New</b> Memory Governor is live — governed supersession with REFINES, a vagueness admission filter, scored recall, and a human review queue in the console <span>→</span></a>
       <section class="wrap hero">
         <h1>Memory that knows when it <em>changed</em>.</h1>
-        <p class="lede">A memory control plane for AI agents working on time-sensitive, audited, and confidential data. Recall what was <em>valid then</em> — not just what looks similar now.</p>
+        <p class="lede">A memory control plane for AI agents working on time-sensitive, audited, and confidential data. Recall what was <em>valid then</em>, not just what looks similar now.</p>
 
         <div class="term" aria-label="Install and use Lians">
           <div class="term-tabs" role="tablist" aria-label="Language">
-            <button class="term-tab active" role="tab" aria-selected="true" data-lang="python">python</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="node">node</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="curl">curl</button>
+            <button class="term-tab active" role="tab" aria-selected="true" data-lang="python" data-install="pip install lians-sdk[local]">python</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="node" data-install="npm install @lians-ai/lians">typescript</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="go" data-install="go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0">go</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="java" data-install="ai.lians:lians-sdk:0.4.0">java</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="c" data-install="cmake -B build &amp;&amp; cmake --build build">c</button>
             <div class="term-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+            <button class="term-copy" type="button" aria-label="Copy install command">copy</button>
           </div>
 <pre class="term-body" data-term="python"><span class="pr">$</span> pip install lians-sdk[local]
 
@@ -54,25 +58,55 @@ mem.<span class="kw">add</span>(agent_id=<span class="st">"desk"</span>,
         event_time=<span class="st">"2025-11-19"</span>)
 
 mem.<span class="kw">recall_at</span>(query=<span class="st">"NVDA guidance"</span>, as_of=<span class="st">"2025-03-01"</span>)
-<span class="cm"># →</span> <span class="out">"$32B"</span> <span class="cm">— valid then, not today's $40B</span><span class="cursor"></span></pre>
+<span class="cm"># →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
 <pre class="term-body" data-term="node" hidden><span class="pr">$</span> npm install @lians-ai/lians
 
-<span class="kw">import</span> { LiansClient } <span class="kw">from</span> <span class="st">"@lians-ai/lians"</span>
-const client = <span class="kw">new</span> LiansClient({ baseUrl, apiKey })
+<span class="kw">await</span> client.<span class="kw">addMemory</span>({ agent_id: <span class="st">"desk"</span>,
+  content: <span class="st">"NVDA guidance raised to $40B"</span>,
+  event_time: <span class="st">"2025-11-19"</span> })
 
-<span class="kw">await</span> client.recall({ agent_id: <span class="st">"desk"</span>,
-                      query: <span class="st">"NVDA guidance"</span> })<span class="cursor"></span></pre>
-<pre class="term-body" data-term="curl" hidden><span class="pr">$</span> curl -X POST $LIANS/v1/recall \
-   -d <span class="st">'{"agent_id":"desk","query":"NVDA guidance","as_of":"2025-03-01"}'</span>
+<span class="kw">await</span> client.<span class="kw">recall</span>({ query: <span class="st">"NVDA guidance"</span>, as_of: <span class="st">"2025-03-01"</span> })
+<span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
+<pre class="term-body" data-term="go" hidden><span class="pr">$</span> go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0
 
-<span class="cm"># →</span> <span class="out">{"value":"$32B","valid_on":"2025-03-01"}</span><span class="cursor"></span></pre>
+c.<span class="kw">AddMemory</span>(ctx, lians.AddMemoryRequest{AgentID: <span class="st">"desk"</span>,
+    Content:   <span class="st">"NVDA guidance raised to $40B"</span>,
+    EventTime: time.Date(2025, 11, 19, 0, 0, 0, 0, time.UTC)})
+
+c.<span class="kw">RecallAt</span>(ctx, <span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>,
+    time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC), 5)
+<span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
+<pre class="term-body" data-term="java" hidden><span class="cm">// Maven Central →</span> ai.lians:lians-sdk:0.4.0
+
+client.<span class="kw">addMemory</span>(<span class="st">"desk"</span>, <span class="st">"NVDA guidance raised to $40B"</span>,
+    Instant.parse(<span class="st">"2025-11-19T00:00:00Z"</span>), Map.of());
+
+client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>,
+    Instant.parse(<span class="st">"2025-03-01T00:00:00Z"</span>), 5);
+<span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
+<pre class="term-body" data-term="c" hidden><span class="pr">$</span> cmake -B build &amp;&amp; cmake --build build
+
+<span class="kw">lians_add</span>(c, <span class="st">"desk"</span>, <span class="st">"NVDA guidance raised to $40B"</span>,
+    <span class="st">"2025-11-19T00:00:00Z"</span>, NULL, NULL, NULL, 0.5);
+
+<span class="kw">lians_recall</span>(c, <span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>, 5,
+    <span class="st">"2025-03-01T00:00:00Z"</span>, NULL);
+<span class="cm">/* →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B) */</span><span class="cursor"></span></pre>
         </div>
 
         <div class="actions">
           <a class="btn btn-primary" href="/login">Get an API key →</a>
-          <a class="tlink" href="/docs">Read the docs →</a>
+          <a class="tlink" href="#watch">▶ Watch how it works (40s)</a>
         </div>
-        <p class="metaline"><span class="ok">●</span> Apache 2.0 · self-hostable · 5 native SDKs · MCP-native</p>
+
+        <p class="metaline"><span class="ok">●</span> Apache 2.0 · self-hostable · MCP-native<span class="gh-stars-wrap" hidden> · <a class="tlink" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">★ <span data-gh-stars></span> on GitHub ↗</a></span></p>
+      </section>
+
+      <section class="wrap block" id="watch" aria-label="Watch how memory works">
+        <p class="block-label">Watch it work</p>
+        <h2>A fact's whole life, in forty seconds.</h2>
+        <p class="intro">Every frame is live. Pause and click anything to inspect it.</p>
+        <div id="memory-player" aria-label="Interactive explainer: how Lians memory works"></div>
       </section>
 
       <section class="wrap block" aria-label="Capabilities">
@@ -91,30 +125,8 @@ const client = <span class="kw">new</span> LiansClient({ baseUrl, apiKey })
             <span class="head"><b>Crypto-shred erasure</b><span class="meta">GDPR Art. 17</span></span>
             <p>Destroy a per-subject key to provably erase content while the audit trail survives.</p>
           </a>
-          <a class="item" href="/product#admission">
-            <span class="head"><b>Memory admission control</b><span class="meta tag">Flagship</span></span>
-            <p>A policy gate on every write — PII/PHI/MNPI detection, source trust, prompt-injection quarantine. No competitor ships this.</p>
-          </a>
-          <a class="item" href="/product#graph">
-            <span class="head"><b>Relationship graph</b><span class="meta">temporal edges</span></span>
-            <p>Conflict-of-interest, related-party, and care-network queries — with no separate graph database.</p>
-          </a>
-          <a class="item" href="/memory-governor">
-            <span class="head"><b>Memory Governor</b><span class="meta tag">New</span></span>
-            <p>Change control for memory: SUPERSEDES / REFINES / CONFIRMS decisions, a vagueness gate on writes, and low-confidence changes queued for human review in the console.</p>
-          </a>
         </div>
-      </section>
-
-      <section class="wrap block" aria-label="Proof">
-        <p class="block-label">Proof</p>
-        <h2>Numbers, not adjectives.</h2>
-        <div class="stats">
-          <span class="s"><b>0 / 4</b><span>stale facts in top-5</span></span>
-          <span class="s"><b>100%</b><span>supersession accuracy</span></span>
-          <span class="s"><b>4 / 4</b><span>point-in-time recall</span></span>
-        </div>
-        <p class="metaline">From the NVDA revision-chain benchmark vs an accumulate-everything store. <a class="tlink" href="/compare">See the full eval →</a></p>
+        <p class="metaline">Plus admission control, a temporal relationship graph, and governed change control. <a class="tlink" href="/product">See the full control plane →</a></p>
       </section>
 
       <section class="wrap block" aria-label="Solutions">
@@ -123,31 +135,69 @@ const client = <span class="kw">new</span> LiansClient({ baseUrl, apiKey })
         <div class="list">
           <a class="item" href="/solutions/financial-services">
             <span class="head"><b>Financial services</b><span class="meta tag">Available</span></span>
-            <p>Point-in-time-correct trading memory across revised guidance and MNPI, with desk barriers and SEC/FINRA audit export.</p>
+            <p>Point-in-time trading memory with SEC/FINRA audit export. What did the desk's agent know on the day of the trade?</p>
           </a>
           <a class="item" href="/solutions/healthcare">
             <span class="head"><b>Healthcare</b><span class="meta tag">Available</span></span>
-            <p>Patient-scoped, encrypted, reconstructable memory with care-team barriers and audit-preserving erasure.</p>
+            <p>Patient-scoped memory with audit-preserving erasure: the medication list as charted at discharge, not as edited since.</p>
           </a>
           <a class="item" href="/solutions/legal">
             <span class="head"><b>Legal</b><span class="meta tag">Available</span></span>
-            <p>Matter-scoped memory with privilege-date reconstruction and conflict-of-interest graph paths.</p>
+            <p>Matter-scoped memory with privilege-date reconstruction: answer from what the firm knew before privilege attached, and prove it.</p>
           </a>
         </div>
       </section>
 
       <section class="wrap block" aria-label="Install">
         <p class="block-label">Install</p>
-        <h2>Five native SDKs. One memory API.</h2>
         <div class="list">
-          <div class="cmd"><span class="lang">Python</span><code>pip install lians-sdk</code></div>
-          <div class="cmd"><span class="lang">TypeScript / Node</span><code>npm install @lians-ai/lians</code></div>
-          <div class="cmd"><span class="lang">Go</span><code>go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.3.0</code></div>
-          <div class="cmd"><span class="lang">Java · JVM 11+</span><code>dev.lians:lians-sdk:0.3.0</code></div>
-          <div class="cmd"><span class="lang">C · C99 + libcurl</span><code>cmake -B build &amp;&amp; cmake --build build</code></div>
-          <div class="cmd"><span class="lang">MCP</span><code>uvx --from 'lians-sdk[mcp]' lians-mcp</code></div>
+          <div class="cmd"><span class="lang">Quickstart</span><code>pip install lians-sdk</code></div>
         </div>
-        <p class="metaline">Run as a library (SQLite), self-hosted (Postgres 16 + pgvector), or managed cloud. <a class="tlink" href="/sdks">Full install guide →</a></p>
+        <p class="metaline">Native SDKs for Python, TypeScript, Go, Java, and C, plus MCP. <a class="tlink" href="/sdks">Full install guide →</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="AI agent integration prompt">
+        <div class="aiprompt">
+          <div class="aiprompt-head">
+            <span class="aiprompt-tag">Agent-ready</span>
+            <p>Building with Claude Code or Codex? Copy one prompt and your agent wires Lians into your codebase.</p>
+            <div class="aiprompt-actions">
+              <button class="aiprompt-copy" type="button" data-copy-target="ai-prompt-text">Copy agent prompt</button>
+            </div>
+          </div>
+          <pre class="aiprompt-body" id="ai-prompt-text" hidden>Integrate Lians (regulated AI memory: bitemporal recall, tamper-evident audit, crypto-shred erasure) into this project.
+
+1. Detect the stack and install the SDK:
+   - Python:            pip install lians-sdk            (extras: [langchain] [langgraph] [crewai] [mcp] [all])
+   - TypeScript / Node:  npm install @lians-ai/lians
+   - Go:                go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0
+   - Java (JVM 11+):    ai.lians:lians-sdk:0.4.0 (Maven Central)
+
+2. Configure via environment only (never hardcode secrets): read LIANS_URL and LIANS_API_KEY.
+   If they are unset, add both to .env.example and tell me to get a key at https://www.lians.ai/login
+   or self-host: git clone https://github.com/ebeirne/Lians2 &amp;&amp; docker compose up --build.
+
+3. Wire memory into the agent loop (no agent loop in this project? skip to 4 and integrate at dev time instead):
+   - Write durable facts after meaningful exchanges: mem.add(agent_id, content, event_time, metadata).
+   - Recall context before responding: mem.recall(agent_id, query), or mem.recall_at(query, as_of=&lt;ISO date&gt;)
+     whenever the answer must reflect what was known or valid at a past point in time.
+   - Put structured keys in metadata (ticker / subject / metric) so supersession can close stale
+     versions automatically instead of letting revisions pile up.
+
+4. If this project is an MCP host, or you are working inside one (Claude Desktop / Claude Code / Cursor /
+   VS Code), skip SDK plumbing and register the MCP server: command "uvx", args
+   ["--from","lians-sdk[mcp]","lians-mcp"], env: LIANS_URL, LIANS_API_KEY, LIANS_AGENT_ID.
+   uvx ships with uv — if missing, install it first: https://docs.astral.sh/uv (winget/brew/curl).
+
+5. Never delete or overwrite memory rows directly: supersession closes stale facts, and
+   POST /v1/erase (crypto-shred) is the only compliant erasure path.
+
+6. Finish with a smoke test: add a fact with yesterday's event_time, assert recall() returns it, and
+   assert recall_at(as_of=&lt;a date before the write&gt;) returns nothing. No key or server yet? Run it
+   serverless: pip install lians-sdk[local], then LocalLiansClient().
+
+Docs: https://www.lians.ai/docs · SDKs: https://www.lians.ai/sdks · API keys: https://www.lians.ai/login</pre>
+        </div>
       </section>
     </main>
 
@@ -162,16 +212,19 @@ const client = <span class="kw">new</span> LiansClient({ baseUrl, apiKey })
       <div class="wrap">
         <div class="foot-top">
           <a class="brand" href="/"><span class="mark">L</span> Lians</a>
-          <p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p>
+          <p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p>
         </div>
         <div class="foot-cols">
-          <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-          <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+          <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+          <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
           <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-          <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+          <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
         </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
       </div>
     </footer>
     <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+    <script src="/lians-player.js" defer></script>
   </body>
 </html>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Lians security architecture: PostgreSQL row-level security information barriers, per-subject AES-256-GCM encryption with KMS, RBAC, SSO, SIEM streaming, and a non-superuser DB posture." />
-    <title>Security — Lians</title>
+    <title>Security · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -27,7 +27,7 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Product / Security</p>
         <h1>Compliance is <em>architecture</em>.</h1>
-        <p class="lede">Policies that live only in application code are policies someone can bypass. Lians pushes isolation, encryption, and access control down into the database and key-management layers — where a bug or a compromised service can't route around them.</p>
+        <p class="lede">Isolation, encryption, and access control live in the database and key-management layers, where a bug or a compromised service can't route around them.</p>
         <div class="actions"><a class="btn btn-primary" href="https://github.com/ebeirne/Lians2/blob/master/docs/security-whitepaper.md" target="_blank" rel="noreferrer">Security whitepaper ↗</a></div>
       </section>
 
@@ -35,10 +35,10 @@
         <p class="block-label">Tenant &amp; barrier isolation</p>
         <h2>The wall is below the app.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>Namespace RLS</b></span><p>Every request sets a transaction-scoped <code class="ic">app.current_namespace</code>; policies restrict every query to that namespace.</p></div>
-          <div class="item"><span class="head"><b>Information barriers</b></span><p>A RESTRICTIVE RLS policy keyed on <code class="ic">barrier_group</code> denies cross-barrier reads even for the table owner — verified in CI against a non-superuser role.</p></div>
-          <div class="item"><span class="head"><b>Non-superuser posture</b></span><p>Run the app as a non-superuser, non-BYPASSRLS Postgres role. Superusers bypass RLS by design; Lians documents and tests against this.</p></div>
-          <div class="item"><span class="head"><b>Compromise-resistant</b></span><p>A compromised service with valid DB credentials still cannot read across a wall — the policy runs under the owner's security context.</p></div>
+          <div class="item"><span class="head"><b>Namespace RLS</b></span><p>Row-level security restricts every query to the requesting namespace.</p></div>
+          <div class="item"><span class="head"><b>Information barriers</b></span><p>RESTRICTIVE policies deny cross-barrier reads even for the table owner, verified in CI against a non-superuser role.</p></div>
+          <div class="item"><span class="head"><b>Non-superuser posture</b></span><p>The app runs as a non-superuser, non-BYPASSRLS Postgres role, documented and tested.</p></div>
+          <div class="item"><span class="head"><b>Compromise-resistant</b></span><p>A compromised service with valid DB credentials still cannot read across a wall.</p></div>
         </div>
       </section>
 
@@ -61,12 +61,12 @@
         <p class="block-label">Access control &amp; operations</p>
         <h2>Scoped, audited, observable.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>Scoped API keys</b></span><p>Namespace-scoped with <code class="ic">read</code> / <code class="ic">write</code> / <code class="ic">admin</code> scopes, checked on every request; admin audit endpoints also require <code class="ic">X-Admin-Secret</code>.</p></div>
-          <div class="item"><span class="head"><b>RBAC roles</b></span><p><code class="ic">owner</code> / <code class="ic">analyst</code> / <code class="ic">compliance</code> / <code class="ic">readonly</code> expand to scope sets at auth time.</p></div>
+          <div class="item"><span class="head"><b>Scoped API keys</b></span><p>Namespace-scoped with read / write / admin scopes, checked on every request.</p></div>
+          <div class="item"><span class="head"><b>RBAC roles</b></span><p>Owner / analyst / compliance / readonly roles expand to scope sets at auth time.</p></div>
           <div class="item"><span class="head"><b>SSO</b></span><p>OIDC / SAML via gateway forward-auth.</p></div>
           <div class="item"><span class="head"><b>SIEM streaming</b></span><p>Stream audit events to Splunk, Datadog, or Elastic.</p></div>
-          <div class="item"><span class="head"><b>Reliability</b></span><p>Idempotency keys prevent duplicate writes on retries; <code class="ic">/livez</code> and <code class="ic">/readyz</code> probes prevent cascading failures; per-key rate limiting.</p></div>
-          <div class="item"><span class="head"><b>Air-gap mode</b></span><p><code class="ic">AIRGAP_MODE</code> hard-fails any config that would send data to an external service.</p></div>
+          <div class="item"><span class="head"><b>Reliability</b></span><p>Idempotent writes, liveness/readiness probes, and per-key rate limiting.</p></div>
+          <div class="item"><span class="head"><b>Air-gap mode</b></span><p>Hard-fails any config that would send data to an external service.</p></div>
         </div>
         <div class="actions"><a class="btn btn-primary" href="/compliance">Compliance mapping →</a><a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/docs/threat-model.md" target="_blank" rel="noreferrer">Threat model ↗</a></div>
       </section>
@@ -75,13 +75,14 @@
     <section class="band"><div class="wrap"><h2>Audit it before you deploy it.</h2><a class="btn" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">Read the source ↗</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
   </body>

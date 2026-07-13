@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians by vertical: point-in-time-correct, auditable, segregated agent memory, available today for financial services, healthcare, and legal." />
-    <title>Solutions · Lians</title>
+    <meta name="description" content="Live status of the Lians website, console API, and managed memory engine, checked from your browser." />
+    <title>Status · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -26,30 +26,20 @@
 
     <main>
       <section class="wrap hero">
-        <p class="crumb"><a href="/">Home</a> / Solutions</p>
-        <h1>Same problem, three <em>industries</em>.</h1>
-        <p class="lede">Temporal correctness, auditability, erasure, and access barriers in one deployable system, for financial services, healthcare, and legal.</p>
+        <p class="crumb"><a href="/">Home</a> / Status</p>
+        <h1>System status.</h1>
+        <p class="lede">Live checks run from your browser against the production surfaces: no synthetic status, no cached page. Refreshes every 30 seconds.</p>
       </section>
 
-      <section class="wrap block" aria-label="Verticals">
-        <p class="block-label">Verticals</p>
-        <h2>Pick your risk model.</h2>
-        <div class="list">
-          <a class="item" href="/solutions/financial-services"><span class="head"><b>Financial services</b><span class="meta tag">Available</span></span><p>Point-in-time-correct trading memory across revised guidance and MNPI, with desk barriers and SEC/FINRA audit export.</p></a>
-          <a class="item" href="/solutions/healthcare"><span class="head"><b>Healthcare</b><span class="meta tag">Available</span></span><p>Per-subject encryption, care-team barriers, point-in-time clinical timelines, and audit-preserving erasure, mapped to HIPAA technical safeguards.</p></a>
-          <a class="item" href="/solutions/legal"><span class="head"><b>Legal</b><span class="meta tag">Available</span></span><p>Matter walls, privilege-date reconstruction, conflict-of-interest graph paths, and custody-preserving erasure for document-heavy legal work.</p></a>
-        </div>
-      </section>
-
-      <section class="wrap block" aria-label="Try it: admission control">
-        <p class="block-label">See it: the shared control plane</p>
-        <h2>Every vertical starts at the same gate.</h2>
-        <p class="intro">Pick a candidate write and watch admission control decide.</p>
-        <div data-viz="gate"></div>
+      <section class="wrap block" aria-label="Live status">
+        <p class="block-label">Live · checked from your browser</p>
+        <h2>Production surfaces.</h2>
+        <div data-viz="statuschecks"></div>
+        <p class="metaline">Managed-engine incidents and maintenance are announced in the <a class="tlink" href="/changelog">changelog</a>. Self-hosted deployments are unaffected by managed-service status.</p>
       </section>
     </main>
 
-    <section class="band"><div class="wrap"><h2>Show each institution its own risk model.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+    <section class="band"><div class="wrap"><h2>Prefer zero shared infrastructure? Self-host it.</h2><a class="btn" href="/sdks">Install guide →</a></div></section>
 
     <footer class="foot"><div class="wrap">
       <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
@@ -59,7 +49,7 @@
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
-      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+      <div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
     <script src="/lians-visuals.js" defer></script>

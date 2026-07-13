@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="The regulated-memory eval: methodology, honest-recall definitions, five hard invariants, real-SDK harness design, dated results, and one-command reproduction." />
+    <title>Research: the regulated-memory eval · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / Research</p>
+        <h1>Honest recall, <em>measured</em>.</h1>
+        <p class="lede">Did the agent answer from what was <em>valid and knowable at the time</em>, and can you prove it afterwards? This eval measures that, live, against real SDKs.</p>
+        <div class="actions"><a class="btn btn-primary" href="https://github.com/ebeirne/Lians2/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Full write-up ↗</a><a class="tlink" href="/compare">Results table →</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="Definitions">
+        <p class="block-label">Definitions</p>
+        <h2>What "honest recall" means here.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Honest recall</b></span><p>A recall at simulated time <code class="ic">T</code> may return only facts whose <b>event time</b> and <b>ingestion time</b> both precede <code class="ic">T</code>. Anything else is contamination, however relevant it looks.</p></div>
+          <div class="item"><span class="head"><b>Stale fact</b></span><p>A superseded version of a fact (e.g. guidance before a revision) returned as if it were current. Accumulate-everything stores serve these whenever embedding similarity favors the older phrasing.</p></div>
+          <div class="item"><span class="head"><b>Lookahead contamination</b></span><p>Two classes: <code class="ic">FUTURE_EVENT</code>, where the event hadn't happened at <code class="ic">T</code>; and the subtler <code class="ic">LATE_REVISION</code>, where the event is old but its corrected figure arrived after <code class="ic">T</code>. Vector stores only see event time, so they miss the second class entirely.</p></div>
+          <div class="item"><span class="head"><b>Turnkey primitive</b></span><p>Each invariant is scored against a product's public API surface. Either there is an API to call, or there isn't; a thrown invariant is a failure, not a partial.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Method">
+        <p class="block-label">Method</p>
+        <h2>Five invariants, one harness, real SDKs.</h2>
+        <p class="intro">The scenario is a revision chain: NVDA data-center guidance revised upward three times across a quarter, interleaved with unrelated facts. Every system ingests the identical sequence with identical timestamps, then answers the same queries through its own real SDK adapter.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>1 · Stale revision suppressed</b></span><p>After a revision lands, the prior figure must not appear in top-5 recall for the natural query. Measures deterministic supersession, not ranking luck.</p></div>
+          <div class="item"><span class="head"><b>2 · Point-in-time (as-of) recall</b></span><p>Query the chain as of a date between revisions; the answer must be the figure that was valid then, not today's.</p></div>
+          <div class="item"><span class="head"><b>3 · Provable erasure</b></span><p>Erase a data subject; content must become unrecoverable while the audit trail survives, with a certificate to show for it.</p></div>
+          <div class="item"><span class="head"><b>4 · Lookahead / backtest guard</b></span><p>A contamination check at a simulated checkpoint must flag both <code class="ic">FUTURE_EVENT</code> and <code class="ic">LATE_REVISION</code> memories, or refuse recall outright.</p></div>
+          <div class="item"><span class="head"><b>5 · Audit-state snapshot at T</b></span><p>Reconstruct exactly what the store contained at a past instant, suitable for handing to an examiner.</p></div>
+        </div>
+        <p class="metaline">Lians executes live against the same engine the server runs; mem0 OSS and Graphiti OSS also execute live in their default documented configs, and the remaining competitors (Letta, Hindsight, Supermemory) run through the same harness via real-SDK adapters. No mocks, no reimplementations of competitors' logic.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Results">
+        <p class="block-label">Results · last run 2026-07-04</p>
+        <h2>The score is the API surface.</h2>
+        <div class="stats">
+          <span class="s"><b>5.0 / 5</b><span>Lians</span></span>
+          <span class="s"><b>2.0 / 5</b><span>next best (Zep/Graphiti)</span></span>
+          <span class="s"><b>0 / 5</b><span>competitors passing the lookahead guard</span></span>
+        </div>
+        <p class="metaline">Pass = 1, partial = ½. Full per-invariant table and per-competitor analysis on the <a class="tlink" href="/compare">compare page</a> and in the <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">methodology doc ↗</a>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="LOCOMO results">
+        <p class="block-label">Recall quality · LOCOMO · run 2026-07-09</p>
+        <h2>Judged by the competitor's harness.</h2>
+        <div class="stats">
+          <span class="s"><b>92.9%</b><span>Lians · LLM-judged QA accuracy</span></span>
+          <span class="s"><b>91.6%</b><span>mem0 · their published score</span></span>
+          <span class="s"><b>1,986</b><span>questions · 10 conversations</span></span>
+        </div>
+        <p class="metaline">Lians top-200 retrieval per question, dumped into the unmodified <a class="tlink" href="https://github.com/mem0ai/memory-benchmarks" target="_blank" rel="noreferrer">mem0ai/memory-benchmarks ↗</a> answer + judge pipeline (gpt-5), so grading is the competitor's, verbatim. Lower cutoffs and the full protocol are in the <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">report ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="Reproduce">
+        <p class="block-label">Reproduce it</p>
+        <h2>Don't trust us. Run it.</h2>
+        <p class="intro">The harness ships in the open-source repo. One command reruns the whole eval; plug in a competitor's API key to score a live column instead of the SDK-surface adapter.</p>
+        <div class="list">
+          <div class="cmd"><span class="lang">Clone</span><code>git clone https://github.com/ebeirne/Lians2 &amp;&amp; cd Lians2/agentmem</code></div>
+          <div class="cmd"><span class="lang">Run</span><code>python -m benchmarks.compare_regulated</code></div>
+        </div>
+        <p class="metaline">Results on this page are refreshed whenever the harness or a competitor SDK changes; the run date above is the date of the numbers shown, not the page edit date.</p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/compare">See the full eval →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

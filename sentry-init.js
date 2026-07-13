@@ -8,7 +8,7 @@
     window.Sentry.init({
       dsn: dsn,
       environment: location.hostname === 'www.lians.ai' ? 'production' : 'development',
-      // Errors only for now — no performance tracing or session replay.
+      // Errors only for now - no performance tracing or session replay.
       tracesSampleRate: 0,
       release: (window.__lian_config || {}).build || undefined,
     });

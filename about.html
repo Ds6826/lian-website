@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Who builds Lians, what exists today, and the founding design-partner program for regulated teams." />
+    <title>About · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / About</p>
+        <h1>Built for agents that must <em>answer</em> for themselves.</h1>
+        <p class="lede">Lians is regulated AI memory infrastructure, built in the open by Ethan Beirne and Dereck Salazar. The thesis: as agents move into finance, healthcare, and legal work, the question stops being “what does the agent know?” and becomes “what did it know when it decided, and can you prove it?”</p>
+      </section>
+
+      <section class="wrap block" aria-label="What exists">
+        <p class="block-label">What exists today</p>
+        <h2>Not a deck. A shipping system.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Open-source engine</b><span class="meta">Apache 2.0</span></span><p>Bitemporal store, deterministic supersession, admission control, SHA-256 audit chain, crypto-shred erasure, relationship graph, all inspectable at <a class="tlink" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">github.com/ebeirne/Lians2 ↗</a>.</p></div>
+          <div class="item"><span class="head"><b>Five SDKs + MCP</b></span><p>Python, TypeScript, Go, Java, C, released in lock-step, plus a native MCP server on the official registry for Claude Desktop, Cursor, and VS Code.</p></div>
+          <div class="item"><span class="head"><b>Managed console</b></span><p>API keys, live playground, and the Memory Governor review queues at <a class="tlink" href="/login">lians.ai/login</a>.</p></div>
+          <div class="item"><span class="head"><b>A benchmark you can re-run</b></span><p>The <a class="tlink" href="/compare">regulated-memory eval</a> executes live against the engine and scores five competitors through real-SDK adapters. No adjectives.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Founder note">
+        <p class="block-label">Why we built this</p>
+        <h2>A founder note.</h2>
+        <p class="intro">Agent memory today is built for chatbots: accumulate everything, rank by similarity, hope the right thing surfaces. That's fine until the answer moves money, touches a patient, or lands in front of a regulator, then the question isn't whether the agent remembered, it's whether it remembered <em>honestly</em>.</p>
+        <p class="intro">Existing stores track one clock; regulated reality runs on two: when a thing was true, and when you learned it. Lians started as that missing primitive and grew into the control plane around it. It's open source because "trust us" is not an acceptable answer in this market. Read the code, run the eval, and hold us to the standard we're selling. · <b>Ethan Beirne</b>, founder</p>
+      </section>
+
+      <section class="wrap block" aria-label="Design partners">
+        <p class="block-label">Design partners · 3 slots</p>
+        <h2>Founding design partners get the direct line.</h2>
+        <p class="intro">Three slots for teams putting agents on time-sensitive, audited, or confidential data: white-glove integration, direct founder access, locked founding pricing.</p>
+        <div class="actions"><a class="btn btn-primary" href="#contact">Apply as a design partner →</a><a class="tlink" href="/solutions">See the verticals →</a></div>
+      </section>
+
+      <section class="wrap block" id="contact" aria-label="Contact">
+        <p class="block-label">Contact</p>
+        <h2>Talk to a human.</h2>
+        <div class="list">
+          <div class="cmd"><span class="lang">Sales &amp; partners</span><code><a class="tlink" href="mailto:sales@lians.ai">sales@lians.ai</a></code></div>
+          <div class="cmd"><span class="lang">Security reports</span><code><a class="tlink" href="mailto:security@lians.ai">security@lians.ai</a></code></div>
+          <div class="cmd"><span class="lang">Privacy</span><code><a class="tlink" href="mailto:privacy@lians.ai">privacy@lians.ai</a></code></div>
+          <div class="cmd"><span class="lang">Everything else</span><code><a class="tlink" href="https://github.com/ebeirne/Lians2/issues" target="_blank" rel="noreferrer">GitHub issues ↗</a></code></div>
+        </div>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Three design-partner slots. Regulated teams first.</h2><a class="btn" href="#contact">Apply →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+  </body>
+</html>

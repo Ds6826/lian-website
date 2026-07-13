@@ -7,7 +7,7 @@ const { createClerkClient, verifyToken } = require('@clerk/backend');
 const root = __dirname;
 const envFile = path.join(root, '.env');
 if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forEach((line) => { const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*?)\s*$/); if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, ''); });
-// Strip BOM (U+FEFF) from Clerk keys — can appear when copy-pasting into Vercel env settings from certain editors
+// Strip BOM (U+FEFF) from Clerk keys - can appear when copy-pasting into Vercel env settings from certain editors
 ['CLERK_SECRET_KEY', 'CLERK_PUBLISHABLE_KEY'].forEach((key) => { if (process.env[key]?.charCodeAt(0) === 0xFEFF) process.env[key] = process.env[key].slice(1); });
 
 const port = Number(process.env.PORT || 8000);
@@ -94,7 +94,7 @@ const clerkFrontendApi = (() => {
 })();
 const clerkOrigin = clerkFrontendApi ? `https://${clerkFrontendApi}` : '';
 // Clerk's own CDN serves v4 for this account; v4 has no billing API (window.Clerk.billing).
-// Load v5 from jsDelivr (already in CSP) as primary — fall back to Clerk's CDN v4 if jsDelivr fails.
+// Load v5 from jsDelivr (already in CSP) as primary - fall back to Clerk's CDN v4 if jsDelivr fails.
 const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
 const clerkJsFallbackUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js` : '';
 
@@ -116,7 +116,8 @@ const SEC_HEADERS = {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self' https://challenges.cloudflare.com https://api.stripe.com https://*.ingest.us.sentry.io${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
+    // api.github.com: live star-count badge on the homepage hero.
+    `connect-src 'self' https://api.github.com https://challenges.cloudflare.com https://api.stripe.com https://*.ingest.us.sentry.io${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
     // hooks.stripe.com + m.stripe.network: Stripe 3-D Secure challenge and fraud-signal frames.
     `frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://m.stripe.network${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
     "object-src 'none'",
@@ -186,7 +187,7 @@ const verifyClerkToken = async (req) => {
       log('clerk_bearer_verify_error', req, null, { message: err.message });
     }
     // Path 2: API-based verification via clerk.sessions.verifySession.
-    // Calls api.clerk.com/v1/sessions/{id}/verify using the secret key — bypasses JWKS
+    // Calls api.clerk.com/v1/sessions/{id}/verify using the secret key - bypasses JWKS
     // kid-matching entirely. Only fails if the token is genuinely invalid/expired.
     try {
       const [, payloadB64] = bearer.split('.');
@@ -238,7 +239,7 @@ const userFor = async (req) => {
     const restoredCompletedAt = clerkUser.privateMetadata?.onboardingCompletedAt || clerkUser.privateMetadata?.onboardingAnswers?.completedAt || null;
     const restoredComplete = Boolean(clerkUser.privateMetadata?.onboardingComplete && restoredCompletedAt);
     const restoredBillingPlan = clerkUser.privateMetadata?.billingPlan || null;
-    // The local id feeds liansNamespace(user) — it must survive lambda recycling,
+    // The local id feeds liansNamespace(user) - it must survive lambda recycling,
     // or a reconstituted user gets a fresh namespace and loses sight of their
     // keys/usage. Reuse the id pinned in Clerk metadata; pin it on first create.
     const restoredId = clerkUser.privateMetadata?.liansUserId || null;
@@ -266,7 +267,7 @@ const userFor = async (req) => {
   } else if (!hasCompletedOnboarding(user, store)) {
     // Upgrade path, mirror of the downgrade above: another lambda may have
     // processed /api/onboarding/complete, so this instance's file-store copy is
-    // stale. Clerk privateMetadata is the durable record — sync from it once,
+    // stale. Clerk privateMetadata is the durable record - sync from it once,
     // persist, and every later request on this instance is served locally.
     try {
       const cu = await clerk.users.getUser(clerkUserId);
@@ -315,7 +316,7 @@ const app = async (req, res) => {
 
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
-    // Clerk webhook — must be before CORS/rate-limit (server-to-server, no origin header)
+    // Clerk webhook - must be before CORS/rate-limit (server-to-server, no origin header)
     if (pathname === '/api/webhooks/clerk' && req.method === 'POST') {
       const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
       if (!webhookSecret) return json(res, 500, { error: 'Webhook not configured.' });
@@ -390,7 +391,7 @@ const app = async (req, res) => {
       return;
     }
 
-    // Page routes — serve the SPA shell; client-side Clerk drives all routing.
+    // Page routes - serve the SPA shell; client-side Clerk drives all routing.
     // Never gate HTML delivery on the session cookie: Clerk sets the cookie
     // asynchronously after OAuth and a cookie-miss here causes a redirect loop.
     // Auth is enforced on every /api/* route instead.
@@ -398,7 +399,7 @@ const app = async (req, res) => {
     if (pathname === '/memory-governor') return serveFile(res, path.join(root, 'memory-governor.html'));
     if (pathname === '/memory-governor.html') return redirect(res, '/memory-governor');
 
-    // Marketing content pages — pretty URLs mapped to their static .html.
+    // Marketing content pages - pretty URLs mapped to their static .html.
     // Keep this in sync with vercel.json routes.
     const CONTENT_PAGES = {
       '/product': 'product.html',
@@ -422,6 +423,12 @@ const app = async (req, res) => {
       '/compare/letta': 'compare-letta.html',
       '/compare/hindsight': 'compare-hindsight.html',
       '/compare/supermemory': 'compare-supermemory.html',
+      '/trust': 'trust.html',
+      '/research': 'research.html',
+      '/blog': 'blog.html',
+      '/blog/backtest-lookahead': 'blog-backtest-lookahead.html',
+      '/blog/locomo-benchmark': 'blog-locomo-benchmark.html',
+      '/blog/memory-lifecycle': 'blog-memory-lifecycle.html',
     };
     if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, CONTENT_PAGES[pathname]));
     if (pathname.endsWith('.html')) {
@@ -483,7 +490,7 @@ const app = async (req, res) => {
       if (liansConfigured()) {
         try {
           const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
-          // The console-internal key is server infrastructure, not a user key — never list it.
+          // The console-internal key is server infrastructure, not a user key - never list it.
           const keys = (Array.isArray(list) ? list : []).filter((k) => !k.revoked_at && k.label !== CONSOLE_KEY_LABEL).map(liansKeyView);
           return json(res, 200, { keys, freshKey: null });
         } catch (err) { log('lians_keys_list_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to reach the Lians API. Please try again.' }); }
@@ -508,7 +515,7 @@ const app = async (req, res) => {
             const { hashedKey, ...safeKey } = keyRecord;
             keys.unshift(safeKey);
           }
-          // Clear the pending key from Clerk metadata — never reveal again
+          // Clear the pending key from Clerk metadata - never reveal again
           await clerk.users.updateUserMetadata(user.clerkUserId, {
             privateMetadata: { ...clerkUser.privateMetadata, pendingApiKey: null, pendingKeyId: null, pendingKeyScopes: null, liansKeyId: keyId, liansTier: tier },
           });
@@ -684,17 +691,11 @@ const app = async (req, res) => {
       }
     }
 
-    // Playground demo (uses lian-sdk when available, falls back to fixture)
+    // Playground demo: canned fixture. The signed-in console's live playground
+    // talks to the real backend via lians-console.js instead.
     if (pathname === '/api/demo/recall' && req.method === 'POST') {
       const user = await userFor(req); if (!user) return json(res, 401, { error: 'Authentication required.' });
-      try {
-        const { LianClient } = require('lian-sdk');
-        const client = new LianClient({ apiKey: process.env.LIANS_API_KEY, baseUrl });
-        const result = await client.recall({ agentId: 'demo', query: 'NVDA guidance', asOf: '2025-03-01' });
-        return json(res, 200, result);
-      } catch {
-        return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' });
-      }
+      return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' });
     }
 
     // Current-month usage from the Lians engine's event log (writes + recalls).

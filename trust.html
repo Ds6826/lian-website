@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Lians trust center: deployment models that keep data in your perimeter, encryption posture, compliance status, subprocessor list, and security disclosure policy." />
+    <title>Trust center · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / Trust</p>
+        <h1>We sell compliance. Here's <em>ours</em>.</h1>
+        <p class="lede">The current, honest state of our security and compliance posture: what's certified, what's in progress, and what's architecturally guaranteed.</p>
+        <div class="actions"><a class="btn btn-primary" href="mailto:security@lians.ai">Contact security →</a><a class="tlink" href="/security">Security architecture →</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="Deployment model">
+        <p class="block-label">Deployment model</p>
+        <h2>The strongest guarantee: your data never reaches us.</h2>
+        <p class="intro">Lians is self-hostable by design: the recommended deployment keeps every memory, embedding, and audit event inside your own perimeter. No telemetry, no phone-home.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>Self-hosted</b><span class="meta">recommended for regulated data</span></span><p>Run the Apache-2.0 engine on your own Postgres. PII, PHI, and MNPI never leave your infrastructure.</p></div>
+          <div class="item"><span class="head"><b>Air-gap mode</b></span><p>Hard-fails any configuration that would send data to an external service.</p></div>
+          <div class="item"><span class="head"><b>Library mode</b></span><p>Embedded SQLite, fully in-process. No server, no network surface.</p></div>
+          <div class="item"><span class="head"><b>Managed cloud</b><span class="meta">optional</span></span><p>Zero ops, with the same encryption and audit posture as self-hosted.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Compliance status">
+        <p class="block-label">Compliance status</p>
+        <h2>Current, dated, no adjectives.</h2>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Item</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>SOC 2 Type 1</td><td>In progress</td><td>Current status and control documentation available under NDA; <a class="tlink" href="mailto:security@lians.ai">ask security@lians.ai</a>.</td></tr>
+            <tr><td>GDPR Art. 17 erasure</td><td>Architectural</td><td>Per-subject crypto-shred with erasure certificate; audit trail preserved. <a class="tlink" href="/compliance">Mapping →</a></td></tr>
+            <tr><td>SEC 17a-4 / WORM</td><td>Architectural</td><td>Append-only SHA-256 audit chain; point-in-time reconstruction for examiners. <a class="tlink" href="/compliance">Mapping →</a></td></tr>
+            <tr><td>HIPAA</td><td>Architecture-aligned</td><td>Self-hosted keeps PHI in your perimeter; patient-scoped encryption and access barriers in the engine.</td></tr>
+            <tr><td>Penetration testing</td><td>Open source</td><td>The full engine is public. Audit it before you deploy it. Threat model and security whitepaper on <a class="tlink" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a>.</td></tr>
+          </tbody>
+        </table></div>
+        <p class="metaline">Last updated 2026-07-05. This table states what is true today, not what a roadmap hopes.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Encryption">
+        <p class="block-label">Encryption</p>
+        <h2>Encrypted at rest, in transit, per subject.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>At rest</b></span><p>AES-256-GCM under a per-subject key, wrapped by a master key from your KMS.</p></div>
+          <div class="item"><span class="head"><b>In transit</b></span><p>TLS everywhere; HSTS with preload on the managed surface.</p></div>
+          <div class="item"><span class="head"><b>Credentials</b></span><p>API keys stored only as SHA-256 hashes, namespace-scoped, individually revocable.</p></div>
+          <div class="item"><span class="head"><b>Erasure</b></span><p>Destroying a subject's key renders their content permanently unreadable; hashes and timestamps survive for the examiner.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Subprocessors">
+        <p class="block-label">Subprocessors</p>
+        <h2>A short list, and how to make it zero.</h2>
+        <p class="intro">These apply to the managed cloud and this website only. Self-hosted deployments have <b>no subprocessors</b>. That's the point.</p>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Subprocessor</th><th>Purpose</th><th>Data touched</th></tr></thead>
+          <tbody>
+            <tr><td>Fly.io</td><td>Managed cloud hosting (app + database)</td><td>Customer memory data (managed cloud only), encrypted at rest</td></tr>
+            <tr><td>Vercel</td><td>Website and console hosting</td><td>Site traffic metadata</td></tr>
+            <tr><td>Clerk</td><td>Console authentication</td><td>Account email, session data</td></tr>
+            <tr><td>Stripe</td><td>Billing</td><td>Payment details (never stored by Lians)</td></tr>
+            <tr><td>Sentry</td><td>Error telemetry for the website</td><td>Error traces; no memory content</td></tr>
+          </tbody>
+        </table></div>
+        <p class="metaline">Changes to this list are announced in the <a class="tlink" href="/changelog">changelog</a> before they take effect.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Disclosure">
+        <p class="block-label">Security disclosure</p>
+        <h2>Found something? Tell us directly.</h2>
+        <div class="list">
+          <div class="cmd"><span class="lang">Report</span><code><a class="tlink" href="mailto:security@lians.ai">security@lians.ai</a></code></div>
+          <div class="cmd"><span class="lang">Response</span><code>acknowledgement within 48 hours</code></div>
+          <div class="cmd"><span class="lang">Disclosure</span><code>coordinated: we fix, then publish in the changelog with credit</code></div>
+        </div>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Don't take the page's word. <em>Audit the source.</em></h2><a class="btn" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">Read the code ↗</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

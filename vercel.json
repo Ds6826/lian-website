@@ -4,48 +4,328 @@
     {
       "src": "api/index.js",
       "use": "@vercel/node",
-      "config": { "includeFiles": ["*.html"] }
+      "config": {
+        "includeFiles": [
+          "*.html"
+        ]
+      }
     },
-    { "src": "app.js", "use": "@vercel/static" },
-    { "src": "clerk-loader.js", "use": "@vercel/static" },
-    { "src": "sentry-init.js", "use": "@vercel/static" },
-    { "src": "script.js", "use": "@vercel/static" },
-    { "src": "governor.js", "use": "@vercel/static" },
-    { "src": "memory-governor.html", "use": "@vercel/static" },
-    { "src": "product.html", "use": "@vercel/static" },
-    { "src": "compliance.html", "use": "@vercel/static" },
-    { "src": "security.html", "use": "@vercel/static" },
-    { "src": "sdks.html", "use": "@vercel/static" },
-    { "src": "compare.html", "use": "@vercel/static" },
-    { "src": "pricing.html", "use": "@vercel/static" },
-    { "src": "docs.html", "use": "@vercel/static" },
-    { "src": "solutions.html", "use": "@vercel/static" },
-    { "src": "solutions-financial-services.html", "use": "@vercel/static" },
-    { "src": "solutions-healthcare.html", "use": "@vercel/static" },
-    { "src": "solutions-legal.html", "use": "@vercel/static" },
-    { "src": "console-api.js", "use": "@vercel/static" },
-    { "src": "app.css", "use": "@vercel/static" },
-    { "src": "favicon.svg", "use": "@vercel/static" },
-    { "src": "styles.css", "use": "@vercel/static" },
-    { "src": "pages.css", "use": "@vercel/static" },
-    { "src": "lians.css", "use": "@vercel/static" },
-    { "src": "lians.js", "use": "@vercel/static" },
-    { "src": "governor.css", "use": "@vercel/static" }
+    {
+      "src": "app.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "clerk-loader.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sentry-init.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "script.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "governor.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "memory-governor.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "product.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compliance.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "security.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sdks.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compare.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "pricing.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "docs.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "solutions.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "solutions-financial-services.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "solutions-healthcare.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "solutions-legal.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "privacy.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "terms.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "changelog.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "about.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "status.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compare-mem0.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compare-zep.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compare-letta.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compare-hindsight.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "compare-supermemory.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "trust.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "research.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "blog.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "blog-locomo-benchmark.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "blog-backtest-lookahead.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "blog-memory-lifecycle.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "llms.txt",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "sitemap.xml",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "feed.xml",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "robots.txt",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "console-api.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "app.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.svg",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "styles.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "pages.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "lians.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "lians.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "lians-visuals.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "lians-visuals.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "lians-player.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "governor.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": ".well-known/mcp-registry-auth",
+      "use": "@vercel/static"
+    }
   ],
   "routes": [
-    { "src": "/memory-governor", "dest": "/memory-governor.html" },
-    { "src": "/product", "dest": "/product.html" },
-    { "src": "/compliance", "dest": "/compliance.html" },
-    { "src": "/security", "dest": "/security.html" },
-    { "src": "/sdks", "dest": "/sdks.html" },
-    { "src": "/compare", "dest": "/compare.html" },
-    { "src": "/pricing", "dest": "/pricing.html" },
-    { "src": "/docs", "dest": "/docs.html" },
-    { "src": "/solutions", "dest": "/solutions.html" },
-    { "src": "/solutions/financial-services", "dest": "/solutions-financial-services.html" },
-    { "src": "/solutions/healthcare", "dest": "/solutions-healthcare.html" },
-    { "src": "/solutions/legal", "dest": "/solutions-legal.html" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/api/index.js" }
+    {
+      "src": "/memory-governor",
+      "dest": "/memory-governor.html"
+    },
+    {
+      "src": "/product",
+      "dest": "/product.html"
+    },
+    {
+      "src": "/compliance",
+      "dest": "/compliance.html"
+    },
+    {
+      "src": "/security",
+      "dest": "/security.html"
+    },
+    {
+      "src": "/sdks",
+      "dest": "/sdks.html"
+    },
+    {
+      "src": "/compare",
+      "dest": "/compare.html"
+    },
+    {
+      "src": "/pricing",
+      "dest": "/pricing.html"
+    },
+    {
+      "src": "/docs",
+      "dest": "/docs.html"
+    },
+    {
+      "src": "/solutions",
+      "dest": "/solutions.html"
+    },
+    {
+      "src": "/solutions/financial-services",
+      "dest": "/solutions-financial-services.html"
+    },
+    {
+      "src": "/solutions/healthcare",
+      "dest": "/solutions-healthcare.html"
+    },
+    {
+      "src": "/solutions/legal",
+      "dest": "/solutions-legal.html"
+    },
+    {
+      "src": "/privacy",
+      "dest": "/privacy.html"
+    },
+    {
+      "src": "/terms",
+      "dest": "/terms.html"
+    },
+    {
+      "src": "/changelog",
+      "dest": "/changelog.html"
+    },
+    {
+      "src": "/about",
+      "dest": "/about.html"
+    },
+    {
+      "src": "/status",
+      "dest": "/status.html"
+    },
+    {
+      "src": "/compare/mem0",
+      "dest": "/compare-mem0.html"
+    },
+    {
+      "src": "/compare/zep",
+      "dest": "/compare-zep.html"
+    },
+    {
+      "src": "/compare/letta",
+      "dest": "/compare-letta.html"
+    },
+    {
+      "src": "/compare/hindsight",
+      "dest": "/compare-hindsight.html"
+    },
+    {
+      "src": "/compare/supermemory",
+      "dest": "/compare-supermemory.html"
+    },
+    {
+      "src": "/trust",
+      "dest": "/trust.html"
+    },
+    {
+      "src": "/research",
+      "dest": "/research.html"
+    },
+    {
+      "src": "/blog",
+      "dest": "/blog.html"
+    },
+    {
+      "src": "/blog/locomo-benchmark",
+      "dest": "/blog-locomo-benchmark.html"
+    },
+    {
+      "src": "/blog/backtest-lookahead",
+      "dest": "/blog-backtest-lookahead.html"
+    },
+    {
+      "src": "/blog/memory-lifecycle",
+      "dest": "/blog-memory-lifecycle.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
+    }
   ]
 }

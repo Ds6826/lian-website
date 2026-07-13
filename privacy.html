@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="How Lians collects, uses, protects, and erases data across the website, console, and managed engine. Self-hosted deployments send us nothing." />
+    <title>Privacy policy · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / Privacy</p>
+        <h1>Privacy policy.</h1>
+        <p class="lede">Effective 2026-07-02. This policy covers the lians.ai website and the Lians managed console. Self-hosted deployments of the open-source engine run entirely on your infrastructure; no data reaches us at all.</p>
+      </section>
+
+      <section class="wrap block prose" aria-label="Privacy policy">
+        <h3>1 · What we collect</h3>
+        <p><strong>Account data.</strong> When you sign in, our authentication provider (Clerk) processes your name, email address, and avatar from Google or GitHub. We store a workspace record keyed to that identity, plus the answers you give during onboarding (role, use case, tooling).</p>
+        <p><strong>Billing data.</strong> Paid plans are processed by Stripe via Clerk Billing. Card numbers never touch our servers; we store only your plan tier and subscription status.</p>
+        <p><strong>Service telemetry.</strong> We log API and console requests (route, timestamp, status, coarse IP for rate-limiting) and use Sentry for error reports. We do not run advertising trackers, and the only cookies we set are the session cookies required to keep you signed in.</p>
+        <p><strong>Memory content.</strong> Facts your agents write to the managed engine are processed on your behalf as a data processor. Content is encrypted at rest with per-subject AES-256-GCM keys; erasure is available at any time via crypto-shred (<code class="ic">POST /v1/erase</code>), which destroys the subject key and renders the content permanently unrecoverable (including in backups) while the hash-only audit trail survives.</p>
+
+        <h3>2 · What we never do</h3>
+        <p>We do not sell personal data. We do not use your memory content to train models. We do not share data with third parties except the subprocessors below, each bound by their own data-processing terms.</p>
+
+        <h3>3 · Subprocessors</h3>
+        <p>Vercel (website + console hosting) · Fly.io (managed engine hosting) · Clerk (authentication &amp; billing) · Stripe (payments) · Sentry (error monitoring) · Google Workspace (email). Self-hosted deployments use none of these.</p>
+
+        <h3>4 · Retention &amp; erasure</h3>
+        <p>Account data is retained while your account is active and deleted on request. Memory content follows the retention policy you configure per namespace; crypto-shred erasure takes effect immediately and issues a signed erasure certificate. Audit rows are hash-only and are retained to satisfy regulatory record-keeping (e.g. SEC 17a-4); they contain no recoverable content.</p>
+
+        <h3>5 · Your rights</h3>
+        <p>Depending on your jurisdiction (GDPR, UK GDPR, CCPA), you may have rights of access, rectification, erasure, portability, and objection. Write to <a class="tlink" href="mailto:privacy@lians.ai">privacy@lians.ai</a> and we will respond within 30 days. For content your organisation stores about its own users, contact that organisation; we act on their instruction as processor.</p>
+
+        <h3>6 · Security</h3>
+        <p>Encryption in transit (TLS) and at rest, per-subject envelope encryption, row-level security for information barriers, and an append-only tamper-evident audit chain. Full details in the <a class="tlink" href="/security">security architecture</a>. Report vulnerabilities to <a class="tlink" href="mailto:security@lians.ai">security@lians.ai</a>.</p>
+
+        <h3>7 · Changes</h3>
+        <p>We will post material changes here and update the effective date. Questions: <a class="tlink" href="mailto:privacy@lians.ai">privacy@lians.ai</a>.</p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Memory that can prove it forgot.</h2><a class="btn" href="/compliance">Audit &amp; compliance →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+  </body>
+</html>

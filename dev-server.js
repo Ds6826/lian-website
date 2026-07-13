@@ -34,11 +34,13 @@ const SEC_HEADERS = {
   ...(isProd ? { 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload' } : {}),
   'content-security-policy': [
     "default-src 'self'",
-    `script-src 'self'${clerkHost ? ` ${clerkHost}` : ''}`,
+    // sha256 hash whitelists the inline no-flash theme script in every page <head>
+    // (same hash as server.js — keep both in sync if the theme snippet changes).
+    `script-src 'self' 'sha256-oM3fK1wB/KZpRi+zI+8vJ+5IU+jYT4jY9m7pTRZLHCc='${clerkHost ? ` ${clerkHost}` : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https:",
-    `connect-src 'self'${clerkHost ? ` ${clerkHost} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
+    `connect-src 'self' https://api.github.com${clerkHost ? ` ${clerkHost} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
     `frame-src${clerkHost ? ` ${clerkHost}` : " 'none'"}`,
     "object-src 'none'",
     "base-uri 'self'",
@@ -132,7 +134,7 @@ http.createServer(async (req, res) => {
       return;
     }
 
-    // Page routes — serve the SPA shell for every app route
+    // Page routes - serve the SPA shell for every app route
     if (pathname === '/login') { const user = await userFor(req); if (user) return redirect(res, user.onboardingComplete ? '/console' : `/onboarding/${firstIncomplete(user)}`); return serveFile(res, path.join(root, 'app.html')); }
     if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) { const user = await requireAuth(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
     if (pathname === '/console' || pathname.startsWith('/console/')) { const user = await requireOnboarding(req, res); if (!user) return; return serveFile(res, path.join(root, 'app.html')); }
@@ -159,17 +161,11 @@ http.createServer(async (req, res) => {
     if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' }); const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
     if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop(); const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === user.id); if (!key) return json(res, 404, { error: 'Key not found.' }); key.revokedAt = new Date().toISOString(); writeStore(store); log('api_key_deleted', req, user, { prefix: key.prefix }); return json(res, 200, { ok: true }); }
 
-    // Playground demo (uses lian-sdk when available, falls back to fixture)
+    // Playground demo: canned fixture. The signed-in console's live playground
+    // talks to the real backend via lians-console.js instead.
     if (pathname === '/api/demo/recall' && req.method === 'POST') {
       const user = await userFor(req); if (!user) return json(res, 401, { error: 'Authentication required.' });
-      try {
-        const { LianClient } = require('lian-sdk');
-        const client = new LianClient({ apiKey: process.env.LIAN_API_KEY, baseUrl });
-        const result = await client.recall({ agentId: 'demo', query: 'NVDA guidance', asOf: '2025-03-01' });
-        return json(res, 200, result);
-      } catch {
-        return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' });
-      }
+      return json(res, 200, { value: '$32B', validOn: '2025-03-01', content: 'NVDA FY2026 revenue guidance revised to $32B on February 20, 2025. Superseded by the May update.', audit: 'Validity window verified and recall event logged.' });
     }
 
     // ── Billing (Clerk) ───────────────────────────────────────────────────────

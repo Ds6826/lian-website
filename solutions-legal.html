@@ -4,11 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Lians for legal: matter-scoped agent memory with privilege-date reconstruction, conflict-of-interest graph paths, and custody-preserving erasure." />
-    <title>Legal — Lians</title>
+    <title>Legal · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
@@ -27,14 +28,14 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Solutions / Legal</p>
         <h1>Matter-scoped memory with privilege <em>cutoffs</em>.</h1>
-        <p class="lede">Legal AI agents must respect matter walls, privilege cutoffs, client confidentiality, chain-of-custody, and conflict-of-interest rules across huge document collections. Lians gives legal agents matter-scoped memory with privilege-date reconstruction, conflict graph queries, and custody-preserving erasure.</p>
+        <p class="lede">Matter-scoped memory with privilege-date reconstruction, conflict-of-interest graph queries, and custody-preserving erasure.</p>
         <div class="actions"><a class="btn btn-primary" href="/login">Get an API key →</a><a class="tlink" href="/compliance">Compliance posture →</a></div>
         <div class="term" style="margin-top:30px" aria-label="Point-in-time and graph example">
 <pre class="term-body"><span class="pr">$</span> mem.recall_at(matter=<span class="st">"m-4471"</span>, query=<span class="st">"liability cap"</span>, as_of=<span class="st">"2025-03-01"</span>)
-<span class="cm"># →</span> <span class="out">"$2M"</span> <span class="cm">— the cap in force then, before the amendment</span>
+<span class="cm"># →</span> <span class="out">"$2M"</span> <span class="cm">(the cap in force then, before the amendment)</span>
 
 <span class="pr">$</span> path(from=<span class="st">"attorney:jdoe"</span>, to=<span class="st">"party:acme"</span>)
-<span class="cm"># →</span> <span class="out">conflict</span> <span class="cm">— reachable via a former-client edge</span><span class="cursor"></span></pre>
+<span class="cm"># →</span> <span class="out">conflict</span> <span class="cm">(reachable via a former-client edge)</span><span class="cursor"></span></pre>
         </div>
       </section>
 
@@ -42,7 +43,7 @@
         <p class="block-label">Proof points</p>
         <h2>Walls, cutoffs, custody.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>Matter-level barriers</b></span><p>Matter walls enforced at the database layer via row-level security — not application checks a bug can bypass.</p></div>
+          <div class="item"><span class="head"><b>Matter-level barriers</b></span><p>Matter walls enforced at the database layer via row-level security, not application checks a bug can bypass.</p></div>
           <div class="item"><span class="head"><b>Privilege-date reconstruction</b></span><p><code class="ic">recall_at</code> for privilege cutoff and production-date reconstruction.</p></div>
           <div class="item"><span class="head"><b>Chain of custody</b></span><p>Tamper-evident audit trail for every access and change.</p></div>
           <div class="item"><span class="head"><b>Conflict-of-interest paths</b></span><p>Reachability from attorney to adverse party through the relationship graph.</p></div>
@@ -51,12 +52,18 @@
         </div>
       </section>
 
+      <section class="wrap block" aria-label="Try it: point-in-time recall">
+        <p class="block-label">See it: as-of recall</p>
+        <h2>Reconstruct access as of any date.</h2>
+        <div data-viz="asof" data-preset="matter"></div>
+      </section>
+
       <section class="wrap block" aria-label="Demo and connectors">
         <div class="split">
           <div class="prose">
             <p class="block-label">The demo</p>
             <h3>Ingest, cut off, reconstruct, trace.</h3>
-            <p>Ingest matter facts before and after a privilege cutoff, show point-in-time reconstruction excludes later-produced documents, then run a graph path from attorney to adverse party — all on the tamper-evident chain.</p>
+            <p>Ingest matter facts before and after a privilege cutoff, show point-in-time reconstruction excludes later-produced documents, then run a graph path from attorney to adverse party, all on the tamper-evident chain.</p>
           </div>
           <div class="prose">
             <p class="block-label">Connector priorities</p>
@@ -71,14 +78,16 @@
     <section class="band"><div class="wrap"><h2>Give legal agents memory that holds <em>privilege</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
   </body>
 </html>

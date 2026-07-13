@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians audit & compliance posture: SEC 17a-4 / WORM, FINRA 4511, GDPR Art. 17 crypto-shred, MiFID II, HIPAA, DORA, and the EU AI Act — each mapped to a technical control." />
-    <title>Audit &amp; compliance — Lians</title>
+    <meta name="description" content="Lians audit & compliance posture: SEC 17a-4 / WORM, FINRA 4511, GDPR Art. 17 crypto-shred, MiFID II, HIPAA, DORA, and the EU AI Act, each mapped to a technical control." />
+    <title>Audit &amp; compliance · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
@@ -27,7 +28,7 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Product / Audit &amp; compliance</p>
         <h1>Memory your auditor can <em>trust</em>.</h1>
-        <p class="lede">Each regulatory obligation maps to a concrete technical control you can inspect in the open-source code — not a marketing claim. Self-hosted, the data never leaves your perimeter, and the audit trail survives even when content is erased.</p>
+        <p class="lede">Each regulatory obligation maps to a technical control you can inspect in the open-source code.</p>
         <div class="actions"><a class="btn btn-primary" href="https://github.com/ebeirne/Lians2/blob/master/docs/compliance.md" target="_blank" rel="noreferrer">Compliance reference ↗</a></div>
       </section>
 
@@ -42,13 +43,13 @@
             <tr><td>GDPR Art. 17 (erasure)</td><td>Per-subject AES-256-GCM crypto-shred; signed erasure certificate; audit rows survive.</td></tr>
             <tr><td>MiFID II (Art. 16, 25)</td><td>Bitemporal <code>event_time</code> + <code>valid_from/valid_to</code>; 5-year retention; as-of reconstruction.</td></tr>
             <tr><td>HIPAA §164.312</td><td>Per-subject encryption, audit controls, transmission security; BAA before PHI.</td></tr>
-            <tr><td>Information barriers</td><td>PostgreSQL row-level security on a <code>barrier_group</code> column — enforced below the app.</td></tr>
+            <tr><td>Information barriers</td><td>PostgreSQL row-level security on a <code>barrier_group</code> column, enforced below the app.</td></tr>
             <tr><td>DORA</td><td>Self-hosting makes you the ICT provider; snapshot export for exit/portability; KMS-held keys.</td></tr>
             <tr><td>EU AI Act (Art. 9–13)</td><td>Automatic event recording, tamper-evident logs, decision reproducibility via <code>recall_at</code>.</td></tr>
             <tr><td>Basel III / SR 11-7</td><td>Backtest contamination check flags lookahead bias for model-validation evidence.</td></tr>
           </tbody>
         </table></div>
-        <p class="metaline">Status of each claim — certified vs. "designed to support" — is documented in the repo. Lians has no SOC 2 report today; the controls above are technically equivalent to many SOC 2 CC requirements, and self-hosted deployments can be audited in full by your own team.</p>
+        <p class="metaline">Certified vs. "designed to support" status per claim is documented in the repo; self-hosted deployments can be audited in full by your own team.</p>
       </section>
 
       <section class="wrap block" aria-label="Audit and erasure">
@@ -57,36 +58,39 @@
             <p class="block-label">Tamper-evident audit chain</p>
             <h3>Verify the record, don't just trust it.</h3>
             <p>Every write, recall, supersession, and erasure appends a row to a SHA-256 hash chain. Each row commits to the prior hash, so altering any record breaks verification.</p>
-            <p><code class="ic">GET /v1/admin/audit/verify</code> returns <code class="ic">{"chain_valid": …}</code>. <code class="ic">/v1/admin/audit/export</code> produces a complete examinable log (NDJSON or CSV). The algorithm is open source.</p>
+            <p>One call verifies every row, or pinpoints exactly where verification breaks. Full examinable export and offline-verifiable memory statements included; the algorithm is open source.</p>
           </div>
           <div class="prose">
             <p class="block-label">Crypto-shred erasure</p>
             <h3>Erase data without erasing evidence.</h3>
-            <p>Content is encrypted under a per-subject key. <code class="ic">POST /v1/erase</code> destroys that key — all content under it becomes permanently unrecoverable, including in backups, with no re-index.</p>
-            <p>The audit chain stores only hashes, so it survives intact. <code class="ic">/v1/erase/status</code> confirms the destruction timestamp; a signed erasure certificate is available.</p>
+            <p>Content is encrypted under a per-subject key; erasing destroys the key, and everything under it becomes permanently unrecoverable, including in backups.</p>
+            <p>The audit chain stores only hashes, so it survives intact, with a signed erasure certificate to show for it.</p>
           </div>
         </div>
+        <div data-viz="shred"></div>
       </section>
 
       <section class="wrap block" aria-label="Residency">
         <p class="block-label">Data residency</p>
         <h2>The data never leaves your perimeter.</h2>
         <div class="prose"><p>Self-hosted, Lians runs on your Postgres and Redis on your infrastructure. The master encryption key resolves from your KMS (AWS, Azure, or Vault) and never touches vendor infrastructure. Air-gap mode hard-fails any configuration that would send data externally.</p></div>
-        <div class="actions"><a class="btn btn-primary" href="/security">Security architecture →</a><a class="tlink" href="/compare">Why audit matters vs mem0 / Zep →</a></div>
+        <div class="actions"><a class="btn btn-primary" href="/security">Security architecture →</a><a class="tlink" href="/compare">Why audit matters vs the alternatives →</a></div>
       </section>
     </main>
 
     <section class="band"><div class="wrap"><h2>Give your agents memory that holds up in an audit.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
   </body>
 </html>
