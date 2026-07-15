@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians is regulated AI memory infrastructure: a memory control plane for agents on time-sensitive, audited, and confidential data: bitemporal, tamper-evident, and crypto-shreddable." />
+    <meta name="description" content="Lians is the system of record for AI in regulated industries: one tamper-evident ledger for what AI systems knew, did, and why." />
+    <meta property="og:title" content="Lians · Regulated AI memory infrastructure" />
+    <meta property="og:description" content="A memory control plane for AI agents on time-sensitive, audited, and confidential data: bitemporal, tamper-evident, and crypto-shreddable." />
+    <meta property="og:url" content="https://www.lians.ai/" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://www.lians.ai/og-card.png" />
     <link rel="alternate" type="application/rss+xml" title="Lians Blog" href="https://www.lians.ai/feed.xml" />
     <title>Lians · Regulated AI memory infrastructure</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
     <link rel="stylesheet" href="/lians-visuals.css" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
@@ -20,7 +26,7 @@
     <header>
       <div class="wrap">
         <nav class="nav" aria-label="Primary">
-          <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+          <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
           <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
           <div class="links">
             <a href="/product">Product</a>
@@ -29,7 +35,7 @@
             <a href="/docs">Docs</a>
             <a href="/compare">Compare</a>
             <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a>
-            <a class="muted" href="/login">Sign in</a>
+            <a class="muted" href="/login" data-sign-in-link>Sign in</a>
             <a class="cta" href="/login">Get API key →</a>
           </div>
         </nav>
@@ -38,8 +44,9 @@
 
     <main>
       <section class="wrap hero">
-        <h1>Memory that knows when it <em>changed</em>.</h1>
-        <p class="lede">A memory control plane for AI agents working on time-sensitive, audited, and confidential data. Recall what was <em>valid then</em>, not just what looks similar now.</p>
+        <p class="eyebrow"><span class="dot"></span> Founding Partner Cohort · Seven companies · Early access</p>
+        <h1>The system of record for AI <em>in regulated industries</em>.</h1>
+        <p class="lede">One tamper-evident, bitemporal, erasure-compatible ledger for what AI systems knew, what they did, and why. Start with audit-grade memory. Add behavioral records and Evidence Packs without building a second compliance stack.</p>
 
         <div class="term" aria-label="Install and use Lians">
           <div class="term-tabs" role="tablist" aria-label="Language">
@@ -95,17 +102,34 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
         </div>
 
         <div class="actions">
-          <a class="btn btn-primary" href="/login">Get an API key →</a>
-          <a class="tlink" href="#watch">▶ Watch how it works (40s)</a>
+          <a class="btn btn-primary" href="/design-partners">Apply to the founding cohort →</a>
+          <a class="tlink" href="#watch">▶ Run the changing-facts demo</a>
         </div>
 
-        <p class="metaline"><span class="ok">●</span> Apache 2.0 · self-hostable · MCP-native<span class="gh-stars-wrap" hidden> · <a class="tlink" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">★ <span data-gh-stars></span> on GitHub ↗</a></span></p>
+        <p class="metaline">Three founder-led implementation partners · Four technical evaluation partners · Open source · Self-hostable · MCP-native</p>
+      </section>
+
+      <section class="wrap block" aria-label="Lians products">
+        <p class="block-label">One ledger · Three views</p>
+        <h2>Memory becomes a record. A disputed record becomes evidence.</h2>
+        <div class="list">
+          <a class="item" href="/product"><span class="head"><b>Memory</b><span class="meta">available now</span></span><p>What agents know, with supersession, provenance, information barriers, crypto-shred erasure, and exact point-in-time reconstruction.</p></a>
+          <a class="item" href="/records"><span class="head"><b>Records</b><span class="meta">Article 12 wedge</span></span><p>What AI systems did: inferences, human oversight, system changes, data-subject actions, incidents, and consequential decisions.</p></a>
+          <a class="item" href="/records#evidence"><span class="head"><b>Evidence</b><span class="meta">format ready</span></span><p>Portable Evidence Packs for regulator requests, adverse-action review, model validation, legal discovery, and continuous audit.</p></a>
+        </div>
+      </section>
+
+      <section class="wrap block partner-brief" aria-label="Design partner pilot">
+        <p class="block-label">Founding Partner Cohort · Seven companies</p>
+        <h2>Turn a changing-facts failure into a production-grade evidence trail.</h2>
+        <p class="intro">An eight-week, paid implementation for financial-research, risk, and compliance-agent vendors. We instrument one high-value workflow, define what “correct as of” means, and leave you with a reproducible acceptance suite.</p>
+        <div class="actions"><a class="btn btn-primary" href="/design-partners">See the pilot scope →</a><a class="tlink" href="/research">Inspect the evaluation method →</a></div>
       </section>
 
       <section class="wrap block" id="watch" aria-label="Watch how memory works">
-        <p class="block-label">Watch it work</p>
-        <h2>A fact's whole life, in forty seconds.</h2>
-        <p class="intro">Every frame is live. Pause and click anything to inspect it.</p>
+        <p class="block-label">Changing-facts demo</p>
+        <h2>See a source revision, reconstruction, and receipt.</h2>
+        <p class="intro">Every frame is live. Pause and inspect the revision history, point-in-time answer, and evidence record.</p>
         <div id="memory-player" aria-label="Interactive explainer: how Lians memory works"></div>
       </section>
 
@@ -118,32 +142,32 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
             <p>Every fact carries event time and system time. Ask what an agent knew on any past date.</p>
           </a>
           <a class="item" href="/compliance">
-            <span class="head"><b>Tamper-evident audit chain</b><span class="meta">SEC 17a-4 / WORM</span></span>
-            <p>Each event enters an append-only SHA-256 hash chain. Verify the record, don't just trust it.</p>
+            <span class="head"><b>Tamper-evident audit chain</b><span class="meta">reviewable evidence</span></span>
+            <p>Each event enters an append-only SHA-256 hash chain. Verify the record instead of relying on an unsupported compliance claim.</p>
           </a>
           <a class="item" href="/compliance">
-            <span class="head"><b>Crypto-shred erasure</b><span class="meta">GDPR Art. 17</span></span>
-            <p>Destroy a per-subject key to provably erase content while the audit trail survives.</p>
+            <span class="head"><b>Crypto-shred erasure</b><span class="meta">customer-controlled keys</span></span>
+            <p>Destroy a per-subject key to render content unreadable while preserving the surrounding audit record.</p>
           </a>
         </div>
         <p class="metaline">Plus admission control, a temporal relationship graph, and governed change control. <a class="tlink" href="/product">See the full control plane →</a></p>
       </section>
 
       <section class="wrap block" aria-label="Solutions">
-        <p class="block-label">Solutions</p>
-        <h2>Same problem, three industries.</h2>
+        <p class="block-label">Current focus</p>
+        <h2>Built first for financial research and risk.</h2>
         <div class="list">
           <a class="item" href="/solutions/financial-services">
-            <span class="head"><b>Financial services</b><span class="meta tag">Available</span></span>
-            <p>Point-in-time trading memory with SEC/FINRA audit export. What did the desk's agent know on the day of the trade?</p>
+            <span class="head"><b>Financial research &amp; risk</b><span class="meta tag">Design-partner focus</span></span>
+            <p>Reconstruct the filings, guidance, and data revisions an agent used when it produced a research or risk recommendation.</p>
           </a>
           <a class="item" href="/solutions/healthcare">
-            <span class="head"><b>Healthcare</b><span class="meta tag">Available</span></span>
-            <p>Patient-scoped memory with audit-preserving erasure: the medication list as charted at discharge, not as edited since.</p>
+            <span class="head"><b>Healthcare</b><span class="meta">Future design-partner track</span></span>
+            <p>Point-in-time patient context and access-aware memory are being explored with the right deployment partner.</p>
           </a>
           <a class="item" href="/solutions/legal">
-            <span class="head"><b>Legal</b><span class="meta tag">Available</span></span>
-            <p>Matter-scoped memory with privilege-date reconstruction: answer from what the firm knew before privilege attached, and prove it.</p>
+            <span class="head"><b>Legal</b><span class="meta">Future design-partner track</span></span>
+            <p>Matter-scoped recall and privilege-date reconstruction are available for scoped evaluation, not broad-market promises.</p>
           </a>
         </div>
       </section>
@@ -187,7 +211,7 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
 4. If this project is an MCP host, or you are working inside one (Claude Desktop / Claude Code / Cursor /
    VS Code), skip SDK plumbing and register the MCP server: command "uvx", args
    ["--from","lians-sdk[mcp]","lians-mcp"], env: LIANS_URL, LIANS_API_KEY, LIANS_AGENT_ID.
-   uvx ships with uv — if missing, install it first: https://docs.astral.sh/uv (winget/brew/curl).
+   uvx ships with uv. If missing, install it first: https://docs.astral.sh/uv (winget/brew/curl).
 
 5. Never delete or overwrite memory rows directly: supersession closes stale facts, and
    POST /v1/erase (crypto-shred) is the only compliant erasure path.
@@ -203,15 +227,15 @@ Docs: https://www.lians.ai/docs · SDKs: https://www.lians.ai/sdks · API keys: 
 
     <section class="band">
       <div class="wrap">
-        <h2>Build on memory you can <em>defend</em>.</h2>
-        <a class="btn" href="/login">Get started with Lians →</a>
+        <h2>Build an agent answer your customers can <em>reconstruct</em>.</h2>
+        <a class="btn" href="/design-partners">Join the founding cohort →</a>
       </div>
     </section>
 
     <footer class="foot">
       <div class="wrap">
         <div class="foot-top">
-          <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+          <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
           <p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p>
         </div>
         <div class="foot-cols">

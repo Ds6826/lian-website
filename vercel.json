@@ -39,6 +39,14 @@
       "use": "@vercel/static"
     },
     {
+      "src": "records.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "article-12.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "compliance.html",
       "use": "@vercel/static"
     },
@@ -92,6 +100,10 @@
     },
     {
       "src": "about.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "design-partners.html",
       "use": "@vercel/static"
     },
     {
@@ -167,7 +179,19 @@
       "use": "@vercel/static"
     },
     {
-      "src": "favicon.svg",
+      "src": "favicon.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "logo-blue.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "logo-white.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "og-card.png",
       "use": "@vercel/static"
     },
     {
@@ -215,6 +239,14 @@
     {
       "src": "/product",
       "dest": "/product.html"
+    },
+    {
+      "src": "/records",
+      "dest": "/records.html"
+    },
+    {
+      "src": "/article-12",
+      "dest": "/article-12.html"
     },
     {
       "src": "/compliance",
@@ -271,6 +303,10 @@
     {
       "src": "/about",
       "dest": "/about.html"
+    },
+    {
+      "src": "/design-partners",
+      "dest": "/design-partners.html"
     },
     {
       "src": "/status",

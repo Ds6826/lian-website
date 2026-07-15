@@ -3,6 +3,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { createClerkClient, verifyToken } = require('@clerk/backend');
+const { createPartnerApplicationService, validateApplication } = require('./partner-applications');
 
 const root = __dirname;
 const envFile = path.join(root, '.env');
@@ -36,6 +37,7 @@ const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
+const partnerApplications = createPartnerApplicationService();
 
 // Error monitoring (Sentry). Only initialised when SENTRY_DSN is set, so local dev and
 // unconfigured deploys run without it. The DSN is safe to expose (it's also used client-side).
@@ -403,6 +405,8 @@ const app = async (req, res) => {
     // Keep this in sync with vercel.json routes.
     const CONTENT_PAGES = {
       '/product': 'product.html',
+      '/records': 'records.html',
+      '/article-12': 'article-12.html',
       '/compliance': 'compliance.html',
       '/security': 'security.html',
       '/sdks': 'sdks.html',
@@ -417,6 +421,7 @@ const app = async (req, res) => {
       '/terms': 'terms.html',
       '/changelog': 'changelog.html',
       '/about': 'about.html',
+      '/design-partners': 'design-partners.html',
       '/status': 'status.html',
       '/compare/mem0': 'compare-mem0.html',
       '/compare/zep': 'compare-zep.html',
@@ -446,6 +451,26 @@ const app = async (req, res) => {
     if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }
 
     // ── JSON API ──────────────────────────────────────────────────────────────
+
+    if (pathname === '/api/partner-applications' && req.method === 'POST') {
+      if (!rateLimit(req, res, { max: 8, windowMs: 60 * 60_000, bucket: 'partner-applications' })) return;
+      const body = await readBody(req);
+      const validation = validateApplication(body);
+      if (!validation.ok) return json(res, 400, { error: validation.error, missing: validation.missing });
+      if (!partnerApplications.configured()) {
+        log('partner_application_unconfigured', req, null, { company: body.company });
+        return json(res, 503, { error: 'Applications are temporarily unavailable. Please email sales@lians.ai.' });
+      }
+      try {
+        const application = await partnerApplications.submit(body);
+        log('partner_application_submitted', req, null, { applicationId: application.id, stage: body.current_stage, track: body.preferred_track, highFit: application.highFit });
+        return json(res, 201, { ok: true, applicationId: application.id, schedulingUrl: application.highFit ? (process.env.PARTNER_SCHEDULING_URL || '') : '' });
+      } catch (err) {
+        log('partner_application_failed', req, null, { error: err.message, company: body.company });
+        Sentry?.captureException(err);
+        return json(res, 502, { error: 'We could not complete your application. Please try again or email sales@lians.ai.' });
+      }
+    }
 
     if (pathname === '/api/logout' && req.method === 'POST') {
       const expiredCookies = ['__session', '__client_uat'].flatMap((name) => [
