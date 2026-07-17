@@ -30,6 +30,7 @@
     { "src": "pages.css", "use": "@vercel/static" },
     { "src": "lians.css", "use": "@vercel/static" },
     { "src": "lians.js", "use": "@vercel/static" },
+    { "src": "e84ab31f649b47bc8df03b9ccce11884.txt", "use": "@vercel/static" },
     { "src": "governor.css", "use": "@vercel/static" }
   ],
   "routes": [
