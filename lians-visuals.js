@@ -427,7 +427,7 @@
   // ── live status checks (status page) ───────────────────────────────────────
   document.querySelectorAll('[data-viz="statuschecks"]').forEach((box) => {
     const TARGETS = [
-      { name: 'Website', sub: 'www.lians.ai', url: '/favicon.svg', mode: 'ok200' },
+      { name: 'Website', sub: 'www.lians.ai', url: '/favicon.png', mode: 'ok200' },
       { name: 'Console API', sub: 'www.lians.ai/api/health', url: '/api/health', mode: 'ok200' },
       { name: 'Managed engine · liveness', sub: 'agentmem-lotus.fly.dev/livez', url: 'https://agentmem-lotus.fly.dev/livez', mode: 'ok200' },
       { name: 'Managed engine · dependencies', sub: 'agentmem-lotus.fly.dev/health · DB + cache', url: 'https://agentmem-lotus.fly.dev/health', mode: 'ok200' },
