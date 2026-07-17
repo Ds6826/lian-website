@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="We scored Lians on LOCOMO using mem0's own open-source harness — their answer pipeline, their gpt-5 judge, unmodified. 92.9% vs their published 91.6, with the receipts and the caveats." />
+    <meta name="description" content="We scored Lians on LOCOMO using mem0's own open-source harness - their answer pipeline, their gpt-5 judge, unmodified. 92.9% vs their published 91.6, with the receipts and the caveats." />
     <title>Their harness, their judge: 92.9 on LOCOMO · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,7 +19,7 @@
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
         <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
-        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
       </div>
     </nav></div></header>
 
@@ -27,21 +27,21 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / LOCOMO benchmark</p>
         <h1>Their harness. Their judge. <em>92.9</em>.</h1>
-        <p class="lede">Every memory vendor publishes benchmark numbers from a protocol they control, so we removed ourselves from the grading entirely: Lians retrieval, scored end-to-end by mem0's own open-source LOCOMO harness. It came back 92.9% — above the 91.6 mem0 publishes for itself.</p>
+        <p class="lede">Every memory vendor publishes benchmark numbers from a protocol they control, so we removed ourselves from the grading entirely: Lians retrieval, scored end-to-end by mem0's own open-source LOCOMO harness. It came back 92.9% - above the 91.6 mem0 publishes for itself.</p>
         <p class="metaline">2026-07-10 · Ethan Beirne · 6 min read</p>
       </section>
 
       <section class="wrap block" aria-label="The benchmarketing problem">
         <p class="block-label">The problem with memory benchmarks</p>
         <h2>Everyone wins their own benchmark.</h2>
-        <p class="intro">Memory benchmark results are usually vendor-run: the vendor picks the retrieval depth, the answer prompt, the judge model, and the grading rubric, then reports one flattering number. The result is a field where every product is somehow first. The fix isn't a better argument; it's giving up control of the grading. mem0 open-sourced the exact harness behind their published LOCOMO results — answer generation, judge prompts, scoring, all of it. So we used that, unmodified, and let their protocol grade us.</p>
+        <p class="intro">Memory benchmark results are usually vendor-run: the vendor picks the retrieval depth, the answer prompt, the judge model, and the grading rubric, then reports one flattering number. The result is a field where every product is somehow first. The fix isn't a better argument; it's giving up control of the grading. mem0 open-sourced the exact harness behind their published LOCOMO results - answer generation, judge prompts, scoring, all of it. So we used that, unmodified, and let their protocol grade us.</p>
       </section>
 
       <section class="wrap block" aria-label="The setup">
         <p class="block-label">The setup</p>
         <h2>One substitution: the memory layer.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>The benchmark</b></span><p>LOCOMO: ten very long multi-session conversations (up to 35 sessions each) with 1,540 graded questions across single-hop, multi-hop, temporal, and open-domain categories — the dataset mem0's own results are built on.</p></div>
+          <div class="item"><span class="head"><b>The benchmark</b></span><p>LOCOMO: ten very long multi-session conversations (up to 35 sessions each) with 1,540 graded questions across single-hop, multi-hop, temporal, and open-domain categories - the dataset mem0's own results are built on.</p></div>
           <div class="item"><span class="head"><b>Our side</b></span><p>Every conversation turn ingested into Lians with its real timestamp; recall uses the engine's shipped hybrid ranking (semantic + lexical + temporal grounding). The top-k memories per question are dumped in the harness's native format.</p></div>
           <div class="item"><span class="head"><b>Their side</b></span><p>The unmodified <a class="tlink" href="https://github.com/mem0ai/memory-benchmarks" target="_blank" rel="noreferrer">mem0ai/memory-benchmarks ↗</a> pipeline reads those dumps and does everything else: gpt-5 writes the answers, gpt-5 judges them, mem0's rubric scores them. We never touch a grade.</p></div>
         </div>
@@ -57,7 +57,7 @@
             <tr><td>Lians top-20</td><td class="col-lians">87.3%</td><td>1,083</td><td>5.9%</td></tr>
             <tr><td>Lians top-50</td><td class="col-lians">90.0%</td><td>2,656</td><td>14.6%</td></tr>
             <tr><td>Lians top-200</td><td class="col-lians"><strong>92.9%</strong></td><td>10,283</td><td>56.4%</td></tr>
-            <tr><td>Full conversation in context</td><td class="col-lians">—</td><td>18,218</td><td>100%</td></tr>
+            <tr><td>Full conversation in context</td><td class="col-lians">-</td><td>18,218</td><td>100%</td></tr>
           </tbody>
           <tfoot><tr><td>mem0, published</td><td>91.6%</td><td colspan="2">their protocol, their retrieval</td></tr></tfoot>
         </table></div>
@@ -68,24 +68,24 @@
         <p class="block-label">What this doesn't say</p>
         <h2>The caveats, before someone else finds them.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>Retrieval depth differs</b></span><p>Our 92.9 reads 200 retrieved memories per question; mem0's published pipeline uses its own retrieval settings. The token column exists so you can weigh that yourself — and at top-50 we're still at 90.0 on one-seventh of full context.</p></div>
+          <div class="item"><span class="head"><b>Retrieval depth differs</b></span><p>Our 92.9 reads 200 retrieved memories per question; mem0's published pipeline uses its own retrieval settings. The token column exists so you can weigh that yourself - and at top-50 we're still at 90.0 on one-seventh of full context.</p></div>
           <div class="item"><span class="head"><b>LLM judges wobble</b></span><p>Judge scores vary run to run by a few tenths of a point. We publish the raw evaluation files and per-question outputs, so any number here can be re-judged from the artifacts.</p></div>
           <div class="item"><span class="head"><b>Open-domain is our weakest lane</b></span><p>75.0% at top-200. It's in the report, not hidden in an average. We know the failure modes and they're retrieval-side work, not grading disputes.</p></div>
         </div>
-        <p class="metaline">Full protocol, per-category tables, and every artifact path: <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">judged report ↗</a> · <a class="tlink" href="https://github.com/ebeirne/Lians2/blob/master/agentmem/docs/benchmarks/locomo-token-efficiency-2026-07-10.md" target="_blank" rel="noreferrer">token-efficiency report ↗</a></p>
+        <p class="metaline">Full protocol, per-category tables, and every artifact path: <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">judged report ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/docs/benchmarks/locomo-token-efficiency-2026-07-10.md" target="_blank" rel="noreferrer">token-efficiency report ↗</a></p>
       </section>
 
       <section class="wrap block" aria-label="Why it matters">
         <p class="block-label">Why this matters</p>
         <h2>The compliance engine wins the plain-recall race too.</h2>
-        <p class="intro">The standing objection to regulated memory is that the guarantees must cost recall quality — that bitemporal validity windows, deterministic supersession, and audit chains are a tax you pay in accuracy. This run is the counterexample: the same engine that answers <em>"what did the agent know on March&nbsp;1?"</em> and refuses contaminated recall also beats the best-known general-purpose memory product on the benchmark it popularized. You don't trade recall for defensibility. <a class="tlink" href="/compare">See both evals side by side →</a></p>
+        <p class="intro">The standing objection to regulated memory is that the guarantees must cost recall quality - that bitemporal validity windows, deterministic supersession, and audit chains are a tax you pay in accuracy. This run is the counterexample: the same engine that answers <em>"what did the agent know on March&nbsp;1?"</em> and refuses contaminated recall also beats the best-known general-purpose memory product on the benchmark it popularized. You don't trade recall for defensibility. <a class="tlink" href="/compare">See both evals side by side →</a></p>
       </section>
 
       <section class="wrap block" aria-label="Reproduce">
         <p class="block-label">Reproduce it</p>
         <h2>Don't trust us. Run it.</h2>
         <div class="list">
-          <div class="cmd"><span class="lang">Clone</span><code>git clone https://github.com/ebeirne/Lians2 &amp;&amp; cd Lians2/agentmem</code></div>
+          <div class="cmd"><span class="lang">Clone</span><code>git clone https://github.com/Lians-ai/Lians &amp;&amp; cd Lians/agentmem</code></div>
           <div class="cmd"><span class="lang">Dump</span><code>python -m benchmarks.locomo_eval --embeddings sentence-transformers</code></div>
           <div class="cmd"><span class="lang">Judge</span><code>python -m benchmarks.locomo.run --project-name lians --evaluate-only  # mem0's harness</code></div>
         </div>
@@ -99,7 +99,7 @@
       <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>

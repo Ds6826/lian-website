@@ -49,7 +49,14 @@ test('cross-origin API requests are blocked', async () => {
 });
 
 test('marketing pages serve, including the Memory Governor page', async () => {
-  for (const path of ['/', '/memory-governor', '/product', '/docs', '/pricing']) {
+  for (const path of [
+    '/',
+    '/memory-governor',
+    '/product',
+    '/docs',
+    '/pricing',
+    '/blog/eu-ai-act-article-12',
+  ]) {
     const res = await get(path);
     assert.equal(res.status, 200, `${path} should serve`);
     assert.match(res.headers.get('content-type') || '', /text\/html/);

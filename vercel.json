@@ -155,6 +155,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "blog-eu-ai-act-article-12.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "llms.txt",
       "use": "@vercel/static"
     },
@@ -355,6 +359,10 @@
     {
       "src": "/blog/memory-lifecycle",
       "dest": "/blog-memory-lifecycle.html"
+    },
+    {
+      "src": "/blog/eu-ai-act-article-12",
+      "dest": "/blog-eu-ai-act-article-12.html"
     },
     {
       "handle": "filesystem"
