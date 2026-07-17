@@ -163,6 +163,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "e84ab31f649b47bc8df03b9ccce11884.txt",
+      "use": "@vercel/static"
+    },
+    {
       "src": "sitemap.xml",
       "use": "@vercel/static"
     },
