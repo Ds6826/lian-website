@@ -36,7 +36,7 @@ Key differentiators vs general-purpose memory stores (mem0, Zep/Graphiti, Letta,
 - [Solutions · Legal](https://www.lians.ai/solutions/legal): Matter-scoped memory with privilege-date reconstruction.
 - [SDKs](https://www.lians.ai/sdks): Install guides for Python, TypeScript, Go, Java, C, and MCP.
 - [Docs](https://www.lians.ai/docs): Quickstart and API reference.
-- [Changelog](https://www.lians.ai/changelog): What shipped, release by release (current: v0.4.0, 2026-07-06).
+- [Changelog](https://www.lians.ai/changelog): What shipped, release by release (current: v0.4.1, 2026-07-17).
 - [Pricing](https://www.lians.ai/pricing): Free tier, pro, and enterprise/self-hosted.
 - [Blog](https://www.lians.ai/blog): Writing on regulated AI memory, including backtest lookahead contamination.
 

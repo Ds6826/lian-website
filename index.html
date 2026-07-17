@@ -52,8 +52,8 @@
           <div class="term-tabs" role="tablist" aria-label="Language">
             <button class="term-tab active" role="tab" aria-selected="true" data-lang="python" data-install="pip install lians-sdk[local]">python</button>
             <button class="term-tab" role="tab" aria-selected="false" data-lang="node" data-install="npm install @lians-ai/lians">typescript</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="go" data-install="go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0">go</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="java" data-install="ai.lians:lians-sdk:0.4.0">java</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="go" data-install="go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1">go</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="java" data-install="ai.lians:lians-sdk:0.4.1">java</button>
             <button class="term-tab" role="tab" aria-selected="false" data-lang="c" data-install="cmake -B build &amp;&amp; cmake --build build">c</button>
             <div class="term-dots" aria-hidden="true"><i></i><i></i><i></i></div>
             <button class="term-copy" type="button" aria-label="Copy install command">copy</button>
@@ -74,7 +74,7 @@ mem.<span class="kw">recall_at</span>(query=<span class="st">"NVDA guidance"</sp
 
 <span class="kw">await</span> client.<span class="kw">recall</span>({ query: <span class="st">"NVDA guidance"</span>, as_of: <span class="st">"2025-03-01"</span> })
 <span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="go" hidden><span class="pr">$</span> go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0
+<pre class="term-body" data-term="go" hidden><span class="pr">$</span> go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1
 
 c.<span class="kw">AddMemory</span>(ctx, lians.AddMemoryRequest{AgentID: <span class="st">"desk"</span>,
     Content:   <span class="st">"NVDA guidance raised to $40B"</span>,
@@ -83,7 +83,7 @@ c.<span class="kw">AddMemory</span>(ctx, lians.AddMemoryRequest{AgentID: <span c
 c.<span class="kw">RecallAt</span>(ctx, <span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>,
     time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC), 5)
 <span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="java" hidden><span class="cm">// Maven Central →</span> ai.lians:lians-sdk:0.4.0
+<pre class="term-body" data-term="java" hidden><span class="cm">// Maven Central:</span> ai.lians:lians-sdk:0.4.1
 
 client.<span class="kw">addMemory</span>(<span class="st">"desk"</span>, <span class="st">"NVDA guidance raised to $40B"</span>,
     Instant.parse(<span class="st">"2025-11-19T00:00:00Z"</span>), Map.of());
@@ -194,8 +194,8 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
 1. Detect the stack and install the SDK:
    - Python:            pip install lians-sdk            (extras: [langchain] [langgraph] [crewai] [mcp] [all])
    - TypeScript / Node:  npm install @lians-ai/lians
-   - Go:                go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0
-   - Java (JVM 11+):    ai.lians:lians-sdk:0.4.0 (Maven Central)
+   - Go:                go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1
+   - Java (JVM 11+):    ai.lians:lians-sdk:0.4.1 (Maven Central)
 
 2. Configure via environment only (never hardcode secrets): read LIANS_URL and LIANS_API_KEY.
    If they are unset, add both to .env.example and tell me to get a key at https://www.lians.ai/login
