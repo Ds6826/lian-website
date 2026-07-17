@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Compare Heartwood Memory and Lians for governed agent memory, bitemporal retrieval, point-in-time reconstruction, provenance, policy controls, and crypto-shred erasure." />
+    <title>Lians vs Heartwood Memory | temporal truth and governed recall</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/compare">Compare</a> / Heartwood Memory</p>
+        <h1>Heartwood proves who could see it. <em>Lians proves when you knew it.</em></h1>
+        <p class="lede">Both products take agent-memory governance seriously. Heartwood centers policy-gated recall, signed provenance, and key-destruction proof. Lians centers bitemporal facts, deterministic supersession, point-in-time reconstruction, and audit state at a requested instant.</p>
+        <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Inspect Lians</a><a class="tlink" href="https://heartwoodmemory.com/docs" target="_blank" rel="noreferrer">Read Heartwood docs</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="Credit first">
+        <p class="block-label">Credit first</p>
+        <h2>Heartwood has a real governance thesis.</h2>
+        <div class="prose"><p>Heartwood documents policy enforcement before ranking, tenant isolation, signed provenance, a hash-chained audit log, and hard erasure that destroys a per-subject key while following deletion lineage into derived embeddings. Its MCP server is fail-closed by default and exposes a read-only subset unless write and erasure tools are explicitly allowed.</p><p>Those are meaningful controls. This comparison does not treat governance as a checkbox or claim that one product replaces the other.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="Comparison">
+        <p class="block-label">Documented product surfaces, reviewed July 17, 2026</p>
+        <h2>Same risk class, different primary proof.</h2>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Capability</th><th class="col-lians">Lians</th><th>Heartwood Memory</th></tr></thead>
+          <tbody>
+            <tr><td>Primary guarantee</td><td class="col-lians">Knowledge state at time T</td><td>Policy-compliant, attributable recall</td></tr>
+            <tr><td>Temporal model</td><td class="yes col-lians">Valid time plus system time</td><td>Effective-time filtering documented</td></tr>
+            <tr><td>Historical API</td><td class="yes col-lians"><code>recall_at</code> and <code>reconstruct</code></td><td>Public quickstart centers <code>recall</code> and <code>explain_recall</code></td></tr>
+            <tr><td>Revision handling</td><td class="yes col-lians">Deterministic keyed supersession</td><td>Typed, governed memory records</td></tr>
+            <tr><td>Policy before ranking</td><td>Barrier and namespace controls</td><td class="yes">Core documented design</td></tr>
+            <tr><td>Provenance and audit</td><td class="yes col-lians">Tamper-evident audit and lineage</td><td class="yes">Signed provenance and hash-chained audit</td></tr>
+            <tr><td>Crypto-shred erasure</td><td class="yes col-lians">Key destruction with retained certificate</td><td class="yes">Per-subject key-destruction proof</td></tr>
+            <tr><td>Backtest lookahead check</td><td class="yes col-lians"><code>backtest_check</code></td><td>Not listed in the public MCP quickstart</td></tr>
+            <tr><td>Current core license</td><td class="col-lians">Apache-2.0</td><td>BSL 1.1 from 0.2.0; earlier releases remain MIT</td></tr>
+            <tr><td>Published SDK surfaces</td><td class="col-lians">Python, TypeScript, Java, C, and Go</td><td>Python core; governed TypeScript SDK listed as in development</td></tr>
+          </tbody>
+        </table></div>
+        <p class="metaline">This is a documentation comparison, not a scored benchmark. Heartwood descriptions link to its public documentation; Lians behavior is reproducible from the Apache-2.0 repository.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Decision guide">
+        <p class="block-label">Decision guide</p>
+        <h2>Choose the proof your system must produce.</h2>
+        <div class="prose"><p><strong>Choose Heartwood</strong> when the primary question is whether a principal was permitted to see a memory, whether the result carries valid provenance, and whether erasure produced a subject-level key-destruction proof.</p><p><strong>Choose Lians</strong> when the primary question is what the agent knew at a historical instant, which revision was valid then, whether later information contaminated retrieval, and whether the complete knowledge state can be reconstructed.</p><p>For systems with both requirements, evaluate the products as complementary control planes: governance at recall and temporal truth in the memory record.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="Sources">
+        <p class="block-label">Sources</p>
+        <h2>Verify the claims directly.</h2>
+        <div class="prose"><p><a href="https://heartwoodmemory.com/docs" target="_blank" rel="noreferrer">Heartwood documentation</a> · <a href="https://heartwoodmemory.com/faq" target="_blank" rel="noreferrer">Heartwood FAQ and licensing</a> · <a href="https://heartwoodmemory.com/docs/integrations/adopter-quickstart" target="_blank" rel="noreferrer">Heartwood MCP quickstart</a> · <a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Lians source</a> · <a href="https://github.com/Lians-ai/Lians/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Lians regulated-memory evaluation</a></p></div>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Make time part of the retrieval contract.</h2><a class="btn" href="/docs">Start with Lians</a></div></section>
+    <footer class="foot"><div class="wrap"><div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div><div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div></div></footer>
+    <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+  </body>
+</html>

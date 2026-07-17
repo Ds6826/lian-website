@@ -28,6 +28,7 @@ Key differentiators vs general-purpose memory stores (mem0, Zep/Graphiti, Letta,
 - [Product](https://www.lians.ai/product): How the memory control plane works: admission, supersession, recall, graph.
 - [Research](https://www.lians.ai/research): The regulated-memory eval: methodology, honest-recall definitions, five invariants, dated results, one-command reproduction.
 - [Compare](https://www.lians.ai/compare): LOCOMO 92.9 vs mem0's 91.6 on mem0's own harness, plus the head-to-head regulated eval vs mem0, Zep/Graphiti, Letta, Hindsight, Supermemory (Lians 5.0/5, next best 2.0/5, mem0 0.5/5 live, last run 2026-07-04).
+- [Lians vs Heartwood Memory](https://www.lians.ai/compare/heartwood): temporal truth and point-in-time reconstruction compared with policy-gated recall, signed provenance, and key-destruction proof.
 - [Compliance](https://www.lians.ai/compliance): SEC 17a-4, GDPR Art. 17, HIPAA-aligned architecture mapping.
 - [Security](https://www.lians.ai/security): PostgreSQL RLS information barriers, per-subject encryption with KMS, RBAC, SSO, SIEM streaming.
 - [Trust center](https://www.lians.ai/trust): Compliance status, encryption posture, subprocessor list, disclosure policy.

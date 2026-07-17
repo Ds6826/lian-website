@@ -131,6 +131,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "compare-heartwood.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "trust.html",
       "use": "@vercel/static"
     },
@@ -339,6 +343,10 @@
     {
       "src": "/compare/supermemory",
       "dest": "/compare-supermemory.html"
+    },
+    {
+      "src": "/compare/heartwood",
+      "dest": "/compare-heartwood.html"
     },
     {
       "src": "/trust",
