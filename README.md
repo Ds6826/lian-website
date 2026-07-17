@@ -1,6 +1,6 @@
 # Lian website
 
-Standalone marketing site and local Console prototype for [Lian](https://github.com/ebeirne/Lian). This repository contains only the website; it does not modify or include Lian's application code.
+Standalone marketing site and local Console prototype for [Lians](https://github.com/Lians-ai/Lians). This repository contains only the website; it does not modify or include Lians application code.
 
 ## Run locally
 
