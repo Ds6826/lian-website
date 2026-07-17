@@ -27,3 +27,47 @@ test("published copy follows the canonical link and punctuation rules", () => {
 
   assert.deepEqual(violations, []);
 });
+
+test("high-intent marketing pages expose canonical and social metadata", () => {
+  assert.ok(fs.statSync(path.join(ROOT, "og-card.png")).size > 0, "Open Graph image must exist");
+  const pages = [
+    "index.html",
+    "product.html",
+    "compare.html",
+    "research.html",
+    "pricing.html",
+    "design-partners.html",
+    "docs.html",
+    "solutions-financial-services.html",
+    "about.html",
+  ];
+
+  for (const page of pages) {
+    const copy = fs.readFileSync(path.join(ROOT, page), "utf8");
+    assert.match(copy, /rel="canonical" href="https:\/\/www\.lians\.ai\//, `${page} needs a canonical URL`);
+    assert.match(copy, /property="og:title"/, `${page} needs an Open Graph title`);
+    assert.match(copy, /property="og:description"/, `${page} needs an Open Graph description`);
+    assert.match(copy, /property="og:image"/, `${page} needs an Open Graph image`);
+  }
+});
+
+test("cohort capacity is labeled as openings, not implied traction", () => {
+  const copy = ["index.html", "design-partners.html", "about.html"]
+    .map((file) => fs.readFileSync(path.join(ROOT, file), "utf8"))
+    .join("\n");
+
+  assert.doesNotMatch(copy, /Seven companies|Three implementation partners|Four evaluation partners|Most popular/);
+});
+
+test("every sitemap page has a canonical URL and social image", () => {
+  const sitemap = fs.readFileSync(path.join(ROOT, "sitemap.xml"), "utf8");
+  const urls = [...sitemap.matchAll(/<loc>https:\/\/www\.lians\.ai([^<]*)<\/loc>/g)].map((match) => match[1] || "/");
+
+  for (const route of urls) {
+    const file = route === "/" ? "index.html" : `${route.slice(1).replaceAll("/", "-")}.html`;
+    const copy = fs.readFileSync(path.join(ROOT, file), "utf8");
+    const canonical = route === "/" ? "https://www.lians.ai/" : `https://www.lians.ai${route}`;
+    assert.ok(copy.includes(`rel="canonical" href="${canonical}"`), `${file} needs its canonical URL`);
+    assert.match(copy, /property="og:image" content="https:\/\/www\.lians\.ai\/og-card\.png"/, `${file} needs the social card`);
+  }
+});

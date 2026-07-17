@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians is the system of record for AI in regulated industries: one tamper-evident ledger for what AI systems knew, did, and why." />
-    <meta property="og:title" content="Lians · Regulated AI memory infrastructure" />
-    <meta property="og:description" content="A memory control plane for AI agents on time-sensitive, audited, and confidential data: bitemporal, tamper-evident, and crypto-shreddable." />
+    <meta name="description" content="Bitemporal memory for AI agents. Reconstruct exactly what an agent knew at any past moment, suppress stale facts, and produce a tamper-evident record." />
+    <link rel="canonical" href="https://www.lians.ai/" />
+    <meta property="og:title" content="Lians | Bitemporal memory for AI agents" />
+    <meta property="og:description" content="Stop AI agents from answering yesterday's questions with today's facts. Open source, self-hostable, and audit-ready." />
     <meta property="og:url" content="https://www.lians.ai/" />
     <meta property="og:image" content="https://www.lians.ai/og-card.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lians | Bitemporal memory for AI agents" />
+    <meta name="twitter:description" content="Point-in-time recall, stale-fact suppression, and a tamper-evident record for AI agents." />
     <meta name="twitter:image" content="https://www.lians.ai/og-card.png" />
     <link rel="alternate" type="application/rss+xml" title="Lians Blog" href="https://www.lians.ai/feed.xml" />
-    <title>Lians · Regulated AI memory infrastructure</title>
+    <title>Lians | Bitemporal memory for AI agents</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -20,6 +23,9 @@
     <link rel="icon" href="/favicon.ico?v=4" sizes="any" />
     <link rel="icon" href="/favicon.png?v=4" type="image/png" sizes="512x512" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Lians","applicationCategory":"DeveloperApplication","operatingSystem":"Linux, macOS, Windows","url":"https://www.lians.ai/","downloadUrl":"https://pypi.org/project/lians-sdk/","codeRepository":"https://github.com/Lians-ai/Lians","license":"https://www.apache.org/licenses/LICENSE-2.0","description":"Bitemporal memory for AI agents with point-in-time recall, stale-fact suppression, tamper-evident audit records, and crypto-shred erasure."}
+    </script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
@@ -45,9 +51,21 @@
 
     <main>
       <section class="wrap hero">
-        <p class="eyebrow"><span class="dot"></span> Founding Partner Cohort · Seven companies · Early access</p>
-        <h1>The system of record for AI <em>in regulated industries</em>.</h1>
-        <p class="lede">One tamper-evident, bitemporal, erasure-compatible ledger for what AI systems knew, what they did, and why. Start with audit-grade memory. Add behavioral records and Evidence Packs without building a second compliance stack.</p>
+        <p class="eyebrow"><span class="dot"></span> Open source · Runs locally · No account required</p>
+        <h1>Stop AI agents from answering yesterday's questions with <em>today's facts</em>.</h1>
+        <p class="lede">Lians is bitemporal memory for AI agents. It suppresses stale facts, reconstructs exactly what was knowable at a past moment, and produces the record behind every answer.</p>
+
+        <div class="actions hero-actions">
+          <a class="btn btn-primary" href="#watch">Run the 40-second demo →</a>
+          <a class="btn" href="/compare">See benchmark results →</a>
+          <a class="tlink" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Inspect the source ↗</a>
+        </div>
+
+        <div class="stats hero-stats" aria-label="Published benchmark results">
+          <a class="s" href="/compare"><b>92.9%</b><span>LOCOMO</span></a>
+          <a class="s" href="/compare"><b>89.4%</b><span>LongMemEval-S</span></a>
+          <a class="s" href="/research"><b>5 / 5</b><span>regulated invariants</span></a>
+        </div>
 
         <div class="term" aria-label="Install and use Lians">
           <div class="term-tabs" role="tablist" aria-label="Language">
@@ -102,12 +120,7 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
 <span class="cm">/* →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B) */</span><span class="cursor"></span></pre>
         </div>
 
-        <div class="actions">
-          <a class="btn btn-primary" href="/design-partners">Apply to the founding cohort →</a>
-          <a class="tlink" href="#watch">▶ Run the changing-facts demo</a>
-        </div>
-
-        <p class="metaline">Three founder-led implementation partners · Four technical evaluation partners · Open source · Self-hostable · MCP-native</p>
+        <p class="metaline">Apache 2.0 · Self-hostable · MCP-native · Python, TypeScript, Go, Java, and C</p>
       </section>
 
       <section class="wrap block" aria-label="Lians products">
@@ -121,7 +134,7 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
       </section>
 
       <section class="wrap block partner-brief" aria-label="Design partner pilot">
-        <p class="block-label">Founding Partner Cohort · Seven companies</p>
+        <p class="block-label">Founding Partner Cohort · 7 openings</p>
         <h2>Turn a changing-facts failure into a production-grade evidence trail.</h2>
         <p class="intro">An eight-week, paid implementation for financial-research, risk, and compliance-agent vendors. We instrument one high-value workflow, define what “correct as of” means, and leave you with a reproducible acceptance suite.</p>
         <div class="actions"><a class="btn btn-primary" href="/design-partners">See the pilot scope →</a><a class="tlink" href="/research">Inspect the evaluation method →</a></div>
