@@ -195,6 +195,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "favicon.ico",
+      "use": "@vercel/static"
+    },
+    {
       "src": "logo-blue.png",
       "use": "@vercel/static"
     },
