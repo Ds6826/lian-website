@@ -58,7 +58,7 @@ termCopy?.addEventListener('click', async () => {
     const c = JSON.parse(localStorage.getItem('lians-gh-stars') || 'null');
     if (c && Date.now() - c.t < 3600e3) { show(c.n); return; }
   } catch (e) {}
-  fetch('https://api.github.com/repos/ebeirne/Lians2')
+  fetch('https://api.github.com/repos/Lians-ai/Lians')
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error('gh'))))
     .then((d) => {
       if (typeof d.stargazers_count !== 'number') return;

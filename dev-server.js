@@ -1,4 +1,4 @@
-﻿const http = require('node:http');
+const http = require('node:http');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -35,7 +35,7 @@ const SEC_HEADERS = {
   'content-security-policy': [
     "default-src 'self'",
     // sha256 hash whitelists the inline no-flash theme script in every page <head>
-    // (same hash as server.js — keep both in sync if the theme snippet changes).
+    // (same hash as server.js - keep both in sync if the theme snippet changes).
     `script-src 'self' 'sha256-oM3fK1wB/KZpRi+zI+8vJ+5IU+jYT4jY9m7pTRZLHCc='${clerkHost ? ` ${clerkHost}` : ''}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",

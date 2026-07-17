@@ -7,11 +7,18 @@
     <language>en</language>
     <atom:link href="https://www.lians.ai/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
+      <title>What EU AI Act Article 12 actually requires you to log</title>
+      <link>https://www.lians.ai/blog/eu-ai-act-article-12</link>
+      <guid>https://www.lians.ai/blog/eu-ai-act-article-12</guid>
+      <pubDate>Fri, 17 Jul 2026 12:00:00 GMT</pubDate>
+      <description>A practical guide to Article 12 logging for high-risk AI systems and the evidence architecture agent teams should build now.</description>
+    </item>
+    <item>
       <title>Their harness. Their judge. 92.9 on LOCOMO.</title>
       <link>https://www.lians.ai/blog/locomo-benchmark</link>
       <guid>https://www.lians.ai/blog/locomo-benchmark</guid>
       <pubDate>Fri, 10 Jul 2026 12:00:00 GMT</pubDate>
-      <description>We scored Lians on LOCOMO using mem0's own open-source harness — their answer pipeline, their gpt-5 judge, unmodified. 92.9% vs their published 91.6, at 90% accuracy on one-seventh of full-context tokens. Receipts and caveats included.</description>
+      <description>We scored Lians on LOCOMO using mem0's own open-source harness - their answer pipeline, their gpt-5 judge, unmodified. 92.9% vs their published 91.6, at 90% accuracy on one-seventh of full-context tokens. Receipts and caveats included.</description>
     </item>
     <item>
       <title>Memory is a lifecycle, not a table</title>
