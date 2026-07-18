@@ -3,13 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://www.lians.ai/solutions/healthcare" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content="Lians for healthcare: patient-scoped, encrypted, reconstructable agent memory with care-team barriers and audit-preserving erasure, mapped to HIPAA technical safeguards." />
-    <title>Healthcare — Lians</title>
+    <title>Healthcare · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
@@ -27,12 +31,12 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Solutions / Healthcare</p>
         <h1>Patient-scoped memory that <em>reconstructs</em>.</h1>
-        <p class="lede">Healthcare AI agents can retain PHI, mix care-team context, cite outdated medications, or fail to prove what was known at the time of a decision. Lians gives healthcare agents patient-scoped, encrypted, reconstructable memory with care-team barriers and audit-preserving erasure.</p>
+        <p class="lede">Patient-scoped, encrypted, reconstructable memory, with care-team barriers and audit-preserving erasure.</p>
         <div class="actions"><a class="btn btn-primary" href="/login">Get an API key →</a><a class="tlink" href="/compliance">HIPAA mapping →</a></div>
         <div class="term" style="margin-top:30px" aria-label="Point-in-time recall example">
 <pre class="term-body"><span class="pr">$</span> mem.recall_at(subject=<span class="st">"patient-8821"</span>,
                 query=<span class="st">"anticoagulant"</span>, as_of=<span class="st">"2025-06-01"</span>)
-<span class="cm"># →</span> <span class="out">"Apixaban 5mg"</span> <span class="cm">— the active therapy then, not the discontinued Warfarin</span><span class="cursor"></span></pre>
+<span class="cm"># →</span> <span class="out">"Apixaban 5mg"</span> <span class="cm">(the active therapy then, not the discontinued Warfarin)</span><span class="cursor"></span></pre>
         </div>
       </section>
 
@@ -41,12 +45,18 @@
         <h2>Built for the chart.</h2>
         <div class="list">
           <div class="item"><span class="head"><b>Per-subject encryption</b></span><p>AES-256-GCM keyed by patient or member identifier, so memory is segregated by subject at rest.</p></div>
-          <div class="item"><span class="head"><b>Crypto-shred certificates</b></span><p>Patient-level deletion that's provable — destroy the key, keep the audit trail.</p></div>
+          <div class="item"><span class="head"><b>Crypto-shred certificates</b></span><p>Patient-level deletion that's provable: destroy the key, keep the audit trail.</p></div>
           <div class="item"><span class="head"><b>Care-team barriers</b></span><p>Department and care-team isolation enforced at the database layer via row-level security.</p></div>
-          <div class="item"><span class="head"><b>Point-in-time clinical timelines</b></span><p>Reconstruct the chart context that was active on any date — for a decision or a review.</p></div>
+          <div class="item"><span class="head"><b>Point-in-time clinical timelines</b></span><p>Reconstruct the chart context that was active on any date, for a decision or a review.</p></div>
           <div class="item"><span class="head"><b>HIPAA safeguard mapping</b></span><p>Technical safeguards mapped to controls. <a class="tlink" href="/compliance">See compliance →</a></p></div>
           <div class="item"><span class="head"><b>Healthcare adapter</b></span><p>Patient, encounter, provider, condition, medication, ICD-10, NPI, CPT, and HCPCS normalization.</p></div>
         </div>
+      </section>
+
+      <section class="wrap block" aria-label="Try it: point-in-time recall">
+        <p class="block-label">See it: as-of recall</p>
+        <h2>Reconstruct the chart on any date.</h2>
+        <div data-viz="asof" data-preset="patient"></div>
       </section>
 
       <section class="wrap block" aria-label="Demo and connectors">
@@ -54,7 +64,7 @@
           <div class="prose">
             <p class="block-label">The demo</p>
             <h3>Update, scope, reconstruct, erase.</h3>
-            <p>Update a patient's medication dose across encounters, show only the current dose in present recall, reconstruct the chart context at admission time, then crypto-shred the patient subject — every step on the tamper-evident chain.</p>
+            <p>Update a patient's medication dose across encounters, show only the current dose in present recall, reconstruct the chart context at admission time, then crypto-shred the patient subject, every step on the tamper-evident chain.</p>
           </div>
           <div class="prose">
             <p class="block-label">Connector priorities</p>
@@ -70,14 +80,16 @@
     <section class="band"><div class="wrap"><h2>Give clinical agents memory that <em>reconstructs</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
   </body>
 </html>

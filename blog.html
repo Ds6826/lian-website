@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://www.lians.ai/blog" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="description" content="Writing from the Lians team on regulated AI memory: bitemporal recall, audit chains, backtest contamination, and honest evals." />
+    <link rel="alternate" type="application/rss+xml" title="Lians Blog" href="https://www.lians.ai/feed.xml" />
+    <title>Blog · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / Blog</p>
+        <h1>Notes on memory you can <em>defend</em>.</h1>
+        <p class="lede">Writing from the team building Lians, on bitemporal recall, audit chains, contamination-free backtests, and how to measure memory honestly.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Posts">
+        <p class="block-label">All posts</p>
+        <div class="list">
+          <a class="item" href="/blog/eu-ai-act-article-12">
+            <span class="head"><b>What Article 12 actually requires you to log</b><span class="meta">2026-07-17</span></span>
+            <p>A source-linked implementation guide to EU AI Act logging, point-in-time reconstruction, tamper evidence, and the records most agent stacks cannot produce.</p>
+          </a>
+          <a class="item" href="/blog/locomo-benchmark">
+            <span class="head"><b>Their harness. Their judge. 92.9.</b><span class="meta">2026-07-10</span></span>
+            <p>We scored Lians on LOCOMO using mem0's own open-source harness - their answer pipeline, their gpt-5 judge, unmodified - and came back 92.9% against their published 91.6, at 90% accuracy on one-seventh of full-context tokens. Receipts and caveats included.</p>
+          </a>
+          <a class="item" href="/blog/memory-lifecycle">
+            <span class="head"><b>Memory is a lifecycle, not a table</b><span class="meta">2026-07-06</span></span>
+            <p>v0.4.0 gives every stage of a fact's life a mechanism: flushed before the context cliff, loud while contested, aging by materiality, degrading audibly during outages, and accounting for itself in a signed statement.</p>
+          </a>
+          <a class="item" href="/blog/backtest-lookahead">
+            <span class="head"><b>Your backtest Sharpe is contaminated</b><span class="meta">2026-07-05</span></span>
+            <p>Lookahead bias in agent memory has two classes. FUTURE_EVENT is the one you already filter for; LATE_REVISION wears a historical date, so a single-clock vector store can't even see it. The mechanism, why it silently inflates results, and the two-command check.</p>
+          </a>
+        </div>
+        <p class="metaline">More coming. Watch the <a class="tlink" href="/changelog">changelog</a> or the <a class="tlink" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">repo ↗</a> in the meantime.</p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Build on memory you can <em>defend</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

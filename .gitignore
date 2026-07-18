@@ -6,3 +6,5 @@ lian-memory-governor/
 .vercel
 .env*
 redesign-screenshots/
+
+.mcp-registry-key.pem

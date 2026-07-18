@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://www.lians.ai/compare/mem0" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Lians vs mem0 | Agent memory for regulated systems" />
+    <meta property="og:description" content="A reproducible comparison of Lians and mem0 across LOCOMO recall quality and five regulated-memory invariants." />
+    <meta property="og:url" content="https://www.lians.ai/compare/mem0" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="description" content="Lians vs mem0: 92.9 vs 91.6 on LOCOMO scored by mem0's own harness, plus five regulated-memory invariants: stale suppression, as-of recall, provable erasure, lookahead guard, audit snapshot. Reproducible, honest." />
+    <title>Lians vs mem0 · regulated-memory comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"WebPage","name":"Lians vs mem0","url":"https://www.lians.ai/compare/mem0","description":"A reproducible comparison of Lians and mem0 across LOCOMO recall quality and five regulated-memory invariants.","about":[{"@type":"SoftwareApplication","name":"Lians","applicationCategory":"DeveloperApplication"},{"@type":"SoftwareApplication","name":"mem0","applicationCategory":"DeveloperApplication"}],"isPartOf":{"@type":"WebSite","name":"Lians","url":"https://www.lians.ai/"}}
+    </script>
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/compare">Compare</a> / mem0</p>
+        <h1>Lians vs <em>mem0</em>.</h1>
+        <p class="lede">mem0 is the developer-memory API, scored on the same five invariants we score ourselves. Credit where it's strong, receipts where it isn't.</p>
+        <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Methodology ↗</a><a class="tlink" href="/compare">Full six-way comparison →</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="Where it is strong">
+        <p class="block-label">Credit first</p>
+        <h2>Where mem0 is genuinely strong.</h2>
+        <div class="prose"><p>mem0 earned its community: excellent developer experience, LLM-driven ADD/UPDATE/DELETE fact management, a hosted platform plus open source, and an open benchmark harness good enough that we score ourselves with it. For personalizing a consumer chat product, it is a fine default.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="LOCOMO benchmark">
+        <p class="block-label">Recall quality · LOCOMO · run 2026-07-09</p>
+        <h2>On mem0's own harness: Lians 92.9, mem0 91.6.</h2>
+        <div class="stats">
+          <span class="s"><b>92.9%</b><span>Lians · LLM-judged QA accuracy</span></span>
+          <span class="s"><b>91.6%</b><span>mem0 · their published score</span></span>
+        </div>
+        <p class="metaline">Lians retrieval scored end-to-end by the unmodified <a class="tlink" href="https://github.com/mem0ai/memory-benchmarks" target="_blank" rel="noreferrer">mem0ai/memory-benchmarks ↗</a> harness (gpt-5 answerer + judge), all 10 LOCOMO conversations, no answer-side tricks. <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">Full report ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="Eval">
+        <p class="block-label">Regulated-memory eval · last run 2026-07-04</p>
+        <h2>The five invariants.</h2>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Regulated invariant</th><th class="col-lians">Lians</th><th>mem0</th></tr></thead>
+          <tbody>
+            <tr><td>Stale revision suppressed</td><td class="yes col-lians">pass</td><td class="no">fail</td></tr>
+            <tr><td>Point-in-time (as-of) recall</td><td class="yes col-lians">pass</td><td class="no">absent</td></tr>
+            <tr><td>Provable erasure (crypto-shred + cert)</td><td class="yes col-lians">pass</td><td class="partial">partial</td></tr>
+            <tr><td>Lookahead / backtest guard</td><td class="yes col-lians">pass</td><td class="no">absent</td></tr>
+            <tr><td>Audit-state snapshot at T</td><td class="yes col-lians">pass</td><td class="no">absent</td></tr>
+          </tbody>
+          <tfoot><tr><td>Score (pass = 1, partial = ½)</td><td class="col-lians">5.0 / 5</td><td>0.5 / 5</td></tr></tfoot>
+        </table></div>
+        <p class="metaline">Both columns executed live: mem0 OSS in its default documented config returned superseded and current revisions side by side, unmarked. Behavioral evidence in the <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">methodology doc ↗</a>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Where the lanes diverge">
+        <p class="block-label">Where the lanes diverge</p>
+        <h2>Different jobs, different guarantees.</h2>
+        <div class="prose"><p>mem0 is ADD-oriented: revised facts accumulate and its LLM decides updates non-deterministically. There is no as-of recall, no event-time model, and deletion removes rows without proving anything. If an examiner asks “what did the agent know on March 1?”, there is no API to answer.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="Honest recommendation">
+        <p class="block-label">The honest recommendation</p>
+        <h2>Which should you pick?</h2>
+        <div class="prose"><p>Choose mem0 for consumer personalization with no audit obligations, big-community support, and the fastest path to “remembers my preferences.” Choose Lians when a regulator, auditor, or backtest can ask what was known when.</p><p>A migration guide exists: <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/compare-mem0.md" target="_blank" rel="noreferrer">Lians vs mem0, with migration notes ↗</a>. The write/recall surface maps 1:1; supersession keys replace LLM update heuristics.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="Vendor right of reply">
+        <p class="block-label">Open methodology</p>
+        <h2>Mem0 has a public right of reply.</h2>
+        <div class="prose"><p>We asked Mem0 to review the configuration, evidence, and scoring in public. If a default behavior, documented capability, or result is wrong, we will rerun the adapter and correct this page.</p><p><a class="tlink" href="https://github.com/mem0ai/mem0/discussions/6373" target="_blank" rel="noreferrer">Read or respond to the public fact-check request ↗</a></p></div>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+  </body>
+</html>

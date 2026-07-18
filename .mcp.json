@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "lians": {
+      "command": "uvx",
+      "args": ["--from", "lians-sdk[mcp]", "lians-mcp"],
+      "env": {
+        "LIANS_URL": "${LIANS_URL:-https://agentmem-lotus.fly.dev}",
+        "LIANS_API_KEY": "${LIANS_API_KEY}",
+        "LIANS_AGENT_ID": "${LIANS_AGENT_ID:-lian-website-dev}"
+      }
+    }
+  }
+}

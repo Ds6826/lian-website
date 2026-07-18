@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Technical record infrastructure for EU AI Act Article 12: inference events, human oversight, system changes, incidents, integrity proofs, and point-in-time reconstruction." />
+    <link rel="canonical" href="https://www.lians.ai/article-12" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="EU AI Act Article 12 record infrastructure | Lians" />
+    <meta property="og:description" content="Capture inspectable AI-system records without assembling a second evidence stack from screenshots and application logs." />
+    <meta property="og:url" content="https://www.lians.ai/article-12" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>EU AI Act Article 12 record infrastructure | Lians</title>
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links"><a href="/product">Product</a><a href="/records">Records</a><a href="/research">Research</a><a href="/docs">Docs</a><a class="cta" href="/design-partners">Discuss a workflow →</a></div>
+    </nav></div></header>
+    <main>
+      <section class="wrap hero">
+        <p class="eyebrow"><span class="dot"></span> Records · EU AI Act Article 12</p>
+        <h1>Article 12 logging without a <em>second evidence stack</em>.</h1>
+        <p class="lede">Capture inferences, human oversight, system changes, subject events, and incidents in one tamper-evident record layer that your technical and compliance teams can inspect.</p>
+        <div class="actions"><a class="btn btn-primary" href="/records">Inspect the record model →</a><a class="tlink" href="/blog/eu-ai-act-article-12">Read the source-linked guide →</a></div>
+      </section>
+      <section class="wrap block" aria-label="Technical controls">
+        <p class="block-label">Technical controls</p>
+        <h2>Record what happened, what was known, and what changed.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Automatic event capture</b></span><p>Record each inference, decision, human intervention, model or policy change, data-subject action, and incident through one API.</p></div>
+          <div class="item"><span class="head"><b>Lifetime integrity</b></span><p>Append-only SHA-256 chains and optional physical WORM storage make alteration detectable.</p></div>
+          <div class="item"><span class="head"><b>Point-in-time reconstruction</b></span><p>Reproduce what the AI system knew and which records existed when a decision occurred.</p></div>
+          <div class="item"><span class="head"><b>Erasure-compatible history</b></span><p>Crypto-shred subject content while preserving the surrounding proof that an event occurred.</p></div>
+          <div class="item"><span class="head"><b>Portable evidence</b></span><p>Export a deterministic Evidence Pack for review instead of assembling screenshots and application logs by hand.</p></div>
+        </div>
+      </section>
+      <section class="wrap block" aria-label="Responsibility boundary">
+        <p class="block-label">Responsibility boundary</p>
+        <h2>Technical evidence is not legal certification.</h2>
+        <p class="intro">Deploy self-hosted or air-gapped with PostgreSQL, pgvector, database-enforced information barriers, per-subject encryption keys, and configurable legal hold. Lians provides technical controls and inspectable evidence. Your organization and counsel determine classification, applicability, retention, and compliance.</p>
+      </section>
+    </main>
+    <section class="band"><div class="wrap"><h2>Bring one high-risk workflow and its record requirements.</h2><a class="btn" href="/design-partners#apply">Discuss the implementation →</a></div></section>
+    <script src="/lians.js"></script>
+  </body>
+</html>

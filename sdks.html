@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Install Lians: five native SDKs (Python, TypeScript, Go, Java, C), a self-hostable server, framework integrations, and native MCP support — all on one REST API." />
-    <title>SDKs &amp; install — Lians</title>
+    <link rel="canonical" href="https://www.lians.ai/sdks" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="description" content="Install Lians: five native SDKs (Python, TypeScript, Go, Java, C), a self-hostable server, framework integrations, and native MCP support, all on one REST API." />
+    <title>SDKs &amp; install · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
@@ -27,22 +30,22 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / SDKs</p>
         <h1>One memory API. Five native <em>SDKs</em>.</h1>
-        <p class="lede">Every client speaks the same REST surface — recall, point-in-time <code class="ic">recall_at</code>, snapshot, backtest, crypto-shred erasure, audit-chain verify, and the relationship graph. The fastest path is Python local mode: no server, no Docker, no API key.</p>
+        <p class="lede">Every client speaks the same REST surface. The fastest path is Python local mode: no server, no Docker, no API key.</p>
         <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians/blob/master/docs/install.md" target="_blank" rel="noreferrer">Full install guide ↗</a></div>
       </section>
 
       <section class="wrap block" aria-label="Install matrix">
-        <p class="block-label">Install matrix · all SDKs v0.3.0</p>
+        <p class="block-label">Current release matrix</p>
         <h2>Pick your language.</h2>
         <div class="list">
           <div class="cmd"><span class="lang">Python</span><code>pip install lians-sdk</code></div>
           <div class="cmd"><span class="lang">Python local</span><code>pip install lians-sdk[local]</code></div>
           <div class="cmd"><span class="lang">TypeScript / Node</span><code>npm install @lians-ai/lians</code></div>
-          <div class="cmd"><span class="lang">Go</span><code>go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.3.0</code></div>
-          <div class="cmd"><span class="lang">Java · JVM 11+</span><code>dev.lians:lians-sdk:0.3.0</code></div>
+          <div class="cmd"><span class="lang">Go</span><code>go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1</code></div>
+          <div class="cmd"><span class="lang">Java · JVM 11+</span><code>ai.lians:lians-sdk:0.4.1</code></div>
           <div class="cmd"><span class="lang">C · C99 + libcurl</span><code>cmake -B build &amp;&amp; cmake --build build</code></div>
         </div>
-        <p class="metaline">Python &amp; TypeScript ship from package registries · Go via the module proxy · Java via Maven coordinates · C builds from source. All five release in lock-step at the same version.</p>
+        <p class="metaline">Python 0.4.1 is on PyPI. Go 0.4.1 is on the module proxy. Java 0.4.1 is on Maven Central. C 0.4.1 is attached to the GitHub release. npm remains on 0.4.0 while registry authorization is repaired.</p>
       </section>
 
       <section class="wrap block" aria-label="Self-host and frameworks">
@@ -63,15 +66,15 @@
 <span class="pr">$</span> pip install lians-sdk[langgraph]
 <span class="pr">$</span> pip install lians-sdk[crewai]
 <span class="pr">$</span> pip install lians-sdk[all]</pre>
-            <p style="margin-top:14px">First-class support for LangChain, LangGraph, CrewAI, the OpenAI Agents SDK, and AutoGen v0.4.</p>
+            <p style="margin-top:14px">First-class support for LangChain, LangGraph, CrewAI, the OpenAI Agents SDK, and AutoGen v0.4, including a pre-compaction flush (<code class="ic">CompactionGuard</code> + a flush node/tool per framework) that persists durable facts before your framework summarizes them away.</p>
           </div>
         </div>
       </section>
 
       <section class="wrap block" aria-label="MCP">
-        <p class="block-label">MCP — native tool in any AI client</p>
+        <p class="block-label">MCP · native tool in any AI client</p>
         <h2>Eight memory tools, zero adapter code.</h2>
-        <p class="intro">Lians is on the official MCP Registry. Claude Desktop, Cursor, VS Code, and Windsurf connect with a one-time config and get eight tools automatically: remember, recall, recall_at, reconstruct, list_conflicts, memory_lineage, fact_history, backtest_check.</p>
+        <p class="intro">On the official MCP Registry: Claude Desktop, Cursor, VS Code, and Windsurf connect with a one-time config and get all eight memory tools automatically.</p>
         <pre class="code">{
   <span class="st">"mcpServers"</span>: {
     <span class="st">"lians"</span>: {
@@ -91,22 +94,23 @@
       <section class="wrap block" aria-label="Verify">
         <p class="block-label">Verify a release</p>
         <h2>Confirm the version.</h2>
-        <pre class="code"><span class="pr">$</span> pip install lians-sdk==0.3.0
+        <pre class="code"><span class="pr">$</span> pip install lians-sdk==0.4.1
 <span class="pr">$</span> npm view @lians-ai/lians version
-<span class="pr">$</span> go list -m github.com/Lians-ai/Lians/agentmem/sdk/go@v0.3.0</pre>
+<span class="pr">$</span> go list -m github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1</pre>
       </section>
     </main>
 
     <section class="band"><div class="wrap"><h2>Install in 30 seconds. No account required.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
   </body>

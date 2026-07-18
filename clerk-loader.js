@@ -21,7 +21,7 @@
     if (!clerkScriptUrls[index]) return fail();
     window.clearTimeout(loadTimeout);
     // Failover timer covers only the script DOWNLOAD. It must be cleared the moment
-    // onload fires — otherwise it can fire during the (network-bound) Clerk.load()
+    // onload fires - otherwise it can fire during the (network-bound) Clerk.load()
     // call below, rip out clerk-js v5 (which has the billing API) and fall back to
     // the v4 CDN, leaving window.Clerk half-initialized and billing checkout broken.
     loadTimeout = window.setTimeout(() => {

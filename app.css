@@ -1,4 +1,4 @@
-/* app.css — Lians console. Theme: royal blue on matte black (matches lians.css). */
+/* app.css - Lians console. Theme: royal blue on matte black (matches lians.css). */
 :root{
   --cream:#08090c; --paper:#0f1117; --panel-2:#161922; --ink:#e8eaf1; --lime:#4169e1;
   --blue-bright:#7188ff; --coral:#ff7667; --mint:#a8d5bd;
@@ -31,8 +31,8 @@ h1,h2,h3,p{margin:0}
 a{color:inherit}
 
 /* shared chrome */
-.console-brand{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none;font:500 15px var(--mono);letter-spacing:-.01em}
-.console-brand span{display:grid;place-items:center;width:22px;height:22px;background:var(--lime);color:#fff;border-radius:50%;font:500 12px var(--mono)}
+.console-brand{display:flex;align-items:center;color:inherit;text-decoration:none;font-size:0}
+.console-brand span{display:block;width:98px;height:36px;background:url("/logo-blue.png") center/contain no-repeat;color:transparent;font-size:0}
 .console-eyebrow{font:500 .62rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
 .quiet-button{border:0;background:none;font:500 .68rem var(--mono);letter-spacing:.04em;cursor:pointer;color:var(--muted)}
 .quiet-button:hover{color:var(--ink)}
@@ -91,7 +91,9 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .console-gate{position:fixed;inset:0;background:var(--cream);z-index:200;transition:opacity .15s}
 .console-gate.cleared{display:none}
 .console-page{min-height:100vh;display:grid;grid-template-columns:240px 1fr}
-.sidebar{background:var(--paper);border-right:1px solid var(--line);padding:24px 12px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+/* The sidebar flows with the document so it scrolls as part of the whole page
+   (it used to be sticky+100vh, which pinned it while the main pane scrolled). */
+.sidebar{background:var(--paper);border-right:1px solid var(--line);padding:24px 12px 16px;display:flex;flex-direction:column;min-height:100vh}
 .sidebar .console-brand{padding:0 10px;margin-bottom:24px}
 .project-wrap{position:relative}
 .project-switcher{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line-2);background:var(--panel-2);color:var(--ink);height:42px;padding:0 12px;font:500 .72rem var(--mono);cursor:pointer;text-align:left}
@@ -119,9 +121,9 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .project-confirm-yes:hover{background:#ff8a7a;color:#0e0f13}
 .sidebar-nav{margin-top:20px;display:grid;gap:1px}
 .sidebar-nav p{font:500 .56rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#73798a;margin:16px 10px 6px}
-.nav-item{display:flex;align-items:center;gap:10px;border:0;background:none;text-decoration:none;color:var(--text-2);padding:9px 10px;font:500 .73rem var(--mono);text-align:left;cursor:pointer;border-left:2px solid transparent}
-.nav-item i{font-style:normal;width:15px;text-align:center;color:#73798a}
+.nav-item{display:flex;align-items:center;gap:8px;border:0;background:none;text-decoration:none;color:var(--text-2);padding:12px 12px;font:500 .82rem var(--mono);text-align:left;cursor:pointer;border-left:2px solid transparent}
 .nav-item:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.nav-pill{margin-left:auto;background:var(--lime);color:#fff;font:500 .52rem var(--mono);letter-spacing:.08em;padding:2px 5px;line-height:1.4}
 .nav-item.active{background:rgba(65,105,225,.22);border-left-color:var(--lime);color:#fff}
 .nav-item.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
 .sidebar-footer{margin-top:auto}
@@ -358,7 +360,7 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 @media(max-width:820px){.pg-result-grid,.pg-sandbox{grid-template-columns:1fr}.pg-row{grid-template-columns:1fr auto}.pg-row-meta{display:none}}
 @media(max-width:800px){
   .console-page{grid-template-columns:1fr}
-  .sidebar{position:fixed;z-index:30;left:-260px;transition:left .25s;width:240px}
+  .sidebar{position:fixed;z-index:30;top:0;height:100vh;overflow-y:auto;left:-260px;transition:left .25s;width:240px}
   .sidebar.open{left:0}
   .mobile-menu{display:block;border:0;background:none;color:var(--ink);font-size:1.1rem;margin-right:15px;cursor:pointer}
   .view-wrap{width:min(100% - 36px,1010px);padding:44px 0 68px}
@@ -397,3 +399,51 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .ftier-off{color:var(--muted)}
 .ftier-have{font:500 .56rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--blue-bright)}
 .ftier-need{font:500 .56rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--panel-2);padding:3px 8px}
+/* ── Memory Governor review (console) ────────────────────────────────────── */
+.gov-section{margin-top:44px}
+.gov-section:first-of-type{margin-top:0}
+.gov-section h2{display:flex;align-items:center;gap:10px;font:500 .95rem var(--mono);letter-spacing:-.01em;margin:0 0 16px}
+.gov-count{background:var(--panel-2);border:1px solid var(--line-2);color:var(--text-2);font:500 .6rem var(--mono);padding:2px 8px}
+.gov-card{background:var(--paper);border:1px solid var(--line);padding:16px 18px;margin-bottom:10px;transition:opacity .3s}
+.gov-card.gov-resolved{opacity:.35;pointer-events:none}
+.gov-card header{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.gov-card header time{margin-left:auto;font:400 .6rem var(--mono);color:var(--muted)}
+.gov-card p{margin:0 0 8px;font-size:.8rem;line-height:1.55}
+.gov-card small{display:block;font:400 .62rem var(--mono);color:var(--muted)}
+.gov-relation{font:500 .55rem var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;background:#262a33;color:var(--text-2)}
+.gov-relation-refines{background:#12301f;color:#66d19e}
+.gov-relation-supersedes{background:rgba(65,105,225,.25);color:var(--blue-bright)}
+.gov-relation-contradicts_same_time,.gov-relation-held{background:#3a1a14;color:#ff8a7a}
+.gov-tag{font:500 .55rem var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;background:#2a2410;color:#b0a060}
+.gov-confidence{font:500 .62rem var(--mono);color:var(--text-2)}
+.gov-actions{display:flex;gap:8px;margin-top:14px}
+.gov-actions button{border:1px solid var(--line-2);background:var(--panel-2);color:var(--ink);font:500 .64rem var(--mono);padding:8px 13px;cursor:pointer}
+.gov-actions .gov-confirm{border-color:var(--lime);background:var(--lime);color:#fff}
+.gov-actions .gov-confirm:hover{box-shadow:2px 2px 0 var(--blue-bright)}
+.gov-actions .gov-reject:hover{border-color:#ff8a7a;color:#ff8a7a}
+.gov-actions button:disabled{opacity:.5;cursor:wait}
+/* ── live playground results ─────────────────────────────────────────────── */
+.playground-note{font:400 .68rem var(--mono);color:var(--blue-bright);margin:-14px 0 22px}
+.playground-note.is-error{color:#ff8a7a}
+.playground-results{margin-top:20px;display:grid;gap:8px}
+.pg-result{position:relative;background:var(--panel-2);border:1px solid var(--line);padding:14px 16px;padding-right:74px}
+.pg-result p{margin:0 0 7px;font-size:.8rem;line-height:1.5}
+.pg-result small{font:400 .6rem var(--mono);color:var(--muted);display:flex;gap:8px;align-items:center}
+.pg-score{position:absolute;top:12px;right:14px;font:500 .72rem var(--mono);color:var(--blue-bright)}
+.pg-flag{font:500 .52rem var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;background:#262a33;color:var(--muted)}
+.pg-flag-live{background:var(--lime);color:#fff}
+.pg-empty{background:var(--panel-2);border:1px dashed var(--line-2);padding:18px;font:400 .72rem var(--mono);color:var(--muted)}
+.pg-meta{font:400 .62rem var(--mono);color:var(--muted);margin:6px 0 0}
+
+/* ── agent-ready integration prompt (Get started view) ───────────────────── */
+.aiprompt{border:1px solid var(--lime);background:rgba(65,105,225,.08);margin-top:26px}
+.aiprompt-head{display:flex;align-items:center;gap:14px;padding:12px 16px;flex-wrap:wrap}
+.aiprompt-head .aiprompt-tag{flex-shrink:0;background:var(--lime);color:#fff;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:3px 7px}
+.aiprompt-head p{margin:0;flex:1;min-width:200px;font:400 .78rem/1.55 var(--mono);color:var(--text-2)}
+.aiprompt-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.aiprompt-copy{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--lime);background:var(--lime);color:#fff;font:500 .74rem var(--mono);padding:8px 14px;cursor:pointer;transition:box-shadow .15s}
+.aiprompt-copy:hover{box-shadow:3px 3px 0 var(--blue-bright)}
+.aiprompt-copy.copied{background:var(--paper);color:var(--blue-bright)}
+.aiprompt-toggle{background:none;border:0;color:var(--muted);font:500 .74rem var(--mono);cursor:pointer;padding:8px 2px;text-decoration:underline;text-underline-offset:3px}
+.aiprompt-toggle:hover{color:var(--ink)}
+.aiprompt-body{margin:0;padding:16px 18px;border-top:1px solid var(--line);font:400 .72rem/1.7 var(--mono);color:var(--text-2);white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow-y:auto}

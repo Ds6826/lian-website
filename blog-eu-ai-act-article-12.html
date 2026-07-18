@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EU AI Act Article 12 logging for high-risk AI systems: what the law says, the updated 2027–2028 timeline, and the record architecture agent teams should build now." />
+    <link rel="canonical" href="https://www.lians.ai/blog/eu-ai-act-article-12" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="What EU AI Act Article 12 actually requires you to log" />
+    <meta property="og:description" content="A practical, source-linked guide to Article 12 logging for high-risk AI systems and the evidence most agent stacks cannot reconstruct." />
+    <meta property="og:url" content="https://www.lians.ai/blog/eu-ai-act-article-12" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>EU AI Act Article 12 logging: what to record · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "What EU AI Act Article 12 actually requires you to log, and what most agent stacks miss",
+        "description": "A practical, source-linked guide to Article 12 logging for high-risk AI systems and a technical evidence architecture for AI agents.",
+        "datePublished": "2026-07-17",
+        "dateModified": "2026-07-17",
+        "author": { "@type": "Person", "name": "Ethan Beirne" },
+        "publisher": { "@type": "Organization", "name": "Lians", "url": "https://www.lians.ai" },
+        "mainEntityOfPage": "https://www.lians.ai/blog/eu-ai-act-article-12"
+      }
+    </script>
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get started →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / EU AI Act Article 12</p>
+        <h1>What Article 12 actually requires you to log, and what most agent stacks <em>miss</em>.</h1>
+        <p class="lede">The EU AI Act does not say “send application logs to a dashboard.” It requires high-risk AI systems to support automatic event recording across the system lifetime at a level that makes their operation traceable. For an AI agent, that turns into a harder engineering question: can you reconstruct what the system knew, did, and was allowed to use at the moment of a decision?</p>
+        <p class="metaline">2026-07-17 · Ethan Beirne · 9 min read · Technical guidance, not legal advice</p>
+      </section>
+
+      <section class="wrap block" aria-label="Legal baseline">
+        <p class="block-label">The legal baseline</p>
+        <h2>Article 12 is a traceability requirement, not a prescribed log schema.</h2>
+        <p class="intro">Article 12 applies to <em>high-risk AI systems</em>. It says those systems must technically allow the automatic recording of events over their lifetime. The logging must support traceability appropriate to the system’s purpose and record events relevant to identifying risk or substantial modification, post-market monitoring, and monitoring the system’s operation. The regulation sets more specific minimum fields for certain biometric-identification systems; it does not publish a universal event schema for every agent.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>Provider retention</b><span class="meta">Article 19</span></span><p>Providers must keep automatically generated Article 12 logs under their control for an appropriate period of at least six months, unless other Union or national law provides otherwise.</p></div>
+          <div class="item"><span class="head"><b>Deployer retention</b><span class="meta">Article 26(6)</span></span><p>Deployers have a parallel at-least-six-month obligation for logs under their control, again subject to other applicable law.</p></div>
+          <div class="item"><span class="head"><b>Scope comes first</b></span><p>Not every model, workflow, or agent is a high-risk AI system. Classification depends on the system’s purpose and the Act’s categories. Establish scope with qualified counsel before treating any technical checklist as a compliance conclusion.</p></div>
+        </div>
+        <p class="metaline">Primary source: <a class="tlink" href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj/eng" target="_blank" rel="noreferrer">Regulation (EU) 2024/1689 on EUR-Lex ↗</a>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Current timeline">
+        <p class="block-label">Current timeline · updated 2026-07-17</p>
+        <h2>The high-risk deadline moved. The architecture problem did not.</h2>
+        <p class="intro">On June 29, 2026, the Council gave final approval to the Digital Omnibus amendment. The adopted timetable moves the high-risk rules for standalone systems to <b>December 2, 2027</b> and the rules for high-risk systems embedded in regulated products to <b>August 2, 2028</b>. The Council said the act would enter into force three days after publication in the Official Journal. Teams should verify the latest consolidated text before relying on a date.</p>
+        <p class="intro">The extra time is valuable only if it is used to make records native to the system. Retrofitting provenance after a model, retrieval layer, policy engine, and tool runner have all shipped independently usually produces a folder of correlated logs, not a reconstructable record.</p>
+        <p class="metaline">Timeline source: <a class="tlink" href="https://www.consilium.europa.eu/en/press/press-releases/2026/06/29/artificial-intelligence-council-gives-final-green-light-to-simplify-and-streamline-rules/" target="_blank" rel="noreferrer">Council final-approval notice ↗</a> · Classification guidance: <a class="tlink" href="https://digital-strategy.ec.europa.eu/en/policies/guidelines-ai-high-risk-systems" target="_blank" rel="noreferrer">European Commission high-risk-system guidance ↗</a>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Agent record">
+        <p class="block-label">An implementation interpretation</p>
+        <h2>For an agent, record the decision path, not only the final text.</h2>
+        <p class="intro">The following fields are not a verbatim Article 12 checklist. They are an engineering interpretation of what a useful, reviewable agent record needs in order to support the Act’s traceability objective.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>Identity and time</b></span><p>Stable event ID; system, tenant, agent, and session IDs; event time; recording time; and a trusted ordering value.</p></div>
+          <div class="item"><span class="head"><b>Configuration</b></span><p>Model and tool versions, system and policy version, retrieval configuration, feature flags, and the deployment or change-set identifier.</p></div>
+          <div class="item"><span class="head"><b>Inputs by reference</b></span><p>Prompt or input reference, retrieved-memory IDs, source lineage, and the validity window for each fact. Sensitive payloads can remain encrypted or off-record while their identifiers and hashes stay in the evidence chain.</p></div>
+          <div class="item"><span class="head"><b>Control decisions</b></span><p>Access checks, policy evaluations, blocked or allowed tools, information-barrier scope, human-oversight actions, and the reason codes the control plane produced.</p></div>
+          <div class="item"><span class="head"><b>Outputs and effects</b></span><p>Output reference, tool calls, external actions, errors, retries, overrides, and the link from each effect back to the evidence used to produce it.</p></div>
+          <div class="item"><span class="head"><b>Integrity</b></span><p>Canonical serialization, payload hashes, previous-event hash, key or signature identifier, and export metadata so an evidence package can be verified independently.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Why observability is insufficient">
+        <p class="block-label">The common gap</p>
+        <h2>Observability tells you what ran. Evidence must show what was knowable.</h2>
+        <p class="intro">A tracing platform is excellent for latency, failures, and debugging. It does not automatically make an agent’s state reconstructable. If a fact is corrected in November, a March decision record needs to show the version available in March, not today’s version joined onto an old trace. If a user was outside an information barrier, the record needs the access decision that applied at that time, not the current policy.</p>
+        <p class="intro">That is why one timestamp is not enough. The useful model carries both <b>event time</b>, when something was true in the world, and a <b>system-time validity window</b>, when the AI system believed it. Point-in-time reconstruction selects the version valid at the decision timestamp. Without that second timeline, a technically complete log can still tell a historically false story.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Technical shape">
+        <p class="block-label">A technical shape that survives review</p>
+        <h2>Combine an event ledger, bitemporal state, and subject-level key control.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>1 · Append an event envelope</b></span><p>Write every material inference, memory change, tool action, oversight action, access decision, and system change through one record API.</p></div>
+          <div class="item"><span class="head"><b>2 · Chain the records</b></span><p>Hash a deterministic event representation together with the previous record hash. A hash chain does not prevent every attack, but it makes silent alteration or deletion detectable when anchors and keys are controlled properly.</p></div>
+          <div class="item"><span class="head"><b>3 · Version mutable knowledge</b></span><p>Close the prior system-time validity window when a fact is revised. Reconstruct against an <code class="ic">as_of</code> timestamp instead of joining an old decision to current memory.</p></div>
+          <div class="item"><span class="head"><b>4 · Encrypt by subject or policy boundary</b></span><p>Keep sensitive content behind narrowly scoped keys, leaving non-identifying integrity metadata in the ledger. Destroying a key can make encrypted content irretrievable while preserving evidence that an event occurred.</p></div>
+          <div class="item"><span class="head"><b>5 · Export a deterministic evidence package</b></span><p>Include the selected records, lineage, policy versions, integrity proofs, and verification result. Reviewers should not need access to the production database or screenshots from five tools.</p></div>
+        </div>
+        <p class="intro">Cryptographic erasure is a technical measure, not an automatic GDPR result. Whether remaining data is anonymous depends on whether a person is no longer identifiable, considering the means reasonably likely to be used. Encryption and pseudonymisation reduce risk but can remain personal data while re-identification remains possible.</p>
+        <p class="metaline">Data-protection sources: <a class="tlink" href="https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32016R0679" target="_blank" rel="noreferrer">GDPR, including Recital 26 ↗</a> · <a class="tlink" href="https://www.edpb.europa.eu/system/files/2025-06/spe-training-on-ai-and-data-protection-technical_en.pdf" target="_blank" rel="noreferrer">EDPB secure-AI technical material ↗</a>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Practical test">
+        <p class="block-label">The practical test</p>
+        <h2>Ask for one old decision and try to rebuild it.</h2>
+        <p class="intro">Choose a production-like agent decision from three months ago. Starting with only its event ID, attempt to recover the exact model and policy versions, the memory records visible at that timestamp, the access decision, the human interventions, the tool effects, and an integrity check. If any step requires today’s database state, an employee’s recollection, or a screenshot, the record layer is not yet doing the work.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Lians implementation">
+        <p class="block-label">A reference implementation</p>
+        <h2>Lians turns the record into infrastructure.</h2>
+        <p class="intro">Lians is an open-source system of record for regulated AI: bitemporal memory, point-in-time reconstruction, database-enforced information barriers, a tamper-evident event chain, subject-level encryption, and deterministic evidence exports. It provides technical controls; it is not a certification and cannot determine whether a deployment is legally compliant.</p>
+        <div class="list">
+          <div class="cmd"><span class="lang">Local</span><code>pip install lians-sdk[local]</code></div>
+          <div class="cmd"><span class="lang">Source</span><code>git clone https://github.com/Lians-ai/Lians</code></div>
+        </div>
+        <p class="metaline"><a class="tlink" href="/records">Inspect the record model →</a> · <a class="tlink" href="/article-12">See the Article 12 implementation scope →</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Audit the source ↗</a></p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Build the record before you need to <em>produce it</em>.</h2><a class="btn" href="/login">Get started →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

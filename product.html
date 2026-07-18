@@ -3,13 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://www.lians.ai/product" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Lians works | Bitemporal AI agent memory" />
+    <meta property="og:description" content="Point-in-time recall, stale-fact suppression, audit records, and crypto-shred erasure for AI agents." />
+    <meta property="og:url" content="https://www.lians.ai/product" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content="How Lians works: a bitemporal memory engine with a tamper-evident audit chain, crypto-shred erasure, memory admission control, and a temporal relationship graph." />
-    <title>How Lians works — Regulated AI memory infrastructure</title>
+    <title>How Lians works · Regulated AI memory infrastructure</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
@@ -27,21 +35,21 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Product / How it works</p>
         <h1>The memory control plane, <em>explained</em>.</h1>
-        <p class="lede">Every fact is bitemporal, every change is admitted through a policy gate, and every event lands in a tamper-evident hash chain — so you can prove what an agent knew, when it knew it, and that the record was never altered.</p>
+        <p class="lede">Prove what an agent knew, when it knew it, and that the record was never altered.</p>
         <div class="actions"><a class="btn btn-primary" href="/sdks">Install an SDK →</a><a class="tlink" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Read the source ↗</a></div>
       </section>
 
       <section class="wrap block" aria-label="Architecture">
         <p class="block-label">Architecture</p>
         <h2>Five layers, one API.</h2>
-        <p class="intro">The same engine ships as a local library, a self-hosted server, or managed cloud. Agents talk REST or MCP; everything below is encrypted, bitemporal, and append-only.</p>
+        <p class="intro">One engine: local library, self-hosted server, or managed cloud. Agents talk REST or MCP.</p>
         <div class="table-wrap"><table class="tbl">
           <thead><tr><th>Layer</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td>LLM / Agent</td><td>Connects over the REST API or as a native MCP tool.</td></tr>
+            <tr><td>LLM / Agent</td><td>REST API or native MCP tool; durable facts are flushed to memory before the host framework compacts context.</td></tr>
             <tr><td>Lians API</td><td>FastAPI: authentication, scopes, rate limiting, idempotency keys, OpenTelemetry traces.</td></tr>
             <tr><td>Memories + Event Log</td><td>Encrypted, bitemporal facts alongside an immutable SHA-256 hash chain.</td></tr>
-            <tr><td>Subject Keys</td><td>Per-subject AES-256-GCM data-encryption keys — the targets of crypto-shred erasure.</td></tr>
+            <tr><td>Subject Keys</td><td>Per-subject AES-256-GCM data-encryption keys, the targets of crypto-shred erasure.</td></tr>
             <tr><td>Storage</td><td>PostgreSQL 16 + pgvector (HNSW) for hybrid search; Redis as a hot cache.</td></tr>
           </tbody>
         </table></div>
@@ -52,56 +60,61 @@
           <div class="prose">
             <p class="block-label">Bitemporal model</p>
             <h3>Ask what was true, not just what is stored.</h3>
-            <p>Every fact carries <strong>event time</strong> (when it happened) and <strong>system time</strong> (<code class="ic">valid_from</code> / <code class="ic">valid_to</code>). Recall runs through a validity gate: present queries return facts where <code class="ic">valid_to IS NULL</code>; point-in-time queries return facts where <code class="ic">valid_from ≤ as_of &lt; valid_to</code>.</p>
-            <p>So <code class="ic">recall_at(...)</code> reconstructs exactly what an agent knew on any past date — the foundation for backtests, snapshots, and lineage.</p>
+            <p>Every fact carries <strong>event time</strong> (when it happened) and <strong>system time</strong> (when it was recorded), and recall runs through a validity gate.</p>
+            <p>So <code class="ic">recall_at(...)</code> reconstructs exactly what an agent knew on any past date: the foundation for backtests, snapshots, and lineage.</p>
           </div>
           <div class="prose">
             <p class="block-label">Recall pipeline</p>
             <h3>Hybrid search, validity-gated.</h3>
-            <p>BM25 keyword scoring and semantic cosine similarity are blended, adjusted by recency decay, then passed through the validity gate so superseded versions never reach the model.</p>
-            <p>Result: <strong>0 stale facts</strong> in top-5 recalls vs 4/4 for an accumulate-everything store, with 100% supersession accuracy. <a class="tlink" href="/compare">See the eval →</a></p>
+            <p>Keyword and semantic scores are blended, adjusted by materiality-weighted recency decay, then validity-gated, so superseded versions never reach the model. If embeddings go down, recall degrades to lexical-only and says so on every result, never silently.</p>
+            <p>Result: <strong>0 stale facts</strong> in top-5 recall, 100% supersession accuracy. <a class="tlink" href="/compare">See the eval →</a></p>
           </div>
         </div>
+        <div data-viz="asof" data-preset="nvda"></div>
       </section>
 
       <section class="wrap block" aria-label="Supersession">
         <p class="block-label">Supersession pipeline</p>
         <h2>Revised facts close cleanly.</h2>
         <div class="list">
-          <div class="item"><span class="head"><b>Stage 1 — Metadata overlap</b></span><p>Candidate and existing facts are matched on structured keys (ticker, metric, subject) to find what could conflict.</p></div>
-          <div class="item"><span class="head"><b>Stage 2 — Deterministic decision</b></span><p>A rule engine classifies the relationship: SUPERSEDES, CONFIRMS, or ADDS — no model required, fully reproducible.</p></div>
-          <div class="item"><span class="head"><b>Stage 3 — Optional LLM adjudication</b></span><p>For paraphrase-level conflicts, an optional Claude Haiku stage resolves ambiguity (<code class="ic">SUPERSESSION_LLM_STAGE</code>).</p></div>
-          <div class="item"><span class="head"><b>Result</b></span><p>The superseded version's validity window closes; it survives for audit but is excluded from present recall.</p></div>
+          <div class="item"><span class="head"><b>Stage 1 · Metadata overlap</b></span><p>Candidates are matched on structured keys (ticker, metric, subject) to find what could conflict.</p></div>
+          <div class="item"><span class="head"><b>Stage 2 · Deterministic decision</b></span><p>A rule engine classifies the relationship (SUPERSEDES, REFINES, CONFIRMS, or ADDS), fully reproducible, no model required.</p></div>
+          <div class="item"><span class="head"><b>Stage 3 · Optional LLM adjudication</b></span><p>An optional model stage resolves paraphrase-level conflicts; the superseded version closes but survives for audit.</p></div>
+          <div class="item"><span class="head"><b>Human review · Memory Governor</b></span><p>Low-confidence decisions queue in the console's Governance view. Confirm or reject with one click, audited either way.</p></div>
+          <div class="item"><span class="head"><b>Open conflicts stay loud</b></span><p>Unadjudicated conflicts ride at the top of every context block as explicit "X disagrees with Y" lines until someone resolves them.</p></div>
         </div>
       </section>
 
       <section class="wrap block" aria-label="Audit chain">
         <p class="block-label">Tamper-evident audit chain</p>
         <h2>Proof built into every write.</h2>
-        <div class="prose"><p>Each event is appended to a SHA-256 hash chain — every row commits to the hash of the previous one, satisfying SEC 17a-4 / FINRA 4511 append-only requirements. Anyone can verify the chain: <code class="ic">GET /v1/admin/audit/verify</code> returns <code class="ic">{"chain_valid": true}</code> or detects where a record was altered. Export the full log (<code class="ic">/v1/admin/audit/export</code>) or reconstruct state at any past timestamp (<code class="ic">/v1/snapshot?as_of=…</code>). WORM mode object-locks the audit store for 17a-4 retention.</p></div>
+        <div class="prose"><p>Each event appends to a SHA-256 hash chain: every row commits to the hash of the one before it, satisfying SEC 17a-4 / FINRA 4511. One call verifies the whole chain, or pinpoints exactly where a record was altered. Export the full log, reconstruct state at any past timestamp, or render a signed human-readable memory statement, with WORM mode for 17a-4 retention.</p></div>
+        <div data-viz="chain"></div>
       </section>
 
       <section class="wrap block" id="admission" aria-label="Admission control">
         <p class="block-label">Flagship · Memory admission control</p>
         <h2>Govern what is allowed into memory.</h2>
-        <p class="intro">Most memory layers write whatever the agent hands them. Lians puts a policy gate in front of the store — the differentiator no competitor offers.</p>
+        <p class="intro">Most memory layers write whatever the agent hands them. Lians puts a policy gate in front of the store.</p>
         <div class="list">
-          <div class="item"><span class="head"><b>Sensitive-data detection</b></span><p>PII, PHI, and MNPI are classified on the way in, so regulated content is handled by policy rather than by accident.</p></div>
-          <div class="item"><span class="head"><b>Source-trust validation</b></span><p>Writes are scored against source trust so low-trust inputs don't silently become durable facts.</p></div>
-          <div class="item"><span class="head"><b>Prompt-injection quarantine</b></span><p>Suspicious instructions are held out of recall until reviewed, instead of poisoning future context.</p></div>
-          <div class="item"><span class="head"><b>Review queue + modes</b></span><p>High-risk writes route to a review queue. Run admission in <code class="ic">off</code>, <code class="ic">monitor</code>, or <code class="ic">enforce</code> mode (<code class="ic">ADMISSION_MODE</code>).</p></div>
+          <div class="item"><span class="head"><b>Sensitive-data detection</b></span><p>PII, PHI, and MNPI are classified on the way in, handled by policy, not by accident.</p></div>
+          <div class="item"><span class="head"><b>Source-trust validation</b></span><p>Low-trust inputs don't silently become durable facts.</p></div>
+          <div class="item"><span class="head"><b>Prompt-injection quarantine</b></span><p>Suspicious instructions are held out of recall until reviewed.</p></div>
+          <div class="item"><span class="head"><b>Vagueness pre-filter</b></span><p>Too-vague candidates are rejected before they can dilute recall.</p></div>
+          <div class="item"><span class="head"><b>Review queue + modes</b></span><p>High-risk writes route to the console's Governance queue; run admission in off, monitor, or enforce mode.</p></div>
         </div>
+        <div data-viz="gate"></div>
       </section>
 
       <section class="wrap block" id="graph" aria-label="Relationship graph">
         <p class="block-label">Relationship graph</p>
         <h2>Compliance queries over bitemporal edges.</h2>
-        <p class="intro">Edges are themselves bitemporal, so graph questions respect the same point-in-time correctness as recall — with no separate graph database to operate.</p>
+        <p class="intro">Edges are bitemporal too, so graph questions get the same point-in-time correctness as recall, with no separate graph database to operate.</p>
         <div class="table-wrap"><table class="tbl">
           <thead><tr><th>Operation</th><th>Use it for</th></tr></thead>
           <tbody>
             <tr><td><code>relate(...)</code></td><td>Record a temporal edge between two subjects.</td></tr>
-            <tr><td><code>path(...)</code></td><td>Conflict-of-interest reachability — is attorney A connected to adverse party B?</td></tr>
+            <tr><td><code>path(...)</code></td><td>Conflict-of-interest reachability: is attorney A connected to adverse party B?</td></tr>
             <tr><td><code>neighbors(...)</code></td><td>Related-party / beneficial-ownership and care-network analysis around a subject.</td></tr>
           </tbody>
         </table></div>
@@ -111,14 +124,16 @@
     <section class="band"><div class="wrap"><h2>Build on memory you can <em>defend</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure — bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/compare">Compare vs mem0 / Zep</a><a href="/pricing">Pricing</a><a href="/login">Sign in</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>
     <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
   </body>
 </html>

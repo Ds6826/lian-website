@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://www.lians.ai/blog/backtest-lookahead" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="description" content="Lookahead bias in AI agent memory silently inflates backtest results. FUTURE_EVENT is the obvious class; LATE_REVISION is the one vector stores can't even see. Here's the mechanism and the check." />
+    <title>Your backtest Sharpe is contaminated · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / Backtest contamination</p>
+        <h1>Your backtest Sharpe is <em>contaminated</em>.</h1>
+        <p class="lede">If a research agent with persistent memory helped produce a backtest, there's a question you can't currently answer: did it use anything it couldn't have known at simulation time? For one of the two contamination classes, your vector store can't even represent the question.</p>
+        <p class="metaline">2026-07-05 · Ethan Beirne · 6 min read</p>
+      </section>
+
+      <section class="wrap block" aria-label="The obvious class">
+        <p class="block-label">Contamination class 1</p>
+        <h2>FUTURE_EVENT: the one you already check for.</h2>
+        <p class="intro">The obvious form of lookahead: a memory whose underlying event happens <em>after</em> the simulated decision date. Your backtest runs at January 15; the agent recalls a March earnings surprise. Every quant knows to guard against this, and any store with an event timestamp can filter it. If this were the whole problem, a <code class="ic">WHERE event_time &lt;= sim_date</code> clause would end the discussion.</p>
+      </section>
+
+      <section class="wrap block" aria-label="The subtle class">
+        <p class="block-label">Contamination class 2</p>
+        <h2>LATE_REVISION: the one your vector store can't see.</h2>
+        <p class="intro">Financial data gets revised. Guidance is raised, GDP prints are corrected, filings are amended. A revision carries the <em>original</em> event's date, but it arrived months later.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>The setup</b></span><p>Q3 revenue, event time September 30. In February, the figure is restated. Your agent's memory now holds the corrected number, stamped with its September event time.</p></div>
+          <div class="item"><span class="head"><b>The backtest</b></span><p>Simulation checkpoint: January 15. The filter says September &lt; January, so it looks safely historical. The agent recalls the <em>corrected</em> figure and trades on it.</p></div>
+          <div class="item"><span class="head"><b>The lie</b></span><p>On January 15, the corrected number did not exist. The agent used information from three weeks in its future while every timestamp it can see says "past." That's lookahead bias wearing a historical date.</p></div>
+        </div>
+        <p class="intro">A store with one clock cannot represent this, let alone filter it. You need two: <b>event time</b> (when the fact was true in the world) and <b>ingestion time</b> (when your system learned it). Honest recall at simulated time <code class="ic">T</code> requires <em>both</em> to precede <code class="ic">T</code>. This is the bitemporal property, and it's why bolting a date filter onto a vector database doesn't fix the problem.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Why it inflates">
+        <p class="block-label">Why it inflates results</p>
+        <h2>Revisions are free alpha, in simulation only.</h2>
+        <p class="intro">Revisions are systematically informative: figures get corrected toward the truth, and the truth moves prices. An agent that recalls post-revision numbers at pre-revision checkpoints is trading on corrections before they were published. In simulation, that edge is real and shows up directly in the Sharpe ratio. Live, the revision hasn't landed yet, so the edge evaporates, and the strategy you funded is not the strategy you tested. The more your agent's memory accumulates revised data over time, the wider the gap between the contaminated backtest and live performance. The failure mode isn't a crash; it's a quiet overstatement you discover with real money.</p>
+      </section>
+
+      <section class="wrap block" aria-label="The check">
+        <p class="block-label">The check</p>
+        <h2>Audit the memory, not just the strategy.</h2>
+        <p class="intro">Lians ships a contamination detector as an API primitive. Point it at an agent and a simulation checkpoint; it scans every memory the agent possessed and flags both classes:</p>
+        <div class="term" aria-label="Backtest contamination check">
+          <div class="term-tabs"><div class="term-dots" aria-hidden="true" style="margin-left:0;padding:14px"><i></i><i></i><i></i></div></div>
+<pre class="term-body"><span class="pr">$</span> curl -X POST $LIANS/v1/backtest/check \
+   -d <span class="st">'{"agent_id":"desk","simulation_as_of":"2026-01-15T00:00:00Z"}'</span>
+
+{
+  <span class="st">"memories_checked"</span>: 1204,
+  <span class="st">"flags"</span>: [{
+    <span class="st">"contamination_type"</span>: <span class="out">"late_revision"</span>,
+    <span class="st">"event_time"</span>: <span class="st">"2025-09-30"</span>,
+    <span class="st">"ingestion_time"</span>: <span class="st">"2026-02-06"</span>,   <span class="cm">← arrived 22 days after the checkpoint</span>
+    <span class="st">"delta_days"</span>: 22.4
+  }],
+  <span class="st">"contamination_rate"</span>: 0.0008,
+  <span class="st">"is_clean"</span>: <span class="out">false</span>
+}</pre>
+        </div>
+        <p class="intro" style="margin-top:22px">A report with <code class="ic">is_clean: true</code> is the artifact a research lead can attach to a backtest before capital moves. And because recall itself can be gated the same way: <code class="ic">recall_at(query, as_of=T)</code> refuses anything either clock places after <code class="ic">T</code>, so the honest path is to prevent contamination at recall time and use the detector as the independent audit.</p>
+        <p class="metaline">In the <a class="tlink" href="/research">regulated-memory eval</a>, the lookahead guard is the invariant where the field gap is widest: none of the five competitor stores expose an API for it. Last run 2026-07-04. Reproduce it: <code class="ic">python -m benchmarks.compare_regulated</code>.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Try it">
+        <p class="block-label">Try it on your own agent</p>
+        <h2>Two commands to a verdict.</h2>
+        <div class="list">
+          <div class="cmd"><span class="lang">Install</span><code>pip install lians-sdk[local]</code></div>
+          <div class="cmd"><span class="lang">Check</span><code>mem.backtest_check(agent_id="desk", simulation_as_of="2026-01-15")</code></div>
+        </div>
+        <p class="metaline">Local mode runs on SQLite: no server, no API key. <a class="tlink" href="/docs">Docs →</a> · <a class="tlink" href="/solutions/financial-services">Financial services →</a></p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Backtest on memory you can <em>defend</em>.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

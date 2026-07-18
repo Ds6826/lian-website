@@ -1,4 +1,4 @@
-# Redesign Notes — Quant-Fund Positioning
+# Redesign Notes - Quant-Fund Positioning
 
 Branch: `redesign/quant-fund-positioning` (off `main`).
 Scope: targeted edits to the landing page (`index.html`, `styles.css`) per the
@@ -21,7 +21,7 @@ with `Change N:` prefixes; the first commit is a baseline (see below).
    `server.js`, `clerk-loader.js`, etc.). To keep the per-change diffs clean and
    reviewable, the in-progress landing-page edits were captured in a single
    `Baseline:` commit first. The unrelated backend changes were left
-   **uncommitted and untouched** on the branch — they are not part of this
+   **uncommitted and untouched** on the branch - they are not part of this
    redesign and are yours to commit separately.
 
 3. **Screenshots were not captured.** The brief asked for
@@ -32,7 +32,7 @@ with `Change N:` prefixes; the first commit is a baseline (see below).
    the screenshots.
 
 4. **Trust strip uses only honestly-supported claims (Change 8).** No "SOC 2
-   Type I in progress" — the site never states it, and fabricating a cert was
+   Type I in progress" - the site never states it, and fabricating a cert was
    out of bounds. No founder-credibility line either (couldn't state a
    background accurately). Both, plus design-partner logos, are left as
    `<!-- TODO -->` comments in the trust strip for when real signals exist.

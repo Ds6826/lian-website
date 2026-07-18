@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href="https://www.lians.ai/compare/hindsight" />
+    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="description" content="Lians vs Hindsight on five regulated-memory invariants: stale suppression, as-of recall, provable erasure, lookahead guard, audit snapshot. Benchmarked, reproducible, honest." />
+    <title>Lians vs Hindsight · regulated-memory comparison</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="stylesheet" href="/lians-visuals.css" />
+    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/compare">Compare</a> / Hindsight</p>
+        <h1>Lians vs <em>Hindsight</em>.</h1>
+        <p class="lede">Hindsight is agent memory that learns, scored on the same five invariants we score ourselves. Credit where it's strong, receipts where it isn't.</p>
+        <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Methodology ↗</a><a class="tlink" href="/compare">Full six-way comparison →</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="Where it is strong">
+        <p class="block-label">Credit first</p>
+        <h2>Where Hindsight is genuinely strong.</h2>
+        <div class="prose"><p>Hindsight brings genuine temporal awareness to the dev-memory lane: timestamped retain, four parallel retrieval strategies including time-range filtering, and a reflect() operation that revises beliefs while preserving history. Its memory-bank + mental-model design is thoughtful.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="Eval">
+        <p class="block-label">Regulated-memory eval · last run 2026-07-04</p>
+        <h2>The five invariants.</h2>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Regulated invariant</th><th class="col-lians">Lians</th><th>Hindsight</th></tr></thead>
+          <tbody>
+            <tr><td>Stale revision suppressed</td><td class="yes col-lians">pass</td><td class="partial">partial</td></tr>
+            <tr><td>Point-in-time (as-of) recall</td><td class="yes col-lians">pass</td><td class="partial">partial</td></tr>
+            <tr><td>Provable erasure (crypto-shred + cert)</td><td class="yes col-lians">pass</td><td class="no">absent</td></tr>
+            <tr><td>Lookahead / backtest guard</td><td class="yes col-lians">pass</td><td class="no">absent</td></tr>
+            <tr><td>Audit-state snapshot at T</td><td class="yes col-lians">pass</td><td class="no">absent</td></tr>
+          </tbody>
+          <tfoot><tr><td>Score (pass = 1, partial = ½)</td><td class="col-lians">5.0 / 5</td><td>1.0 / 5</td></tr></tfoot>
+        </table></div>
+        <p class="metaline">Lians executed live; Hindsight via a real-SDK adapter: plug in its key and the column executes live.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Where the lanes diverge">
+        <p class="block-label">Where the lanes diverge</p>
+        <h2>Different jobs, different guarantees.</h2>
+        <div class="prose"><p>Two hard gaps: temporal filtering scopes event time ranges: it cannot answer “what was believed as of date X”, and there is no delete, forget, or erase API on the public surface at all, which makes GDPR-grade erasure impossible, let alone provable. Belief revision is reflection-driven, not a deterministic keyed supersession.</p></div>
+      </section>
+
+      <section class="wrap block" aria-label="Honest recommendation">
+        <p class="block-label">The honest recommendation</p>
+        <h2>Which should you pick?</h2>
+        <div class="prose"><p>Choose Hindsight for learning agents that accumulate insight over time without erasure or audit obligations. Choose Lians when facts must close cleanly, erasure must be provable, and knowledge state must be reproducible at any past instant.</p><p>retain/recall map directly onto add/recall; Lians adds the as-of dimension, the audit chain, and erasure your compliance team will ask about six months in.</p></div>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+    <script src="/lians-visuals.js" defer></script>
+  </body>
+</html>
