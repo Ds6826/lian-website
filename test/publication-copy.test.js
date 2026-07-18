@@ -61,6 +61,14 @@ test("competitive comparison pages expose structured metadata and a public right
   }
 });
 
+test("LOCOMO benchmark article exposes article and dataset metadata", () => {
+  const copy = fs.readFileSync(path.join(ROOT, "blog-locomo-benchmark.html"), "utf8");
+  assert.match(copy, /application\/ld\+json/);
+  assert.match(copy, /"@type": "BlogPosting"/);
+  assert.match(copy, /"@type": "Dataset"/);
+  assert.match(copy, /"measurementTechnique"/);
+});
+
 test("cohort capacity is labeled as openings, not implied traction", () => {
   const copy = ["index.html", "design-partners.html", "about.html"]
     .map((file) => fs.readFileSync(path.join(ROOT, file), "utf8"))
