@@ -8,6 +8,44 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content="We scored Lians on LOCOMO using mem0's own open-source harness - their answer pipeline, their gpt-5 judge, unmodified. 92.9% vs their published 91.6, with the receipts and the caveats." />
     <title>Their harness, their judge: 92.9 on LOCOMO · Lians</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BlogPosting",
+            "headline": "Their harness. Their judge. 92.9 on LOCOMO.",
+            "description": "Lians scored 92.9% on the LOCOMO judged QA protocol using the unmodified mem0ai memory-benchmarks harness.",
+            "url": "https://www.lians.ai/blog/locomo-benchmark",
+            "datePublished": "2026-07-10",
+            "dateModified": "2026-07-18",
+            "author": { "@type": "Person", "name": "Ethan Beirne" },
+            "publisher": { "@type": "Organization", "name": "Lians", "url": "https://www.lians.ai" },
+            "image": "https://www.lians.ai/og-card.png",
+            "mainEntityOfPage": "https://www.lians.ai/blog/locomo-benchmark"
+          },
+          {
+            "@type": "Dataset",
+            "name": "Lians LOCOMO judged benchmark results",
+            "description": "Judged QA accuracy at retrieval cutoffs 10, 20, 50, and 200 across 1,540 LOCOMO questions in categories 1 through 4.",
+            "url": "https://www.lians.ai/blog/locomo-benchmark",
+            "datePublished": "2026-07-09",
+            "creator": { "@type": "Organization", "name": "Lians", "url": "https://www.lians.ai" },
+            "license": "https://www.apache.org/licenses/LICENSE-2.0",
+            "isBasedOn": [
+              "https://github.com/mem0ai/memory-benchmarks",
+              "https://github.com/snap-research/locomo"
+            ],
+            "variableMeasured": [
+              "LLM-judged QA accuracy",
+              "retrieval cutoff",
+              "mean context tokens per question"
+            ],
+            "measurementTechnique": "Unmodified mem0ai memory-benchmarks LOCOMO answer and judge pipeline"
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
