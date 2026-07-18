@@ -69,6 +69,14 @@ test("LOCOMO benchmark article exposes article and dataset metadata", () => {
   assert.match(copy, /"measurementTechnique"/);
 });
 
+test("published pages do not link to disabled repository discussions", () => {
+  const pages = fs.readdirSync(ROOT).filter((file) => file.endsWith(".html"));
+  for (const page of pages) {
+    const copy = fs.readFileSync(path.join(ROOT, page), "utf8");
+    assert.doesNotMatch(copy, /github\.com\/Lians-ai\/Lians\/discussions/, `${page} links to disabled Discussions`);
+  }
+});
+
 test("cohort capacity is labeled as openings, not implied traction", () => {
   const copy = ["index.html", "design-partners.html", "about.html"]
     .map((file) => fs.readFileSync(path.join(ROOT, file), "utf8"))
