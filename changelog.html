@@ -34,6 +34,16 @@
         <p class="lede">Everything ships in the open: engine, five SDKs, MCP server, console, and this site. Full detail in the <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer">repo changelog ↗</a>.</p>
       </section>
 
+      <section class="wrap block" aria-label="Python SDK v0.4.2 packaging fix">
+        <p class="block-label">2026-07-17 &middot; Python v0.4.2</p>
+        <h2>Real semantic embeddings now install with local and MCP modes.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Local installation dependency fixed</b><span class="meta tag">Fixed</span></span><p>The <code class="ic">local</code> and <code class="ic">mcp</code> extras now install <code class="ic">sentence-transformers</code> by default, preventing clean installations from silently using deterministic test-grade embeddings.</p></div>
+          <div class="item"><span class="head"><b>Packaging contract tested</b><span class="meta tag">Verified</span></span><p>Regression tests now require semantic embeddings in the <code class="ic">local</code>, <code class="ic">mcp</code>, and <code class="ic">all</code> extras.</p></div>
+        </div>
+        <p class="metaline">Python 0.4.2 is live on PyPI. Other language SDK versions are unchanged. <a class="tlink" href="https://github.com/Lians-ai/Lians/releases/tag/lians-v0.4.2" target="_blank" rel="noreferrer">Python release</a></p>
+      </section>
+
       <section class="wrap block" aria-label="v0.4.1 package discovery release">
         <p class="block-label">2026-07-17 · v0.4.1</p>
         <h2>Package discovery, integration accuracy, and reproducible evidence.</h2>
