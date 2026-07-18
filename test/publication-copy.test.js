@@ -51,6 +51,16 @@ test("high-intent marketing pages expose canonical and social metadata", () => {
   }
 });
 
+test("competitive comparison pages expose structured metadata and a public right of reply", () => {
+  const pages = ["compare-mem0.html", "compare-zep.html"];
+  for (const page of pages) {
+    const copy = fs.readFileSync(path.join(ROOT, page), "utf8");
+    assert.match(copy, /application\/ld\+json/, `${page} needs structured metadata`);
+    assert.match(copy, /public right of reply/i, `${page} needs a public right of reply`);
+    assert.match(copy, /public fact-check request/i, `${page} needs a public correction channel`);
+  }
+});
+
 test("cohort capacity is labeled as openings, not implied traction", () => {
   const copy = ["index.html", "design-partners.html", "about.html"]
     .map((file) => fs.readFileSync(path.join(ROOT, file), "utf8"))
