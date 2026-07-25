@@ -47,14 +47,15 @@
         <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / RIAD-1</p>
         <h1>Can you reconstruct one consequential AI <em>decision</em>?</h1>
         <p class="lede">That is the narrow question behind RIAD-1. The benchmark does not ask whether a memory system retrieves a pleasant conversation. It asks whether an evidence layer can reopen the boundary around a disputed decision after the underlying facts have changed.</p>
-        <p class="metaline">2026-07-25 · Lians · 6 min read · Open benchmark</p>
+        <p class="metaline">2026-07-25 · Lians · 6 min read · <a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">Standing CI and commit receipts ↗</a></p>
       </section>
 
       <section class="wrap block" aria-label="Benchmark scenario">
         <p class="block-label">The fixture</p>
         <h2>One underwriting decision, two known facts, and one fact learned later.</h2>
-        <p class="intro">RIAD-1 models a credit-underwriting agent. Before approval, the system records verified income and debt-to-income evidence. After approval, it records a missed payment. The benchmark also accepts an authenticated OpenTelemetry GenAI span and writes a decision linked to its model, policy, session, input and output hashes, and cited evidence IDs.</p>
+        <p class="intro">RIAD-1 models a credit-underwriting agent and the technical record behind an ECOA/adverse-action review. Before approval, the system records verified income and debt-to-income evidence. After approval, it records a missed payment. The benchmark also accepts an authenticated OpenTelemetry GenAI span and writes a decision linked to its model, policy, session, input and output hashes, reason codes, and cited evidence IDs.</p>
         <p class="intro">The central correctness test is simple: the exported decision-time snapshot must contain the two facts available before approval and must not leak the later missed payment backward into history.</p>
+        <p class="metaline">This is an engineering test of evidence reconstruction, not legal advice or a claim that a deployment complies with ECOA.</p>
       </section>
 
       <section class="wrap block" aria-label="Benchmark checks">
@@ -80,6 +81,19 @@
           <span class="s"><b>~1.03 s</b><span>local SQLite evidence-pack P95</span></span>
         </div>
         <p class="metaline">The latency number is descriptive, not a production performance claim. <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1.md" target="_blank" rel="noreferrer">Read the methodology ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="Competitor comparison">
+        <p class="block-label">Same contract · honest evidence modes</p>
+        <h2>The comparison shows what each public product surface can produce.</h2>
+        <p class="intro">Lians was executed end-to-end. Mem0 OSS, Graphiti OSS, and Letta were capability-assessed for RIAD-1 because their public APIs do not expose every operation in the harness. N/A means the operation is unavailable, not that a live call secretly failed. Graphiti receives partial credit where its bitemporal graph genuinely helps.</p>
+        <div class="list">
+          <div class="item"><span class="head"><b>Lians</b><span class="meta">6 PASS · executed</span></span><p>Decision-time reconstruction, required provenance, hashed evidence-pack export, authenticated GenAI OTLP ingestion, audit-payload tamper detection, and local replay latency.</p></div>
+          <div class="item"><span class="head"><b>Mem0 OSS</b><span class="meta">5 N/A · 1 NOT RUN</span></span><p>No OSS as-of decision snapshot, consequential-decision record, evidence-pack export, OTLP receiver, or payload hash-chain verifier. Replay latency is not comparable without the evidence-pack operation.</p></div>
+          <div class="item"><span class="head"><b>Graphiti OSS</b><span class="meta">1 PARTIAL · 4 N/A · 1 NOT RUN</span></span><p>Bitemporal graph edges earn partial credit for historical graph state. The public surface does not produce the complete cited decision boundary, hashed pack, OTLP receipt, or audit-chain proof RIAD-1 requires.</p></div>
+          <div class="item"><span class="head"><b>Letta</b><span class="meta">5 N/A · 1 NOT RUN</span></span><p>Passage search does not expose as-of reconstruction or the remaining RIAD evidence operations.</p></div>
+        </div>
+        <p class="metaline"><a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-comparison.md" target="_blank" rel="noreferrer">Per-cell evidence ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-results.json" target="_blank" rel="noreferrer">Machine-readable receipt ↗</a></p>
       </section>
 
       <section class="wrap block" aria-label="Honest limitations">
@@ -108,7 +122,7 @@
     <section class="band"><div class="wrap"><h2>Make one consequential decision <em>reconstructable</em>.</h2><a class="btn" href="/design-partners">Explore a design partnership →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Evidence and replay infrastructure for consequential AI decisions.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
         <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>

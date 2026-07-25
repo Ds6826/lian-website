@@ -1,6 +1,6 @@
 # Lians
 
-> Lians is regulated AI memory infrastructure: an open-source (Apache 2.0), self-hostable memory control plane for AI agents working on time-sensitive, audited, and confidential data. Every fact is bitemporal (event time + ingestion time), every change enters a tamper-evident SHA-256 audit chain, and erasure is a provable per-subject crypto-shred.
+> Lians is open-source, self-hostable evidence and replay infrastructure for consequential AI decisions. It preserves bitemporal decision-time context, consequential-decision records, GenAI telemetry, tamper-evident audit events, and portable Evidence Packs. Memory is one input to the evidence layer, not the category claim.
 
 Benchmarks: 92.9% LLM-judged QA accuracy on LOCOMO, scored end-to-end by the unmodified mem0ai/memory-benchmarks harness (gpt-5 judge) - above mem0's published 91.6 on the same benchmark (run 2026-07-09; report in the repo at agentmem/docs/benchmarks/locomo-judged-2026-07-09.md). LongMemEval-S: 89.4% at top-50 through the same harness (mem0 publishes 94.8; disclosed, with the failure analysis, at /compare). Retrieval payloads run ~5-6k tokens per top-200 call - the same token band mem0's "token-efficient" positioning claims. Regulated-memory eval: Lians 5.0/5 vs next best 2.0/5 (run 2026-07-04, mem0 OSS and Graphiti OSS executed live).
 

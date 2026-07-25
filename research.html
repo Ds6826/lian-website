@@ -78,6 +78,17 @@
         <p class="metaline">Lians top-200 retrieval per question, dumped into the unmodified <a class="tlink" href="https://github.com/mem0ai/memory-benchmarks" target="_blank" rel="noreferrer">mem0ai/memory-benchmarks ↗</a> answer + judge pipeline (gpt-5), so grading is the competitor's, verbatim. Lower cutoffs and the full protocol are in the <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">report ↗</a></p>
       </section>
 
+      <section class="wrap block" aria-label="RIAD-1 decision reconstruction">
+        <p class="block-label">Decision evidence · RIAD-1 · run in CI</p>
+        <h2>One decision boundary, compared without pretending N/A is a live failure.</h2>
+        <div class="stats">
+          <span class="s"><b>6 / 6</b><span>Lians · executed checks passed</span></span>
+          <span class="s"><b>PARTIAL</b><span>Graphiti · historical graph state</span></span>
+          <span class="s"><b>N/A</b><span>Mem0 and Letta · decision reconstruction API</span></span>
+        </div>
+        <p class="metaline">Lians executes end-to-end; competitor cells are explicitly capability-assessed where no RIAD operation exists. <a class="tlink" href="/blog/riad-1-decision-reconstruction">Read the comparison →</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">CI receipts ↗</a></p>
+      </section>
+
       <section class="wrap block" aria-label="Reproduce">
         <p class="block-label">Reproduce it</p>
         <h2>Don't trust us. Run it.</h2>
@@ -93,7 +104,7 @@
     <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/compare">See the full eval →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Evidence and replay infrastructure for consequential AI decisions.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
         <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
