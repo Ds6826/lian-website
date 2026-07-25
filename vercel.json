@@ -1,31 +1,5 @@
 {
   "version": 2,
-  "headers": [
-    {
-      "source": "/",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    },
-    {
-      "source": "/blog",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    },
-    {
-      "source": "/blog/riad-1-decision-reconstruction",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    },
-    {
-      "source": "/research",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    }
-  ],
   "builds": [
     {
       "src": "api/index.js",
@@ -372,11 +346,17 @@
     },
     {
       "src": "/research",
-      "dest": "/research.html"
+      "dest": "/research.html",
+      "headers": {
+        "Cache-Control": "no-store, max-age=0"
+      }
     },
     {
       "src": "/blog",
-      "dest": "/blog.html"
+      "dest": "/blog.html",
+      "headers": {
+        "Cache-Control": "no-store, max-age=0"
+      }
     },
     {
       "src": "/blog/locomo-benchmark",
@@ -396,7 +376,10 @@
     },
     {
       "src": "/blog/riad-1-decision-reconstruction",
-      "dest": "/blog-riad-1-decision-reconstruction.html"
+      "dest": "/blog-riad-1-decision-reconstruction.html",
+      "headers": {
+        "Cache-Control": "no-store, max-age=0"
+      }
     },
     {
       "handle": "filesystem"
