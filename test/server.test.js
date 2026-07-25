@@ -56,6 +56,7 @@ test('marketing pages serve, including the Memory Governor page', async () => {
     '/docs',
     '/pricing',
     '/blog/eu-ai-act-article-12',
+    '/blog/riad-1-decision-reconstruction',
   ]) {
     const res = await get(path);
     assert.equal(res.status, 200, `${path} should serve`);

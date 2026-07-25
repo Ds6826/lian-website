@@ -119,6 +119,18 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
         </div>
       </section>
 
+      <section class="wrap block" aria-label="RIAD-1 decision reconstruction benchmark">
+        <p class="block-label">New open benchmark · RIAD-1</p>
+        <h2>Can you reconstruct one consequential AI decision?</h2>
+        <p class="intro">RIAD-1 records decision-time evidence, a GenAI OpenTelemetry span, model and policy provenance, and one fact learned after the decision. The test then exports the evidence pack and deliberately tampers with an audit payload.</p>
+        <div class="stats">
+          <span class="s"><b>6 / 6</b><span>end-to-end checks passed</span></span>
+          <span class="s"><b>100%</b><span>fixture reconstruction accuracy</span></span>
+          <span class="s"><b>100%</b><span>required provenance coverage</span></span>
+        </div>
+        <p class="metaline">Local SQLite functional run, not a production load test or compliance certification. <a class="tlink" href="/blog/riad-1-decision-reconstruction">Read the benchmark →</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/benchmarks/decision_reconstruction_eval.py" target="_blank" rel="noreferrer">Run the source ↗</a></p>
+      </section>
+
       <section class="wrap block partner-brief" aria-label="Design partner pilot">
         <p class="block-label">Founding Partner Cohort · Seven companies</p>
         <h2>Turn a changing-facts failure into a production-grade evidence trail.</h2>

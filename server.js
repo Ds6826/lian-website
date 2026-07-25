@@ -435,6 +435,7 @@ const app = async (req, res) => {
       '/blog/locomo-benchmark': 'blog-locomo-benchmark.html',
       '/blog/memory-lifecycle': 'blog-memory-lifecycle.html',
       '/blog/eu-ai-act-article-12': 'blog-eu-ai-act-article-12.html',
+      '/blog/riad-1-decision-reconstruction': 'blog-riad-1-decision-reconstruction.html',
     };
     if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, CONTENT_PAGES[pathname]));
     if (pathname.endsWith('.html')) {

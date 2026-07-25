@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="RIAD-1 is an open benchmark for reconstructing consequential AI decisions with point-in-time evidence, provenance, OTLP traces, integrity checks, and tamper detection." />
+    <link rel="canonical" href="https://www.lians.ai/blog/riad-1-decision-reconstruction" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="RIAD-1: can you reconstruct one consequential AI decision?" />
+    <meta property="og:description" content="A runnable benchmark for point-in-time evidence, decision provenance, GenAI OTLP ingestion, evidence-pack integrity, and audit-payload tamper detection." />
+    <meta property="og:url" content="https://www.lians.ai/blog/riad-1-decision-reconstruction" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>RIAD-1 decision reconstruction benchmark · Lians</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/lians.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "RIAD-1: can you reconstruct one consequential AI decision?",
+        "description": "An open benchmark for point-in-time decision evidence, provenance, GenAI OTLP ingestion, evidence-pack integrity, and audit-payload tamper detection.",
+        "datePublished": "2026-07-25",
+        "dateModified": "2026-07-25",
+        "author": { "@type": "Organization", "name": "Lians" },
+        "publisher": { "@type": "Organization", "name": "Lians", "url": "https://www.lians.ai" },
+        "mainEntityOfPage": "https://www.lians.ai/blog/riad-1-decision-reconstruction"
+      }
+    </script>
+    <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header><div class="wrap"><nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+      <div class="links">
+        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/design-partners">Design partnership →</a>
+      </div>
+    </nav></div></header>
+
+    <main>
+      <section class="wrap hero">
+        <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / RIAD-1</p>
+        <h1>Can you reconstruct one consequential AI <em>decision</em>?</h1>
+        <p class="lede">That is the narrow question behind RIAD-1. The benchmark does not ask whether a memory system retrieves a pleasant conversation. It asks whether an evidence layer can reopen the boundary around a disputed decision after the underlying facts have changed.</p>
+        <p class="metaline">2026-07-25 · Lians · 6 min read · Open benchmark</p>
+      </section>
+
+      <section class="wrap block" aria-label="Benchmark scenario">
+        <p class="block-label">The fixture</p>
+        <h2>One underwriting decision, two known facts, and one fact learned later.</h2>
+        <p class="intro">RIAD-1 models a credit-underwriting agent. Before approval, the system records verified income and debt-to-income evidence. After approval, it records a missed payment. The benchmark also accepts an authenticated OpenTelemetry GenAI span and writes a decision linked to its model, policy, session, input and output hashes, and cited evidence IDs.</p>
+        <p class="intro">The central correctness test is simple: the exported decision-time snapshot must contain the two facts available before approval and must not leak the later missed payment backward into history.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Benchmark checks">
+        <p class="block-label">Six checks</p>
+        <h2>A pass must produce evidence, not a marketing assertion.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>1 · Exact point-in-time reconstruction</b></span><p>Prior evidence appears, the later fact does not, and cited evidence IDs exactly match the decision record.</p></div>
+          <div class="item"><span class="head"><b>2 · Required provenance coverage</b></span><p>Agent, session, model, model version, policy version, decision time, knowledge cutoff, evidence IDs, and input/output hashes are populated.</p></div>
+          <div class="item"><span class="head"><b>3 · Evidence-pack integrity</b></span><p>Recomputing the deterministic SHA-256 value matches the hash shipped with the exported pack.</p></div>
+          <div class="item"><span class="head"><b>4 · GenAI OTLP ingestion</b></span><p>The authenticated OTLP/HTTP receiver accepts and retains the OpenTelemetry GenAI span used by the fixture.</p></div>
+          <div class="item"><span class="head"><b>5 · Audit-payload tamper detection</b></span><p>The benchmark deliberately changes a v2 audit payload and requires chain verification to return <code class="ic">tampered</code>.</p></div>
+          <div class="item"><span class="head"><b>6 · Local replay latency guard</b></span><p>Evidence-pack P95 must remain below three seconds in the local functional environment.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Results">
+        <p class="block-label">Latest verified local run · 2026-07-25</p>
+        <h2>Six of six checks passed.</h2>
+        <div class="stats">
+          <span class="s"><b>100%</b><span>fixture reconstruction accuracy</span></span>
+          <span class="s"><b>100%</b><span>required provenance coverage</span></span>
+          <span class="s"><b>100%</b><span>deliberate tamper detected</span></span>
+          <span class="s"><b>~1.03 s</b><span>local SQLite evidence-pack P95</span></span>
+        </div>
+        <p class="metaline">The latency number is descriptive, not a production performance claim. <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1.md" target="_blank" rel="noreferrer">Read the methodology ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="Honest limitations">
+        <p class="block-label">What this does not prove</p>
+        <h2>The limitations belong beside the score.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Not a production load test</b></span><p>The fixture runs offline against ephemeral SQLite. Production Postgres throughput, concurrency, and durability require a separate benchmark.</p></div>
+          <div class="item"><span class="head"><b>Not certified WORM or legal attestation</b></span><p>The test proves application-level tamper evidence. Storage certification, retention controls, anchoring, and legal attestation are deployment concerns.</p></div>
+          <div class="item"><span class="head"><b>Not automatic trace correlation</b></span><p>The fixture explicitly stores trace and span IDs in decision metadata. Automatic OTLP trace-to-decision linking is not claimed.</p></div>
+          <div class="item"><span class="head"><b>Not universal model-output replay</b></span><p>Exact output reproduction also depends on preserving provider behavior, model determinism, tool state, and artifacts not submitted to Lians.</p></div>
+          <div class="item"><span class="head"><b>Versioned integrity boundary</b></span><p>New v2 audit rows hash canonical JSON payloads. Historical v1 rows remain verifiable but did not include the JSON payload in their hash.</p></div>
+        </div>
+      </section>
+
+      <section class="wrap block" aria-label="Run benchmark">
+        <p class="block-label">Reproduce it</p>
+        <h2>Read the code, then run the same test.</h2>
+        <div class="list">
+          <div class="cmd"><span class="lang">Clone</span><code>git clone https://github.com/Lians-ai/Lians &amp;&amp; cd Lians</code></div>
+          <div class="cmd"><span class="lang">Run</span><code>python agentmem/benchmarks/decision_reconstruction_eval.py</code></div>
+        </div>
+        <p class="metaline"><a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/benchmarks/decision_reconstruction_eval.py" target="_blank" rel="noreferrer">Benchmark source ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/tests/test_decision_reconstruction_eval.py" target="_blank" rel="noreferrer">Regression test ↗</a> · <a class="tlink" href="/design-partners">Bring us a decision workflow →</a></p>
+      </section>
+    </main>
+
+    <section class="band"><div class="wrap"><h2>Make one consequential decision <em>reconstructable</em>.</h2><a class="btn" href="/design-partners">Explore a design partnership →</a></div></section>
+
+    <footer class="foot"><div class="wrap">
+      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-cols">
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+      </div>
+      <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
+    </div></footer>
+    <script src="/lians.js"></script>
+  </body>
+</html>

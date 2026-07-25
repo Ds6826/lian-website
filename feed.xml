@@ -7,6 +7,13 @@
     <language>en</language>
     <atom:link href="https://www.lians.ai/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
+      <title>RIAD-1: can you reconstruct one consequential AI decision?</title>
+      <link>https://www.lians.ai/blog/riad-1-decision-reconstruction</link>
+      <guid>https://www.lians.ai/blog/riad-1-decision-reconstruction</guid>
+      <pubDate>Sat, 25 Jul 2026 12:00:00 GMT</pubDate>
+      <description>An open, runnable benchmark for point-in-time reconstruction, provenance, GenAI OTLP ingestion, evidence-pack integrity, and audit-payload tamper detection.</description>
+    </item>
+    <item>
       <title>What EU AI Act Article 12 actually requires you to log</title>
       <link>https://www.lians.ai/blog/eu-ai-act-article-12</link>
       <guid>https://www.lians.ai/blog/eu-ai-act-article-12</guid>

@@ -159,6 +159,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "blog-riad-1-decision-reconstruction.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "llms.txt",
       "use": "@vercel/static"
     },
@@ -363,6 +367,10 @@
     {
       "src": "/blog/eu-ai-act-article-12",
       "dest": "/blog-eu-ai-act-article-12.html"
+    },
+    {
+      "src": "/blog/riad-1-decision-reconstruction",
+      "dest": "/blog-riad-1-decision-reconstruction.html"
     },
     {
       "handle": "filesystem"
