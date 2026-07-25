@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="RIAD-1 is an open benchmark for reconstructing consequential AI decisions with point-in-time evidence, provenance, OTLP traces, integrity checks, and tamper detection." />
+    <meta name="description" content="RIAD-1 compares whether Lians, Mem0, Graphiti, and Letta can reconstruct the exact evidence boundary behind a consequential AI decision." />
     <link rel="canonical" href="https://www.lians.ai/blog/riad-1-decision-reconstruction" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="RIAD-1: can you reconstruct one consequential AI decision?" />
-    <meta property="og:description" content="A runnable benchmark for point-in-time evidence, decision provenance, GenAI OTLP ingestion, evidence-pack integrity, and audit-payload tamper detection." />
+    <meta property="og:title" content="RIAD-1: memory is not an evidence record" />
+    <meta property="og:description" content="A reproducible comparison of Lians, Mem0, Graphiti, and Letta against one consequential-decision reconstruction contract." />
     <meta property="og:url" content="https://www.lians.ai/blog/riad-1-decision-reconstruction" />
     <meta name="twitter:card" content="summary_large_image" />
-    <title>RIAD-1 decision reconstruction benchmark · Lians</title>
+    <title>RIAD-1: memory is not an evidence record · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -20,8 +20,8 @@
       {
         "@context": "https://schema.org",
         "@type": "TechArticle",
-        "headline": "RIAD-1: can you reconstruct one consequential AI decision?",
-        "description": "An open benchmark for point-in-time decision evidence, provenance, GenAI OTLP ingestion, evidence-pack integrity, and audit-payload tamper detection.",
+        "headline": "RIAD-1: memory is not an evidence record",
+        "description": "A reproducible comparison of Lians, Mem0, Graphiti, and Letta against a consequential-decision reconstruction contract.",
         "datePublished": "2026-07-25",
         "dateModified": "2026-07-25",
         "author": { "@type": "Organization", "name": "Lians" },
@@ -45,55 +45,42 @@
     <main>
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / <a href="/blog">Blog</a> / RIAD-1</p>
-        <h1>Can you reconstruct one consequential AI <em>decision</em>?</h1>
-        <p class="lede">That is the narrow question behind RIAD-1. The benchmark does not ask whether a memory system retrieves a pleasant conversation. It asks whether an evidence layer can reopen the boundary around a disputed decision after the underlying facts have changed.</p>
-        <p class="metaline">2026-07-25 · Lians · 6 min read · <a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">Standing CI and commit receipts ↗</a></p>
-      </section>
-
-      <section class="wrap block" aria-label="Benchmark scenario">
-        <p class="block-label">The fixture</p>
-        <h2>One underwriting decision, two known facts, and one fact learned later.</h2>
-        <p class="intro">RIAD-1 models a credit-underwriting agent and the technical record behind an ECOA/adverse-action review. Before approval, the system records verified income and debt-to-income evidence. After approval, it records a missed payment. The benchmark also accepts an authenticated OpenTelemetry GenAI span and writes a decision linked to its model, policy, session, input and output hashes, reason codes, and cited evidence IDs.</p>
-        <p class="intro">The central correctness test is simple: the exported decision-time snapshot must contain the two facts available before approval and must not leak the later missed payment backward into history.</p>
-        <p class="metaline">This is an engineering test of evidence reconstruction, not legal advice or a claim that a deployment complies with ECOA.</p>
-      </section>
-
-      <section class="wrap block" aria-label="Benchmark checks">
-        <p class="block-label">Six checks</p>
-        <h2>A pass must produce evidence, not a marketing assertion.</h2>
-        <div class="list">
-          <div class="item"><span class="head"><b>1 · Exact point-in-time reconstruction</b></span><p>Prior evidence appears, the later fact does not, and cited evidence IDs exactly match the decision record.</p></div>
-          <div class="item"><span class="head"><b>2 · Required provenance coverage</b></span><p>Agent, session, model, model version, policy version, decision time, knowledge cutoff, evidence IDs, and input/output hashes are populated.</p></div>
-          <div class="item"><span class="head"><b>3 · Evidence-pack integrity</b></span><p>Recomputing the deterministic SHA-256 value matches the hash shipped with the exported pack.</p></div>
-          <div class="item"><span class="head"><b>4 · GenAI OTLP ingestion</b></span><p>The authenticated OTLP/HTTP receiver accepts and retains the OpenTelemetry GenAI span used by the fixture.</p></div>
-          <div class="item"><span class="head"><b>5 · Audit-payload tamper detection</b></span><p>The benchmark deliberately changes a v2 audit payload and requires chain verification to return <code class="ic">tampered</code>.</p></div>
-          <div class="item"><span class="head"><b>6 · Local replay latency guard</b></span><p>Evidence-pack P95 must remain below three seconds in the local functional environment.</p></div>
-        </div>
-      </section>
-
-      <section class="wrap block" aria-label="Results">
-        <p class="block-label">Latest verified local run · 2026-07-25</p>
-        <h2>Six of six checks passed.</h2>
-        <div class="stats">
-          <span class="s"><b>100%</b><span>fixture reconstruction accuracy</span></span>
-          <span class="s"><b>100%</b><span>required provenance coverage</span></span>
-          <span class="s"><b>100%</b><span>deliberate tamper detected</span></span>
-          <span class="s"><b>~1.03 s</b><span>local SQLite evidence-pack P95</span></span>
-        </div>
-        <p class="metaline">The latency number is descriptive, not a production performance claim. <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1.md" target="_blank" rel="noreferrer">Read the methodology ↗</a></p>
+        <h1>Memory is not an <em>evidence record</em>.</h1>
+        <p class="lede">A system can remember what it knows now and still be unable to prove what it knew when a consequential decision was made. RIAD-1 tests that missing boundary and shows which public product surfaces can actually produce it.</p>
+        <p class="metaline">2026-07-25 · Lians · reproducible comparison · <a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">Standing CI and commit receipts ↗</a></p>
       </section>
 
       <section class="wrap block" aria-label="Competitor comparison">
-        <p class="block-label">Same contract · honest evidence modes</p>
-        <h2>The comparison shows what each public product surface can produce.</h2>
-        <p class="intro">Lians was executed end-to-end. Mem0 OSS, Graphiti OSS, and Letta were capability-assessed for RIAD-1 because their public APIs do not expose every operation in the harness. N/A means the operation is unavailable, not that a live call secretly failed. Graphiti receives partial credit where its bitemporal graph genuinely helps.</p>
+        <p class="block-label">The result that matters</p>
+        <h2>Only Lians exposes the complete decision-time evidence operation.</h2>
+        <p class="intro">A perfect score on a benchmark we wrote would be weak evidence by itself. The useful result is the architectural comparison: when the same reconstruction contract is applied to the public OSS surfaces of Mem0, Graphiti, and Letta, the required operation is absent or incomplete.</p>
         <div class="list">
-          <div class="item"><span class="head"><b>Lians</b><span class="meta">6 PASS · executed</span></span><p>Decision-time reconstruction, required provenance, hashed evidence-pack export, authenticated GenAI OTLP ingestion, audit-payload tamper detection, and local replay latency.</p></div>
-          <div class="item"><span class="head"><b>Mem0 OSS</b><span class="meta">5 N/A · 1 NOT RUN</span></span><p>No OSS as-of decision snapshot, consequential-decision record, evidence-pack export, OTLP receiver, or payload hash-chain verifier. Replay latency is not comparable without the evidence-pack operation.</p></div>
-          <div class="item"><span class="head"><b>Graphiti OSS</b><span class="meta">1 PARTIAL · 4 N/A · 1 NOT RUN</span></span><p>Bitemporal graph edges earn partial credit for historical graph state. The public surface does not produce the complete cited decision boundary, hashed pack, OTLP receipt, or audit-chain proof RIAD-1 requires.</p></div>
-          <div class="item"><span class="head"><b>Letta</b><span class="meta">5 N/A · 1 NOT RUN</span></span><p>Passage search does not expose as-of reconstruction or the remaining RIAD evidence operations.</p></div>
+          <div class="item"><span class="head"><b>Lians</b><span class="meta">PASS · executed end-to-end</span></span><p>Exports the exact decision-time evidence boundary with cited facts, provenance, a deterministic pack hash, an authenticated GenAI OTLP receipt, and audit-chain verification.</p></div>
+          <div class="item"><span class="head"><b>Mem0 OSS</b><span class="meta">N/A · operation not exposed</span></span><p>Its public OSS surface does not expose an as-of consequential-decision snapshot, a cited evidence pack, GenAI OTLP receipt, or payload hash-chain proof.</p></div>
+          <div class="item"><span class="head"><b>Graphiti OSS</b><span class="meta">PARTIAL · historical graph state</span></span><p>Bitemporal graph edges preserve useful history, but the public surface does not produce the complete cited decision boundary or the integrity and telemetry receipts RIAD-1 requires.</p></div>
+          <div class="item"><span class="head"><b>Letta</b><span class="meta">N/A · operation not exposed</span></span><p>Passage search does not expose an as-of decision reconstruction operation or the associated evidence-pack and audit proofs.</p></div>
         </div>
-        <p class="metaline"><a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-comparison.md" target="_blank" rel="noreferrer">Per-cell evidence ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-results.json" target="_blank" rel="noreferrer">Machine-readable receipt ↗</a></p>
+        <p class="metaline">N/A is not presented as a failed live call. It means the public product surface does not expose the operation the contract requires. <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-comparison.md" target="_blank" rel="noreferrer">Inspect every cell and source ↗</a></p>
+      </section>
+
+      <section class="wrap block" aria-label="Benchmark scenario">
+        <p class="block-label">The exam question</p>
+        <h2>What evidence existed when this applicant received this outcome?</h2>
+        <p class="intro">RIAD-1 models a credit-underwriting decision of the kind that may later need to support an ECOA adverse-action explanation. At decision time, verified income and debt-to-income evidence are known. A missed payment is learned later. A valid reconstruction must include the earlier evidence, exclude the later fact, and preserve the model, policy, reason codes, inputs, outputs, cited evidence, trace identifiers, and integrity proof tied to that decision.</p>
+        <p class="intro">That is a different product boundary from memory retrieval. Updating what an agent currently knows is useful. Preserving an immutable, non-sampled record of what the system knew and used at a legally significant moment serves a different buyer and carries a different liability profile.</p>
+        <p class="metaline">RIAD-1 is an engineering benchmark, not legal advice or a claim that any deployment is compliant with ECOA.</p>
+      </section>
+
+      <section class="wrap block" aria-label="Executed proof">
+        <p class="block-label">What we executed</p>
+        <h2>The proof is a reproducible artifact, not the headline score.</h2>
+        <div class="list">
+          <div class="item"><span class="head"><b>Decision-time reconstruction</b></span><p>The exported snapshot contains the facts available before the decision and excludes the later missed payment.</p></div>
+          <div class="item"><span class="head"><b>Evidence and integrity</b></span><p>The decision cites exact evidence IDs and exports provenance plus a deterministic SHA-256 pack hash. Deliberate audit-payload modification is detected.</p></div>
+          <div class="item"><span class="head"><b>OpenTelemetry ingestion</b></span><p>An authenticated OTLP/HTTP endpoint accepts and retains the OpenTelemetry GenAI span used by the fixture. The fixture stores trace and span IDs explicitly; automatic trace-to-decision correlation is not claimed.</p></div>
+          <div class="item"><span class="head"><b>Standing receipt</b></span><p>GitHub Actions reruns the benchmark and publishes commit-specific receipts. The current local SQLite latency is descriptive, not a production throughput claim.</p></div>
+        </div>
+        <p class="metaline"><a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">View standing CI ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-results.json" target="_blank" rel="noreferrer">Read the machine receipt ↗</a></p>
       </section>
 
       <section class="wrap block" aria-label="Honest limitations">
