@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians vs mem0, Zep, Letta, Hindsight, and Supermemory on the regulated-memory invariants that accumulate-everything stores fail by design: stale suppression, point-in-time recall, provable erasure, lookahead guard, and audit snapshot." />
-    <title>Compare · Lians vs mem0, Zep, Letta, Hindsight &amp; Supermemory</title>
+    <meta name="description" content="Compare whether Lians, Mem0, Graphiti, and Letta expose the complete decision-time evidence operation required by RIAD-1." />
+    <title>Decision evidence comparison · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -19,79 +19,61 @@
       <a class="brand" href="/" aria-label="Lians home"><img class="brand-logo header-logo" src="/lians-header-logo.png?v=exact-20260725" alt="Lians" width="160" height="76" /></a>
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
-        <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
-        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+        <a href="/product">Product</a><a href="/solutions/financial-services">Financial services</a><a href="/design-partners">Design partnerships</a><a href="/docs">Docs</a><a href="/compare">Evidence comparison</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/design-partners">Design partnership ?</a>
       </div>
     </nav></div></header>
 
     <main>
       <section class="wrap hero">
-        <p class="crumb"><a href="/">Home</a> / Compare</p>
-        <h1>Win the bake-off on the <em>numbers</em>.</h1>
-        <p class="lede">Recall quality on LOCOMO judged by mem0's own harness, plus five regulated invariants scored across six products - all reproducible from the open repo.</p>
-        <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Methodology ↗</a></div>
+        <p class="crumb"><a href="/">Home</a> / Decision evidence comparison</p>
+        <h1>Memory retrieval is not <em>decision evidence</em>.</h1>
+        <p class="lede">RIAD-1 asks whether a system can reconstruct the exact evidence boundary behind a consequential decision after the underlying facts have changed.</p>
+        <div class="actions"><a class="btn btn-primary" href="/blog/riad-1-decision-reconstruction">Inspect RIAD-1 ?</a><a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/docs/benchmarks/riad-1-comparison.md" target="_blank" rel="noreferrer">Per-cell evidence ?</a></div>
       </section>
 
-      <section class="wrap block" aria-label="LOCOMO benchmark">
-        <p class="block-label">Recall quality · LOCOMO · run 2026-07-09</p>
-        <h2>Their benchmark. Their harness. Our number.</h2>
-        <div class="stats">
-          <span class="s"><b>92.9%</b><span>Lians · LLM-judged QA accuracy</span></span>
-          <span class="s"><b>91.6%</b><span>mem0 · their published score</span></span>
-        </div>
-        <p class="metaline">Lians retrieval scored end-to-end by the unmodified <a class="tlink" href="https://github.com/mem0ai/memory-benchmarks" target="_blank" rel="noreferrer">mem0ai/memory-benchmarks ↗</a> harness (gpt-5 answerer + judge), all 10 LOCOMO conversations. <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">Full report ↗</a></p>
-      </section>
-
-      <section class="wrap block" aria-label="LongMemEval benchmark">
-        <p class="block-label">Recall quality · LongMemEval-S · run 2026-07-12</p>
-        <h2>LongMemEval: they lead, we publish it anyway.</h2>
-        <div class="stats">
-          <span class="s"><b>89.4%</b><span>Lians · LLM-judged, all 500 questions</span></span>
-          <span class="s"><b>94.8%</b><span>mem0 · their published score</span></span>
-        </div>
-        <p class="metaline">Same unmodified harness, same models. Retrieval already surfaces the answer sessions for 97% of questions - the gap is answer assembly, and the fix is in progress on the open repo.</p>
-      </section>
-
-      <section class="wrap block" aria-label="Eval">
-        <p class="block-label">Regulated-memory eval · head-to-head</p>
-        <h2>Five invariants. One winner.</h2>
-        <div data-viz="evalchart" style="margin-bottom:26px"></div>
+      <section class="wrap block" aria-label="RIAD evidence operation comparison">
+        <p class="block-label">Same contract ? public product surfaces</p>
+        <h2>Can the system produce the decision-time evidence operation?</h2>
         <div class="table-wrap"><table class="tbl">
-          <thead><tr><th>Regulated invariant</th><th class="col-lians">Lians</th><th>Zep / Graphiti</th><th>Letta</th><th>Hindsight</th><th>Supermemory</th><th>mem0</th></tr></thead>
+          <thead><tr><th>Public surface</th><th>Decision-time reconstruction</th><th>Cited evidence pack</th><th>GenAI OTLP receipt</th><th>Integrity proof</th></tr></thead>
           <tbody>
-            <tr><td>Stale revision suppressed</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="partial">partial</td><td class="partial">partial</td><td class="partial">partial</td><td class="no">fail</td></tr>
-            <tr><td>Point-in-time (as-of) recall</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="no">absent</td><td class="partial">partial</td><td class="no">absent</td><td class="no">absent</td></tr>
-            <tr><td>Provable erasure (crypto-shred + cert)</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="partial">partial</td><td class="no">absent</td><td class="partial">partial</td><td class="partial">partial</td></tr>
-            <tr><td>Lookahead / backtest guard</td><td class="yes col-lians">pass</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td></tr>
-            <tr><td>Audit-state snapshot at T</td><td class="yes col-lians">pass</td><td class="partial">partial</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td><td class="no">absent</td></tr>
+            <tr><td class="col-lians">Lians</td><td class="yes">PASS ? executed</td><td class="yes">exposed</td><td class="yes">authenticated receiver</td><td class="yes">deterministic hash + chain</td></tr>
+            <tr><td>Mem0 OSS</td><td class="no">N/A</td><td class="no">not exposed</td><td class="no">not exposed</td><td class="no">not exposed</td></tr>
+            <tr><td>Graphiti OSS</td><td class="partial">PARTIAL ? graph history</td><td class="no">not exposed completely</td><td class="no">not exposed</td><td class="no">not exposed</td></tr>
+            <tr><td>Letta</td><td class="no">N/A</td><td class="no">not exposed</td><td class="no">not exposed</td><td class="no">not exposed</td></tr>
           </tbody>
-          <tfoot><tr><td>Score (pass = 1, partial = ½)</td><td class="col-lians">5.0 / 5</td><td>2.0 / 5</td><td>1.0 / 5</td><td>1.0 / 5</td><td>1.0 / 5</td><td>0.5 / 5</td></tr></tfoot>
         </table></div>
-        <p class="metaline">Lians, mem0 OSS, and Graphiti OSS executed live in their default documented configs; Letta, Hindsight, and Supermemory via real-SDK capability adapters. Last run 2026-07-04. <a class="tlink" href="/research">Methodology →</a></p>
+        <p class="metaline">Lians was executed end to end. Competitor rows are capability assessments of documented public surfaces. N/A means the required operation is unavailable; it is not presented as a failed hidden call.</p>
       </section>
 
-      <section class="wrap block" aria-label="Why audit matters">
-        <p class="block-label">Why audit matters</p>
-        <h2>Storage is not the moat.</h2>
+      <section class="wrap block" aria-label="Why this category is different">
+        <p class="block-label">Different job ? different buyer ? different liability</p>
+        <h2>Why would an observability or memory vendor not simply build this?</h2>
         <div class="list">
-          <a class="item" href="/compare/mem0"><span class="head"><b>vs mem0</b><span class="meta">full comparison →</span></span><p>92.9 vs their 91.6 on LOCOMO through their own harness; live-run stale suppression fails, no as-of recall, no audit trail.</p></a>
-          <a class="item" href="/compare/zep"><span class="head"><b>vs Zep / Graphiti</b><span class="meta">full comparison →</span></span><p>Strong knowledge graph without access control, multi-tenancy, or audit by design.</p></a>
-          <a class="item" href="/compare/letta"><span class="head"><b>vs Letta</b><span class="meta">full comparison →</span></span><p>Excellent self-editing context, but edits are silent overwrites with no validity windows.</p></a>
-          <a class="item" href="/compare/hindsight"><span class="head"><b>vs Hindsight</b><span class="meta">full comparison →</span></span><p>Temporal-aware episodic banks without validity-gated supersession or provable erasure.</p></a>
-          <a class="item" href="/compare/supermemory"><span class="head"><b>vs Supermemory</b><span class="meta">full comparison →</span></span><p>Fast ingestion and retrieval, but accumulate-and-rank, with no point-in-time reconstruction.</p></a>
+          <div class="item"><span class="head"><b>Immutable and non-sampled retention</b></span><p>Evidence must survive sampling, changing state, and ordinary operational retention windows.</p></div>
+          <div class="item"><span class="head"><b>Decision-boundary reconstruction</b></span><p>The product must preserve what was available and cited at the legally significant moment, not merely retrieve what is known now.</p></div>
+          <div class="item"><span class="head"><b>Attestation workflow</b></span><p>Compliance, model-risk, and legal reviewers need a portable record with explicit integrity and custody boundaries.</p></div>
         </div>
+      </section>
+
+      <section class="wrap block" aria-label="Recall benchmarks">
+        <p class="block-label">Supporting engineering evidence</p>
+        <h2>Recall benchmarks remain published, but they do not define the category.</h2>
+        <p class="intro">LOCOMO and LongMemEval results remain available for technical diligence. They measure retrieval and answer assembly. RIAD-1 measures the evidence operation buyers need when a consequential outcome is disputed.</p>
+        <div class="actions"><a class="tlink" href="/research">Review all methodology ?</a><a class="tlink" href="/blog/locomo-benchmark">Read the LOCOMO report ?</a></div>
       </section>
     </main>
 
-    <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+    <section class="band"><div class="wrap"><h2>Bring one disputed decision. Leave with a reconstructable record.</h2><a class="btn btn-primary" href="/design-partners">Explore a design partnership ?</a></div></section>
 
     <footer class="foot"><div class="wrap">
       <div class="foot-top"><a class="brand" href="/" aria-label="Lians home"><img class="brand-logo footer-lotus" src="/favicon.png?v=lotus-20260725" alt="Lians lotus logo" width="52" height="52" /></a><p>Evidence and replay infrastructure for consequential AI decisions.</p></div>
       <div class="foot-cols">
-        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Evidence Control</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+        <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Decision evidence comparison</a><a href="/design-partners">Design partnerships</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>
       <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
     </div></footer>

@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians is the system of record for AI in regulated industries: one tamper-evident ledger for what AI systems knew, did, and why." />
+    <meta name="description" content="Lians preserves and reconstructs the decision-time evidence behind consequential AI outcomes, with provenance, telemetry, and integrity receipts." />
     <meta property="og:title" content="Lians · Evidence infrastructure for consequential AI" />
-    <meta property="og:description" content="A memory control plane for AI agents on time-sensitive, audited, and confidential data: bitemporal, tamper-evident, and crypto-shreddable." />
+    <meta property="og:description" content="Prove what your AI knew when it acted. Preserve the decision boundary and reconstruct it later without leaking facts learned afterward." />
     <meta property="og:url" content="https://www.lians.ai/" />
     <meta property="og:image" content="https://www.lians.ai/og-card.png" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -30,13 +30,13 @@
           <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
           <div class="links">
             <a href="/product">Product</a>
-            <a href="/solutions">Solutions</a>
-            <a href="/pricing">Pricing</a>
+            <a href="/solutions/financial-services">Financial services</a>
+            <a href="/design-partners">Design partnerships</a>
             <a href="/docs">Docs</a>
-            <a href="/compare">Compare</a>
+            <a href="/compare">Evidence comparison</a>
             <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a>
             <a class="muted" href="/login" data-sign-in-link>Sign in</a>
-            <a class="cta" href="/login">Get API key →</a>
+            <a class="cta" href="/design-partners">Design partnership ?</a>
           </div>
         </nav>
       </div>
@@ -44,91 +44,43 @@
 
     <main>
       <section class="wrap hero">
-        <p class="eyebrow"><span class="dot"></span> Founding Partner Cohort · Seven companies · Early access</p>
-        <h1>The system of record for AI <em>in regulated industries</em>.</h1>
-        <p class="lede">One tamper-evident, bitemporal, erasure-compatible ledger for what AI systems knew, what they did, and why. Start with audit-grade memory. Add behavioral records and Evidence Packs without building a second compliance stack.</p>
+        <p class="eyebrow"><span class="dot"></span> Decision evidence for regulated AI · Financial services first</p>
+        <h1>Prove what your AI knew <em>when it acted</em>.</h1>
+        <p class="lede">Lians preserves the decision-time evidence, model and policy provenance, telemetry, and integrity receipts behind consequential AI outcomes. Reconstruct the record later without leaking facts learned afterward.</p>
 
-        <div class="term" aria-label="Install and use Lians">
-          <div class="term-tabs" role="tablist" aria-label="Language">
-            <button class="term-tab active" role="tab" aria-selected="true" data-lang="python" data-install="pip install lians-sdk[local]">python</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="node" data-install="npm install @lians-ai/lians">typescript</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="go" data-install="go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1">go</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="java" data-install="ai.lians:lians-sdk:0.4.1">java</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="c" data-install="cmake -B build &amp;&amp; cmake --build build">c</button>
-            <div class="term-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-            <button class="term-copy" type="button" aria-label="Copy install command">copy</button>
-          </div>
-<pre class="term-body" data-term="python"><span class="pr">$</span> pip install lians-sdk[local]
-
-mem.<span class="kw">add</span>(agent_id=<span class="st">"desk"</span>,
-        content=<span class="st">"NVDA guidance raised to $40B"</span>,
-        event_time=<span class="st">"2025-11-19"</span>)
-
-mem.<span class="kw">recall_at</span>(query=<span class="st">"NVDA guidance"</span>, as_of=<span class="st">"2025-03-01"</span>)
-<span class="cm"># →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="node" hidden><span class="pr">$</span> npm install @lians-ai/lians
-
-<span class="kw">await</span> client.<span class="kw">addMemory</span>({ agent_id: <span class="st">"desk"</span>,
-  content: <span class="st">"NVDA guidance raised to $40B"</span>,
-  event_time: <span class="st">"2025-11-19"</span> })
-
-<span class="kw">await</span> client.<span class="kw">recall</span>({ query: <span class="st">"NVDA guidance"</span>, as_of: <span class="st">"2025-03-01"</span> })
-<span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="go" hidden><span class="pr">$</span> go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1
-
-c.<span class="kw">AddMemory</span>(ctx, lians.AddMemoryRequest{AgentID: <span class="st">"desk"</span>,
-    Content:   <span class="st">"NVDA guidance raised to $40B"</span>,
-    EventTime: time.Date(2025, 11, 19, 0, 0, 0, 0, time.UTC)})
-
-c.<span class="kw">RecallAt</span>(ctx, <span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>,
-    time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC), 5)
-<span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="java" hidden><span class="cm">// Maven Central:</span> ai.lians:lians-sdk:0.4.1
-
-client.<span class="kw">addMemory</span>(<span class="st">"desk"</span>, <span class="st">"NVDA guidance raised to $40B"</span>,
-    Instant.parse(<span class="st">"2025-11-19T00:00:00Z"</span>), Map.of());
-
-client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>,
-    Instant.parse(<span class="st">"2025-03-01T00:00:00Z"</span>), 5);
-<span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="c" hidden><span class="pr">$</span> cmake -B build &amp;&amp; cmake --build build
-
-<span class="kw">lians_add</span>(c, <span class="st">"desk"</span>, <span class="st">"NVDA guidance raised to $40B"</span>,
-    <span class="st">"2025-11-19T00:00:00Z"</span>, NULL, NULL, NULL, 0.5);
-
-<span class="kw">lians_recall</span>(c, <span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>, 5,
-    <span class="st">"2025-03-01T00:00:00Z"</span>, NULL);
-<span class="cm">/* →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B) */</span><span class="cursor"></span></pre>
+        <div class="list hero-proof">
+          <a class="item" href="/blog/riad-1-decision-reconstruction"><span class="head"><b>RIAD-1 decision reconstruction</b><span class="meta tag">Open benchmark</span></span><p>See the exact evidence operation Lians exposes and Mem0, Graphiti, and Letta do not expose completely.</p></a>
+          <a class="item" href="/solutions/financial-services"><span class="head"><b>Financial-services evidence</b><span class="meta">Design-partner focus</span></span><p>Reconstruct underwriting, research, and risk decisions from the facts available when the outcome was produced.</p></a>
         </div>
 
         <div class="actions">
-          <a class="btn btn-primary" href="/design-partners">Apply to the founding cohort →</a>
-          <a class="tlink" href="#watch">▶ Run the changing-facts demo</a>
+          <a class="btn btn-primary" href="/design-partners">Explore a design partnership →</a>
+          <a class="tlink" href="/blog/riad-1-decision-reconstruction">Inspect RIAD-1 →</a>
         </div>
 
-        <p class="metaline">Three founder-led implementation partners · Four technical evaluation partners · Open source · Self-hostable · MCP-native</p>
+        <p class="metaline">Immutable decision records · Point-in-time reconstruction · Authenticated GenAI OTLP ingestion · Reproducible receipts</p>
       </section>
 
       <section class="wrap block" aria-label="Lians products">
-        <p class="block-label">One ledger · Three views</p>
-        <h2>Memory becomes a record. A disputed record becomes evidence.</h2>
+        <p class="block-label">One evidence boundary · Three outputs</p>
+        <h2>Record the decision. Reconstruct the evidence. Verify the receipt.</h2>
         <div class="list">
-          <a class="item" href="/product"><span class="head"><b>Memory</b><span class="meta">available now</span></span><p>What agents know, with supersession, provenance, information barriers, crypto-shred erasure, and exact point-in-time reconstruction.</p></a>
-          <a class="item" href="/records"><span class="head"><b>Records</b><span class="meta">Article 12 wedge</span></span><p>What AI systems did: inferences, human oversight, system changes, data-subject actions, incidents, and consequential decisions.</p></a>
-          <a class="item" href="/records#evidence"><span class="head"><b>Evidence</b><span class="meta">format ready</span></span><p>Portable Evidence Packs for regulator requests, adverse-action review, model validation, legal discovery, and continuous audit.</p></a>
+          <a class="item" href="/records"><span class="head"><b>Decision record</b><span class="meta">captured at action time</span></span><p>Preserve the outcome, cited facts, model and policy versions, inputs, outputs, reason codes, and trace identifiers.</p></a>
+          <a class="item" href="/product"><span class="head"><b>Point-in-time reconstruction</b><span class="meta">exact evidence boundary</span></span><p>Reopen what the system knew at the decision without contaminating the record with information learned later.</p></a>
+          <a class="item" href="/records#evidence"><span class="head"><b>Verifiable Evidence Pack</b><span class="meta">portable receipt</span></span><p>Export provenance, cited evidence, telemetry, and deterministic integrity proofs for review and attestation workflows.</p></a>
         </div>
       </section>
 
       <section class="wrap block" aria-label="RIAD-1 decision reconstruction benchmark">
-        <p class="block-label">New open benchmark · RIAD-1</p>
-        <h2>Can you reconstruct one consequential AI decision?</h2>
-        <p class="intro">RIAD-1 records decision-time evidence, a GenAI OpenTelemetry span, model and policy provenance, and one fact learned after the decision. The test then exports the evidence pack and deliberately tampers with an audit payload.</p>
+        <p class="block-label">The wedge · RIAD-1 open benchmark</p>
+        <h2>Only Lians exposes the complete decision-time evidence operation.</h2>
+        <p class="intro">Lians executes the full reconstruction contract end to end. Mem0 and Letta do not expose the operation in their public OSS surfaces; Graphiti provides useful historical graph state but not the complete cited decision boundary, integrity pack, and telemetry receipt.</p>
         <div class="stats">
-          <span class="s"><b>6 / 6</b><span>end-to-end checks passed</span></span>
-          <span class="s"><b>100%</b><span>fixture reconstruction accuracy</span></span>
-          <span class="s"><b>100%</b><span>required provenance coverage</span></span>
+          <span class="s"><b>PASS</b><span>Lians · executed end to end</span></span>
+          <span class="s"><b>N/A</b><span>Mem0 and Letta · operation not exposed</span></span>
+          <span class="s"><b>PARTIAL</b><span>Graphiti · historical graph state</span></span>
         </div>
-        <p class="metaline">Local SQLite functional run, not a production load test or compliance certification. <a class="tlink" href="/blog/riad-1-decision-reconstruction">Read the comparison →</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">Standing CI ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/benchmarks/decision_reconstruction_eval.py" target="_blank" rel="noreferrer">Run the source ↗</a></p>
+        <p class="metaline">N/A means the required public operation is unavailable, not that a hidden live call failed. <a class="tlink" href="/blog/riad-1-decision-reconstruction">Read the comparison →</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/actions/workflows/riad-1.yml" target="_blank" rel="noreferrer">Standing CI ↗</a> · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/benchmarks/decision_reconstruction_eval.py" target="_blank" rel="noreferrer">Run the source ↗</a></p>
       </section>
 
       <section class="wrap block partner-brief" aria-label="Design partner pilot">
@@ -138,11 +90,11 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
         <div class="actions"><a class="btn btn-primary" href="/design-partners">See the pilot scope →</a><a class="tlink" href="/research">Inspect the evaluation method →</a></div>
       </section>
 
-      <section class="wrap block" id="watch" aria-label="Watch how memory works">
+      <section class="wrap block" id="watch" aria-label="Watch decision evidence reconstruction">
         <p class="block-label">Changing-facts demo</p>
         <h2>See a source revision, reconstruction, and receipt.</h2>
         <p class="intro">Every frame is live. Pause and inspect the revision history, point-in-time answer, and evidence record.</p>
-        <div id="memory-player" aria-label="Interactive explainer: how Lians memory works"></div>
+        <div id="memory-player" aria-label="Interactive explainer: how Lians reconstructs decision evidence"></div>
       </section>
 
       <section class="wrap block" aria-label="Capabilities">
@@ -185,11 +137,11 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
       </section>
 
       <section class="wrap block" aria-label="Install">
-        <p class="block-label">Install</p>
+        <p class="block-label">Implementation interfaces</p>
         <div class="list">
           <div class="cmd"><span class="lang">Quickstart</span><code>pip install lians-sdk</code></div>
         </div>
-        <p class="metaline">Native SDKs for Python, TypeScript, Go, Java, and C, plus MCP. <a class="tlink" href="/sdks">Full install guide →</a></p>
+        <p class="metaline">Primary SDKs for Python and TypeScript, with Go and Java interfaces plus MCP. <a class="tlink" href="/sdks">Full install guide →</a></p>
       </section>
 
       <section class="wrap block" aria-label="AI agent integration prompt">
@@ -251,10 +203,10 @@ Docs: https://www.lians.ai/docs · SDKs: https://www.lians.ai/sdks · API keys: 
           <p>Evidence and replay infrastructure for consequential AI decisions.</p>
         </div>
         <div class="foot-cols">
-          <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-          <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+          <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Evidence Control</a></div>
+          <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
           <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
-          <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
+          <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Decision evidence comparison</a><a href="/design-partners">Design partnerships</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
         </div>
       <div class="foot-bottom"><span>&#169; 2026 Lians</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:sales@lians.ai">sales@lians.ai</a></div>
       </div>
