@@ -181,7 +181,7 @@ code.ic{background:var(--panel-2);color:#cfd6e2;padding:1px 6px;font:500 12.5px 
 
 /* ── footer ─────────────────────────────────────────────────────────────── */
 .foot{border-top:1px solid var(--line-2);margin-top:20px;padding:42px 0 48px}
-.foot-top{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:baseline;margin-bottom:30px}
+.foot-top{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;margin-bottom:30px}
 .foot-top .brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:500;font-size:15px}
 .foot-top .brand-logo{height:44px}
 .foot-top p{margin:0;color:var(--muted);font-size:12.5px;max-width:420px;line-height:1.55}
