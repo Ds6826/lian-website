@@ -53,6 +53,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
 header .wrap{max-width:1080px}
 .nav{display:flex;align-items:center;gap:18px;padding:24px 0;font:500 13px var(--mono)}
 .nav .brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:500;letter-spacing:-.01em;font-size:15px}
+.brand-logo{display:block;width:auto;height:28px;object-fit:contain}
 .nav .links{display:flex;gap:16px;margin-left:auto;align-items:center;flex-wrap:nowrap}
 .nav .links a{text-decoration:none;color:var(--ink);white-space:nowrap}
 .nav .links a:hover{box-shadow:inset 0 -1px 0 var(--blue-bright)}
@@ -182,6 +183,7 @@ code.ic{background:var(--panel-2);color:#cfd6e2;padding:1px 6px;font:500 12.5px 
 .foot{border-top:1px solid var(--line-2);margin-top:20px;padding:42px 0 48px}
 .foot-top{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:baseline;margin-bottom:30px}
 .foot-top .brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:500;font-size:15px}
+.foot-top .brand-logo{height:34px}
 .foot-top p{margin:0;color:var(--muted);font-size:12.5px;max-width:420px;line-height:1.55}
 .foot-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
 .foot-cols span{display:block;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}

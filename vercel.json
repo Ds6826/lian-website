@@ -191,6 +191,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "lians-wordmark.png",
+      "use": "@vercel/static"
+    },
+    {
       "src": "logo-blue.png",
       "use": "@vercel/static"
     },
