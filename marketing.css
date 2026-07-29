@@ -14,9 +14,10 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { overflow-x: clip; scroll-behavior: smooth; }
 body {
   margin: 0;
+  overflow-x: clip;
   color: var(--text);
   background: var(--ink);
   font-family: Manrope, system-ui, sans-serif;
@@ -96,6 +97,7 @@ button, input { font: inherit; }
 }
 .page-hero { padding: 76px 0 54px; }
 .page-hero-grid { display: grid; grid-template-columns: minmax(0,1.16fr) minmax(300px,.84fr); gap: 46px; align-items: center; }
+.page-hero-grid > * { min-width: 0; }
 .page-hero-grid h1 { max-width: 820px; }
 .page-geometry { position: relative; min-width: 0; overflow: visible; cursor: grab; touch-action: none; }
 .page-geometry:active { cursor: grabbing; }

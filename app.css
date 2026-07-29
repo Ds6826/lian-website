@@ -4,13 +4,14 @@
   --blue-bright:#76a1ff; --coral:#ff7070; --mint:#66d49f;
   --line:#263247; --line-2:#34435d; --muted:#98a6bb;
   --text-2:#c5cfdd; --code-text:#dce4ef; --grid-line:rgba(118,161,255,.08);
-  --mono:"DM Mono",monospace; --sans:"Manrope",sans-serif;
+  --mono:"DM Mono",monospace; --sans:"Manrope",sans-serif; --title:"Space Mono","Courier New",monospace;
 }
 *{box-sizing:border-box}
 body{margin:0;font:400 14px/1.6 var(--sans);color:var(--ink);background:var(--cream);-webkit-font-smoothing:antialiased}
 body::before,body::after{display:none}
 ::selection{background:var(--lime);color:#fff}
 h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:var(--title)!important}
 a{color:inherit}
 
 /* shared chrome */
@@ -488,3 +489,6 @@ form label,.field-label{display:block;font:500 .68rem var(--mono);letter-spacing
 .aiprompt-toggle{background:none;border:0;color:var(--muted);font:500 .74rem var(--mono);cursor:pointer;padding:8px 2px;text-decoration:underline;text-underline-offset:3px}
 .aiprompt-toggle:hover{color:var(--ink)}
 .aiprompt-body{margin:0;padding:16px 18px;border-top:1px solid var(--line);font:400 .72rem/1.7 var(--mono);color:var(--text-2);white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow-y:auto}
+
+/* Keep page titles aligned with the public Space Mono title system. */
+h1,h2,h3{font-family:var(--title)}
