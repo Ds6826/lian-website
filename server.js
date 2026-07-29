@@ -482,10 +482,12 @@ const app = async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
-    // Best-effort, site-wide flood protection (per IP, per server instance) for
-    // every page and asset request. The stricter per-IP API limit still applies
-    // below. (On serverless this is per-instance; pair with the platform WAF.)
-    if (!await rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
+    // Best-effort flood protection for navigations and dynamic routes. Static
+    // assets are deliberately excluded: one page view fans out into many font,
+    // image, CSS, and JavaScript requests and must not exhaust the user's page
+    // quota. The stricter per-IP API limit still applies below.
+    const isStaticAsset = /\.[a-z0-9]{2,8}$/i.test(pathname);
+    if (!isStaticAsset && !await rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
 
     // Block cross-origin requests to the API.
     // Allow both apex and www so a misconfigured BASE_URL env var never locks
