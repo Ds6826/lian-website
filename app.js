@@ -344,16 +344,6 @@ const doSignOut = async () => {
   runtime.token = null;
   runtime.tokenAt = 0;
   runtime.tokenPromise = null;
-  runtime.keysCache = null;
-  runtime.keysCacheAt = 0;
-  document.querySelector('.sidebar')?.classList.remove('open');
-  document.querySelector('#new-key-secret')?.replaceChildren();
-  const keyReveal = document.querySelector('#key-reveal');
-  if (keyReveal) keyReveal.hidden = true;
-  const authNote = document.querySelector('.auth-note');
-  if (authNote) authNote.textContent = 'Sign in securely with Google or GitHub to create your workspace.';
-  setAuthButtonsDisabled(false);
-  renderShellForRoute('/login');
   try { if (window.Clerk?.signOut) await window.Clerk.signOut(); } catch (e) {}
   await fetch('/api/logout', { method: 'POST' }).catch(() => {});
   window.location.replace('/login');
