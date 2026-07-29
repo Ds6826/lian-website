@@ -12,6 +12,17 @@
   setStatus('loading');
   const clerkScriptUrls = [...new Set([config.clerkJsUrl, config.clerkJsFallbackUrl].filter(Boolean))];
   let loadTimeout;
+  const loadClerkUi = () => new Promise((resolve, reject) => {
+    if (window.__internal_ClerkUICtor) return resolve();
+    if (!config.clerkUiUrl) return reject(new Error('Clerk UI is not configured.'));
+    const uiScript = document.createElement('script');
+    uiScript.async = true;
+    uiScript.crossOrigin = 'anonymous';
+    uiScript.src = config.clerkUiUrl;
+    uiScript.onload = resolve;
+    uiScript.onerror = () => reject(new Error('Unable to load the secure sign-in interface.'));
+    document.head.append(uiScript);
+  });
 
   const fail = () => {
     window.clearTimeout(loadTimeout);
@@ -38,7 +49,11 @@
     script.onload = async () => {
       window.clearTimeout(loadTimeout);
       try {
-        await window.Clerk.load({ publishableKey: config.clerkPublishableKey });
+        await loadClerkUi();
+        await window.Clerk.load({
+          publishableKey: config.clerkPublishableKey,
+          ui: { ClerkUI: window.__internal_ClerkUICtor },
+        });
         setStatus('ready');
       } catch (error) {
         window.clearTimeout(loadTimeout);

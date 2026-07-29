@@ -3,43 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians for financial institutions: keep AI agents point-in-time correct across revised market data and MNPI, with desk barriers, backtest contamination checks, and SEC/FINRA audit export." />
+    <meta name="description" content="Lians for financial research and risk agents: reconstruct the evidence an agent used across revised market data, late filings, and changing policy." />
     <title>Financial services · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
     <link rel="stylesheet" href="/lians-visuals.css" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <header><div class="wrap"><nav class="nav" aria-label="Primary">
-      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
         <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
-        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
       </div>
     </nav></div></header>
 
     <main>
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Solutions / Financial services</p>
-        <h1>Memory that stays point-in-time <em>correct</em>.</h1>
-        <p class="lede">Agents ingest revised market data, MNPI, and late filings, and risk using the wrong temporal version in a trade. Lians keeps them point-in-time correct and reviewable.</p>
-        <div class="actions"><a class="btn btn-primary" href="/login">Get an API key →</a><a class="tlink" href="/compare">See the eval →</a></div>
+        <h1>Give every research or risk answer an <em>evidence trail</em>.</h1>
+        <p class="lede">When guidance, filings, or internal research change, Lians helps an agent retrieve what was known at the time and show the record behind its answer.</p>
+        <div class="actions"><a class="btn btn-primary" href="/design-partners">Join the founding cohort →</a><a class="tlink" href="/research">Inspect the evaluation method →</a></div>
       </section>
 
       <section class="wrap block" aria-label="Proof points">
         <p class="block-label">Proof points</p>
-        <h2>Built for the desk.</h2>
+        <h2>Designed for a reviewable workflow.</h2>
         <div class="list">
           <div class="item"><span class="head"><b>Bitemporal memory</b></span><p><code class="ic">event_time</code>, <code class="ic">ingestion_time</code>, <code class="ic">valid_from</code>, <code class="ic">valid_to</code>: every fact reconstructable as of any date.</p></div>
           <div class="item"><span class="head"><b>Backtest contamination checks</b></span><p>Flag facts ingested after the simulation date so a backtest isn't poisoned by lookahead bias.</p></div>
           <div class="item"><span class="head"><b>Desk information barriers</b></span><p>Chinese walls enforced in Postgres RLS, keyed on <code class="ic">barrier_group</code>, not in app code.</p></div>
-          <div class="item"><span class="head"><b>SEC / FINRA audit export</b></span><p>Hash-chain verification and examinable export for supervisory review.</p></div>
+          <div class="item"><span class="head"><b>Evidence export</b></span><p>Hash-chain verification and exportable records for your internal supervisory or model-risk review process.</p></div>
           <div class="item"><span class="head"><b>Related-party graph</b></span><p>Beneficial-ownership and conflict paths via the relationship graph.</p></div>
           <div class="item"><span class="head"><b>Finance adapter</b></span><p>Ticker, ISIN, CUSIP, and metric normalization out of the box.</p></div>
         </div>
@@ -62,19 +62,19 @@
             <p class="block-label">Connector priorities</p>
             <h3>Where the data lives.</h3>
             <p>Bloomberg, FactSet, Refinitiv / LSEG, Snowflake, Databricks, S3 data lakes, OMS/EMS exports, and trade-surveillance tools.</p>
-            <p><a class="tlink" href="/compliance">DORA, MiFID II &amp; SR 11-7 mapping →</a></p>
+            <p><a class="tlink" href="/security">Review the self-hosted deployment architecture →</a></p>
           </div>
         </div>
       </section>
     </main>
 
-    <section class="band"><div class="wrap"><h2>Give the trading desk memory it can defend.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+    <section class="band"><div class="wrap"><h2>Prove one research or risk workflow before you scale it.</h2><a class="btn" href="/design-partners">See the paid pilot →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>

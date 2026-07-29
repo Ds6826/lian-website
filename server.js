@@ -4,6 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { createPartnerApplicationService, validateApplication } = require('./partner-applications');
+const { createExperienceLearningService, rerankRecall } = require('./experience-learning');
+const { compileContext } = require('./context-compiler');
+const { hybridRecall } = require('./hybrid-retrieval');
 
 const root = __dirname;
 const envFile = path.join(root, '.env');
@@ -38,6 +41,7 @@ const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
 const partnerApplications = createPartnerApplicationService();
+const experienceLearning = createExperienceLearningService();
 
 // Error monitoring (Sentry). Only initialised when SENTRY_DSN is set, so local dev and
 // unconfigured deploys run without it. The DSN is safe to expose (it's also used client-side).
@@ -95,10 +99,15 @@ const clerkFrontendApi = (() => {
   }
 })();
 const clerkOrigin = clerkFrontendApi ? `https://${clerkFrontendApi}` : '';
+const clerkSignInUrl = process.env.CLERK_SIGN_IN_URL || 'https://accounts.lians.ai/sign-in';
 // Clerk's own CDN serves v4 for this account; v4 has no billing API (window.Clerk.billing).
 // Load v5 from jsDelivr (already in CSP) as primary - fall back to Clerk's CDN v4 if jsDelivr fails.
-const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
+// Keep ClerkJS aligned with the production Frontend API. Clerk v5 cannot
+// deserialize newer client/session states such as `expired`, which prevents
+// the login page from reaching an OAuth provider at all.
+const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
 const clerkJsFallbackUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js` : '';
+const clerkUiUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/ui@1/dist/ui.browser.js` : '';
 
 const SEC_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -152,10 +161,42 @@ const writeStore = (store) => { fs.mkdirSync(dataDir, { recursive: true }); fs.w
 const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 // Helpers use res.setHeader so security headers set at request start are preserved
 const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.writeHead(status); res.end(JSON.stringify(body)); };
+const healthPage = ({ build, environment, authConfigured }) => `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>System operational · Lians</title>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/marketing.css?v=20260728-health">
+  </head>
+  <body class="health-body">
+    <main class="health-shell">
+      <a class="health-brand" href="/" aria-label="Lians home"><img src="/logo-blue.png" alt="Lians"></a>
+      <section class="health-panel">
+        <div class="health-status"><span aria-hidden="true"></span><p>All systems operational</p></div>
+        <h1>The evidence layer is online.</h1>
+        <p class="health-lede">The public API edge is responding normally. Authentication and the application workflow are available.</p>
+        <div class="health-grid">
+          <article><span>API EDGE</span><strong>Operational</strong><small>Requests are being accepted</small></article>
+          <article><span>AUTHENTICATION</span><strong>${authConfigured ? 'Configured' : 'Local mode'}</strong><small>${authConfigured ? 'Clerk services connected' : 'External sign-in not configured'}</small></article>
+          <article><span>ENVIRONMENT</span><strong>${environment}</strong><small>Build ${build.slice(0, 12)}</small></article>
+        </div>
+        <div class="health-flow" aria-label="Application workflow"><span>Sign in</span><i>→</i><span>Onboarding</span><i>→</i><span>Console</span></div>
+        <div class="health-actions"><a class="button" href="/status">View full status →</a><a class="text-link" href="/api/health?format=json">View JSON</a></div>
+      </section>
+      <p class="health-foot">Lians · Decision evidence for regulated AI</p>
+    </main>
+  </body>
+</html>`;
 const readBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Invalid JSON')); } }); });
 const readRawBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => resolve(body)); req.on('error', reject); });
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
-const redirect = (res, location) => { res.setHeader('location', location); res.writeHead(302); res.end(); };
+const redirect = (res, location, status = 302) => { res.setHeader('location', location); res.writeHead(status); res.end(); };
 const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
 const allowedApiOrigins = (req) => {
   const proto = (req.headers['x-forwarded-proto'] || (req.headers.host?.startsWith('localhost') ? 'http' : 'https')).split(',')[0].trim();
@@ -389,7 +430,7 @@ const app = async (req, res) => {
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, clerkUiUrl, clerkSignInUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
       return;
     }
 
@@ -398,13 +439,37 @@ const app = async (req, res) => {
     // asynchronously after OAuth and a cookie-miss here causes a redirect loop.
     // Auth is enforced on every /api/* route instead.
     if (pathname === '/auth/google' || pathname === '/auth/github') return redirect(res, '/login');
-    if (pathname === '/memory-governor') return serveFile(res, path.join(root, 'memory-governor.html'));
     if (pathname === '/memory-governor.html') return redirect(res, '/memory-governor');
+    const LEGACY_REDIRECTS = {
+      '/memory-governor': '/product',
+      '/records': '/product',
+      '/article-12': '/security',
+      '/compliance': '/security',
+      '/trust': '/security',
+      '/sdks': '/docs',
+      '/research': '/blog/locomo-benchmark',
+      '/compare': '/blog/locomo-benchmark',
+      '/compare/mem0': '/blog/locomo-benchmark',
+      '/compare/zep': '/blog/locomo-benchmark',
+      '/compare/letta': '/blog/locomo-benchmark',
+      '/compare/hindsight': '/blog/locomo-benchmark',
+      '/compare/supermemory': '/blog/locomo-benchmark',
+      '/solutions': '/product',
+      '/solutions/financial-services': '/product',
+      '/solutions/healthcare': '/product',
+      '/solutions/legal': '/product',
+      '/changelog': '/blog',
+      '/blog/backtest-lookahead': '/blog',
+      '/blog/memory-lifecycle': '/blog',
+      '/blog/eu-ai-act-article-12': '/blog',
+    };
+    if (LEGACY_REDIRECTS[pathname]) return redirect(res, LEGACY_REDIRECTS[pathname], 308);
 
     // Marketing content pages - pretty URLs mapped to their static .html.
     // Keep this in sync with vercel.json routes.
     const CONTENT_PAGES = {
       '/product': 'product.html',
+      '/integrations': 'marketing.html',
       '/records': 'records.html',
       '/article-12': 'article-12.html',
       '/compliance': 'compliance.html',
@@ -434,8 +499,11 @@ const app = async (req, res) => {
       '/blog/backtest-lookahead': 'blog-backtest-lookahead.html',
       '/blog/locomo-benchmark': 'blog-locomo-benchmark.html',
       '/blog/memory-lifecycle': 'blog-memory-lifecycle.html',
+      '/blog/eu-ai-act-article-12': 'blog-eu-ai-act-article-12.html',
     };
-    if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, CONTENT_PAGES[pathname]));
+    if (pathname === '/privacy') return serveFile(res, path.join(root, 'privacy.html'));
+    if (pathname === '/terms') return serveFile(res, path.join(root, 'terms.html'));
+    if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, 'marketing.html'));
     if (pathname.endsWith('.html')) {
       const pretty = Object.entries(CONTENT_PAGES).find(([, file]) => `/${file}` === pathname)?.[0];
       if (pretty) return redirect(res, pretty);
@@ -482,14 +550,27 @@ const app = async (req, res) => {
     }
 
     if (pathname === '/api/health' && req.method === 'GET') {
-      return json(res, 200, {
+      const health = {
         ok: true,
         build: APP_BUILD,
         environment: process.env.VERCEL ? 'vercel' : (process.env.NODE_ENV || 'local'),
         clerkPublishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
         clerkSecretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
         workflow: 'login->onboarding->console',
-      });
+      };
+      const wantsHtml = /\btext\/html\b/i.test(req.headers.accept || '') && url.searchParams.get('format') !== 'json';
+      if (wantsHtml) {
+        res.setHeader('vary', 'accept');
+        res.setHeader('content-type', 'text/html; charset=utf-8');
+        res.writeHead(200);
+        res.end(healthPage({
+          build: health.build,
+          environment: health.environment,
+          authConfigured: health.clerkPublishableKeyConfigured && health.clerkSecretKeyConfigured,
+        }));
+        return;
+      }
+      return json(res, 200, health);
     }
 
     if (pathname === '/api/session' && req.method === 'GET') {
@@ -504,6 +585,41 @@ const app = async (req, res) => {
 
     // Onboarding
     if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; const complete = hasCompletedOnboarding(user); return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: complete, nextStep: complete ? null : firstIncomplete(user) }); }
+    if (pathname === '/api/onboarding/skip' && req.method === 'POST') {
+      const user = await apiAuth(req, res);
+      if (!user) return;
+      const store = readStore();
+      const completedAt = new Date().toISOString();
+      const answers = {
+        ...(store.onboarding[user.id] || {}),
+        ...Object.fromEntries(requiredSteps.map((step) => [step, 'Skipped; answer later'])),
+        context: '',
+        updatedAt: completedAt,
+        completedAt,
+      };
+      const target = store.users.find((item) => item.id === user.id);
+      if (!target) return json(res, 404, { error: 'User workspace not found.' });
+      target.onboardingComplete = true;
+      target.onboardingCompletedAt = completedAt;
+      store.onboarding[user.id] = answers;
+      writeStore(store);
+      try {
+        const cu = await clerk.users.getUser(user.clerkUserId);
+        await clerk.users.updateUserMetadata(user.clerkUserId, {
+          privateMetadata: {
+            ...cu.privateMetadata,
+            onboardingComplete: true,
+            onboardingCompletedAt: completedAt,
+            onboardingAnswers: answers,
+          },
+        });
+      } catch (err) {
+        log('clerk_skip_sync_failed', req, user, { error: err.message, status: err.status });
+        return json(res, 503, { error: 'Workspace setup was saved, but account synchronization is still pending. Please try again.' });
+      }
+      log('onboarding_skipped', req, target);
+      return json(res, 200, { next: '/console' });
+    }
     if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected) return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingAnswers: { ...store.onboarding[user.id] } } }); } catch (err) { log('clerk_answers_backup_failed', req, user, { error: err.message }); } return json(res, 200, { next: `/onboarding/${next}` }); }
     if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; const completedAt = new Date().toISOString(); target.onboardingCompletedAt = completedAt; store.onboarding[user.id] = { ...answers, completedAt }; writeStore(store); log('onboarding_completed', req, target); let synced = false; for (let attempt = 0; attempt < 4 && !synced; attempt++) { if (attempt > 0) await new Promise((r2) => setTimeout(r2, 1500 * attempt)); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingComplete: true, onboardingCompletedAt: completedAt, onboardingAnswers: store.onboarding[user.id] } }); synced = true; } catch (err) { log('clerk_complete_sync_failed', req, user, { error: err.message, status: err.status, attempt }); } } log('clerk_complete_sync_result', req, user, { synced }); return json(res, 200, { next: '/console' }); }
     if (pathname === '/api/billing/select' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding before selecting a plan.' }); const body = await readBody(req); const plan = String(body.plan || '').toLowerCase(); if (!['free', 'starter', 'growth', 'pro', 'enterprise'].includes(plan)) return json(res, 400, { error: 'Invalid plan.' }); if (plan !== 'free') { try { const sub = await clerk.users.getUserBillingSubscription(user.clerkUserId); const clerkPlan = sub?.data?.plan?.slug; if (!clerkPlan || clerkPlan === 'free') return json(res, 403, { error: 'No active paid subscription found. Please complete checkout.' }); } catch (err) { log('billing_select_verify_warning', req, user, { error: err.message, plan }); return json(res, 503, { error: 'Unable to verify subscription status. Please try again.' }); } } const store = readStore(); const target = store.users.find((item) => item.id === user.id); target.billingPlan = plan; target.billingSelectedAt = new Date().toISOString(); writeStore(store); log('billing_plan_selected', req, target, { plan }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: plan, billingSelectedAt: target.billingSelectedAt } }); } catch (err) { log('billing_metadata_sync_failed', req, user, { error: err.message }); } return json(res, 200, { next: '/console', plan }); }
@@ -661,6 +777,137 @@ const app = async (req, res) => {
     // All backed by a per-user, server-held API key on the user's own namespace.
     if (pathname.startsWith('/api/console/')) {
       const user = await apiOnboarding(req, res); if (!user) return;
+      const namespace = liansNamespace(user);
+      const isLearningRoute = pathname.startsWith('/api/console/experiences') ||
+        pathname.startsWith('/api/console/adaptive-recall') ||
+        pathname.startsWith('/api/console/context') ||
+        pathname.startsWith('/api/console/reflections');
+      if (isLearningRoute && !experienceLearning.configured()) {
+        return json(res, 503, { error: 'The experience learning store is not configured for this deployment.' });
+      }
+      try {
+        if (pathname === '/api/console/experiences' && req.method === 'POST') {
+          const experience = await experienceLearning.createExperience(namespace, await readBody(req));
+          log('agent_experience_created', req, user, { experienceId: experience.id, agentId: experience.agent_id });
+          return json(res, 201, { experience });
+        }
+        if (pathname === '/api/console/experiences' && req.method === 'GET') {
+          const experiences = await experienceLearning.listExperiences(namespace, {
+            agentId: String(url.searchParams.get('agent_id') || '').slice(0, 200) || null,
+            status: String(url.searchParams.get('status') || '').slice(0, 30) || null,
+            limit: url.searchParams.get('limit'),
+          });
+          return json(res, 200, { experiences });
+        }
+        const outcomeMatch = pathname.match(/^\/api\/console\/experiences\/([^/]+)\/outcome$/);
+        if (outcomeMatch && req.method === 'PATCH') {
+          const experience = await experienceLearning.recordOutcome(namespace, outcomeMatch[1], await readBody(req));
+          log('agent_experience_completed', req, user, { experienceId: experience.id, reward: experience.reward });
+          return json(res, 200, { experience });
+        }
+        if (pathname === '/api/console/adaptive-recall' && req.method === 'POST') {
+          if (!liansConsole.configured()) return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
+          const body = await readBody(req);
+          const agentId = String(body.agent_id || '').trim().slice(0, 200);
+          const query = String(body.query || '').trim().slice(0, 500);
+          if (!agentId || !query) return json(res, 400, { error: 'agent_id and query are required.' });
+          const requestedK = Math.max(1, Math.min(Number(body.k) || 50, 200));
+          const asOf = body.as_of ? String(body.as_of) : null;
+          const useQueryExpansion = body.query_expansion === true || body.hybrid === true;
+          const recalled = useQueryExpansion
+            ? await hybridRecall({
+                recall: (request) => liansConsole.recall(user, request),
+                agentId,
+                query,
+                k: requestedK,
+                asOf,
+                maxVariants: body.max_query_variants,
+                perQueryK: body.per_query_k,
+              })
+            : await liansConsole.recall(user, { agentId, query, k: requestedK, asOf });
+          const experiences = await experienceLearning.listExperiences(namespace, { agentId, status: 'completed', limit: 500 });
+          const result = rerankRecall(recalled, experiences);
+          log('adaptive_recall_completed', req, user, { agentId, memories: result.memories?.length || 0, experiences: experiences.length });
+          return json(res, 200, result);
+        }
+        if (pathname === '/api/console/context' && req.method === 'POST') {
+          if (!liansConsole.configured()) return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
+          const body = await readBody(req);
+          const agentId = String(body.agent_id || '').trim().slice(0, 200);
+          const query = String(body.query || '').trim().slice(0, 500);
+          if (!agentId || !query) return json(res, 400, { error: 'agent_id and query are required.' });
+          const candidateK = Math.max(20, Math.min(Number(body.k) || 200, 200));
+          const asOf = body.as_of ? String(body.as_of) : null;
+          const useQueryExpansion = body.query_expansion === true || body.hybrid === true;
+          const recalled = useQueryExpansion
+            ? await hybridRecall({
+                recall: (request) => liansConsole.recall(user, request),
+                agentId,
+                query,
+                k: candidateK,
+                asOf,
+                maxVariants: body.max_query_variants,
+                perQueryK: body.per_query_k,
+              })
+            : await liansConsole.recall(user, { agentId, query, k: candidateK, asOf });
+          const experiences = await experienceLearning.listExperiences(namespace, { agentId, status: 'completed', limit: 500 });
+          const context = compileContext({
+            recallResult: recalled,
+            experiences,
+            maxItems: body.max_items,
+            maxTokens: body.max_tokens,
+            minimumScore: body.minimum_score,
+          });
+          log('agent_context_compiled', req, user, {
+            agentId,
+            selected: context.memories.length,
+            excluded: context.excluded.length,
+            estimatedTokens: context.budget.estimated_tokens,
+          });
+          return json(res, 200, context);
+        }
+        if (pathname === '/api/console/reflections' && req.method === 'GET') {
+          const status = String(url.searchParams.get('status') || 'pending').slice(0, 30);
+          const proposals = await experienceLearning.listReflectionProposals(namespace, status);
+          return json(res, 200, { proposals });
+        }
+        if (pathname === '/api/console/reflections/generate' && req.method === 'POST') {
+          const body = await readBody(req);
+          const agentId = String(body.agent_id || '').trim().slice(0, 200);
+          if (!agentId) return json(res, 400, { error: 'agent_id is required.' });
+          const proposals = await experienceLearning.createReflectionProposals(namespace, agentId);
+          log('reflection_proposals_generated', req, user, { agentId, created: proposals.length });
+          return json(res, 201, { proposals });
+        }
+        const reflectionMatch = pathname.match(/^\/api\/console\/reflections\/([^/]+)$/);
+        if (reflectionMatch && req.method === 'PATCH') {
+          const body = await readBody(req);
+          const action = String(body.action || '');
+          let promotedMemoryId = null;
+          if (action === 'approve') {
+            if (!liansConsole.configured()) return json(res, 503, { error: 'The Lians backend is required to promote an approved reflection.' });
+            const pending = await experienceLearning.getReflectionProposal(namespace, reflectionMatch[1]);
+            const promoted = await liansConsole.writeMemory(user, {
+              agentId: pending.agent_id,
+              content: pending.content,
+              metadata: {
+                kind: 'governed_reflection',
+                reflection_proposal_id: pending.id,
+                supporting_experience_ids: pending.supporting_experience_ids,
+                confidence: pending.confidence,
+              },
+            });
+            promotedMemoryId = promoted.id;
+          }
+          const proposal = await experienceLearning.reviewReflectionProposal(namespace, reflectionMatch[1], action, body.note, promotedMemoryId);
+          log('reflection_proposal_reviewed', req, user, { proposalId: proposal.id, status: proposal.status });
+          return json(res, 200, { proposal });
+        }
+      } catch (err) {
+        const status = err.status >= 400 && err.status < 500 ? err.status : 502;
+        log('experience_learning_request_failed', req, user, { route: pathname, error: err.message, status: err.status });
+        return json(res, status, { error: status === 502 ? 'Unable to access the experience learning store. Please try again.' : err.message });
+      }
       if (!liansConsole.configured()) {
         // Governance view renders an unconfigured empty state instead of erroring.
         if (pathname === '/api/console/governance' && req.method === 'GET') {
@@ -760,7 +1007,7 @@ const app = async (req, res) => {
     }
 
     // Static files
-    const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+    const relative = pathname === '/' ? 'marketing.html' : pathname.replace(/^\//, '');
     const file = path.resolve(root, relative);
     if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
     return serveFile(res, file);

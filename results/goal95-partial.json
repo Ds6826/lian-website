@@ -1,0 +1,61 @@
+{
+  "suite": "lians-locomo-goal95-verifier-v1",
+  "protocol": "semantic top-200, frozen base+0.1 dialogue support, radius-2 attributed bundles, top-50 fair-share context",
+  "leakage_policy": "Gold evidence is used only after retrieval for scoring; no evidence IDs or answers enter retrieval, ranking, bundling, or compilation.",
+  "configuration": {
+    "base": 1,
+    "lexical": 0,
+    "neighbor": 0.1
+  },
+  "inputs": [
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_1_context_bundles.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_2_context_bundles.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_3_context_bundles_r2.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_4_context_bundles_r2.json"
+  ],
+  "reports": 4,
+  "questions": 610,
+  "evidence_hits": 594,
+  "evidence_hit": 0.9737704918032787,
+  "evidence_all_hits": 548,
+  "evidence_all": 0.898360655737705,
+  "compiled_evidence_hits": 594,
+  "compiled_evidence_hit": 0.9737704918032787,
+  "compiled_evidence_all_hits": 548,
+  "compiled_evidence_all": 0.898360655737705,
+  "retrieved_hit_retention": 1,
+  "mean_context_tokens": 1086.6032786885246,
+  "token_budget": 1200,
+  "packs_over_budget": 0,
+  "by_category": {
+    "1": {
+      "questions": 110,
+      "evidence_hit": 0.9545454545454546,
+      "evidence_all": 0.6272727272727273
+    },
+    "2": {
+      "questions": 119,
+      "evidence_hit": 0.9831932773109243,
+      "evidence_all": 0.9747899159663865
+    },
+    "3": {
+      "questions": 33,
+      "evidence_hit": 0.9393939393939394,
+      "evidence_all": 0.696969696969697
+    },
+    "4": {
+      "questions": 348,
+      "evidence_hit": 0.9798850574712644,
+      "evidence_all": 0.9770114942528736
+    }
+  },
+  "gates": {
+    "complete_dataset": false,
+    "score_at_least_95": true,
+    "compiled_score_at_least_95": true,
+    "one_hundred_percent_retention": true,
+    "no_context_over_budget": true,
+    "all_categories_present": true
+  },
+  "passed": false
+}

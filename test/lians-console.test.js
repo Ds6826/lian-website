@@ -162,3 +162,39 @@ test('playgroundRecall passes query, k and optional as_of', async () => {
   const call = fetchImpl.calls.find((c) => c.key === 'POST /v1/recall');
   assert.deepEqual(call.body, { agent_id: PLAYGROUND_AGENT, query: 'NVDA guidance', k: 5, as_of: '2025-03-01' });
 });
+
+test('recall supports arbitrary agents and bounds k for adaptive learning', async () => {
+  const { client, fetchImpl } = build({
+    metadata: { liansConsoleKey: 'agentmem_ok' },
+    routes: { 'POST /v1/recall': { body: { memories: [] } } },
+  });
+  await client.recall(USER, { agentId: 'support-agent', query: 'How did refunds work?', k: 500, asOf: '2026-07-01' });
+  const call = fetchImpl.calls.find((item) => item.key === 'POST /v1/recall');
+  assert.deepEqual(call.body, {
+    agent_id: 'support-agent',
+    query: 'How did refunds work?',
+    k: 200,
+    include_context: true,
+    as_of: '2026-07-01',
+  });
+});
+
+test('writeMemory promotes governed reflections with provenance metadata', async () => {
+  const { client, fetchImpl } = build({
+    metadata: { liansConsoleKey: 'agentmem_ok' },
+    routes: { 'POST /v1/memories': { body: { id: 'promoted-memory' } } },
+  });
+  await client.writeMemory(USER, {
+    agentId: 'support-agent',
+    content: 'Prefer the validated refund workflow.',
+    eventTime: '2026-07-28T12:00:00Z',
+    metadata: { kind: 'governed_reflection', reflection_proposal_id: 'rp-1' },
+  });
+  const call = fetchImpl.calls.find((item) => item.key === 'POST /v1/memories');
+  assert.deepEqual(call.body, {
+    agent_id: 'support-agent',
+    content: 'Prefer the validated refund workflow.',
+    event_time: '2026-07-28T12:00:00Z',
+    metadata: { kind: 'governed_reflection', reflection_proposal_id: 'rp-1' },
+  });
+});

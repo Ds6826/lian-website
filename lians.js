@@ -1,6 +1,14 @@
 // Minimal interactions for the Lians site: mobile nav + terminal language tabs.
 const menuBtn = document.querySelector('.menu-btn');
 const navLinks = document.querySelector('.nav .links');
+if (navLinks) {
+  navLinks.innerHTML = `<a href="/product">Product</a><a href="/docs">Docs</a><a href="/pricing">Pricing</a><a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer" data-track="github_clicked">GitHub ↗</a><a class="muted" href="/login" data-sign-in-link>Sign in</a><a class="cta" href="/design-partners">Talk to us</a>`;
+}
+// Keep legacy legal-page CTAs aligned with the current implementation offer.
+document.querySelectorAll('a.btn[href="/design-partners"], a.btn-primary[href="/design-partners"]').forEach((cta) => {
+  cta.href = '/design-partners';
+  cta.textContent = 'Plan your implementation →';
+});
 menuBtn?.addEventListener('click', () => {
   const open = navLinks.classList.toggle('open');
   menuBtn.setAttribute('aria-expanded', String(open));
@@ -18,6 +26,83 @@ termTabs.forEach((tab) => tab.addEventListener('click', () => {
   });
   termBodies.forEach((b) => { b.hidden = b.dataset.term !== lang; });
 }));
+
+// Landing-page visitors with a live Clerk session are already signed in, so
+// remove the redundant header sign-in action once the same-origin session
+// endpoint confirms it. Anonymous visitors continue to see the link.
+(function () {
+  const signInLink = document.querySelector('[data-sign-in-link]');
+  if (!signInLink) return;
+  fetch('/api/session', { credentials: 'same-origin' })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((session) => {
+      if (session?.authenticated) signInLink.remove();
+    })
+    .catch(() => {});
+})();
+
+const trackFunnel = (name, detail = {}) => {
+  const payload = { event: name, ...detail };
+  window.dataLayer?.push(payload);
+  window.dispatchEvent(new CustomEvent('lians:funnel', { detail: payload }));
+};
+document.querySelectorAll('[data-track]').forEach((el) => el.addEventListener('click', () => trackFunnel(el.dataset.track)));
+if (location.pathname === '/design-partners') trackFunnel('partner_page_viewed');
+
+const demo = document.querySelector('#watch');
+if (demo) {
+  let started = false;
+  new IntersectionObserver(([entry], observer) => {
+    if (!entry?.isIntersecting || started) return;
+    started = true;
+    trackFunnel('changing_facts_demo_started');
+    observer.disconnect();
+  }, { threshold: 0.45 }).observe(demo);
+  document.addEventListener('lians:demo-completed', () => trackFunnel('changing_facts_demo_completed'), { once: true });
+}
+
+const partnerForm = document.querySelector('#partner-application');
+if (partnerForm) {
+  const status = document.querySelector('#partner-form-status');
+  partnerForm.addEventListener('input', () => trackFunnel('partner_application_started'), { once: true });
+  const params = new URLSearchParams(location.search);
+  ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach((key) => {
+    partnerForm.elements.namedItem(key).value = params.get(key) || '';
+  });
+  partnerForm.elements.namedItem('landing_page').value = location.href;
+  partnerForm.elements.namedItem('referring_url').value = document.referrer;
+  partnerForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = partnerForm.querySelector('[type="submit"]');
+    button.disabled = true;
+    status.textContent = 'Submitting…';
+    try {
+      const formData = new FormData(partnerForm);
+      const file = formData.get('architecture_file');
+      formData.delete('architecture_file');
+      const body = Object.fromEntries(formData);
+      if (file?.size) {
+        if (file.size > 700_000) throw new Error('Keep the optional upload under 700 KB.');
+        body.architecture_file = { name: file.name, type: file.type, data_url: await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }) };
+      }
+      const response = await fetch('/api/partner-applications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Unable to submit your application.');
+      trackFunnel('partner_application_submitted', { preferred_track: body.preferred_track, current_stage: body.current_stage });
+      partnerForm.hidden = true;
+      document.querySelector('#partner-form-success').hidden = false;
+      const booking = document.querySelector('#partner-booking-link');
+      if (result.schedulingUrl && booking) {
+        booking.href = result.schedulingUrl;
+        booking.hidden = false;
+        booking.addEventListener('click', () => trackFunnel('partner_call_booked'), { once: true });
+      }
+    } catch (error) {
+      status.textContent = error.message;
+      button.disabled = false;
+    }
+  });
+}
 
 // Arrow keys move between terminal tabs, per the tablist pattern.
 document.querySelector('.term-tabs')?.addEventListener('keydown', (e) => {
@@ -58,7 +143,7 @@ termCopy?.addEventListener('click', async () => {
     const c = JSON.parse(localStorage.getItem('lians-gh-stars') || 'null');
     if (c && Date.now() - c.t < 3600e3) { show(c.n); return; }
   } catch (e) {}
-  fetch('https://api.github.com/repos/ebeirne/Lians2')
+  fetch('https://api.github.com/repos/Lians-ai/Lians')
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error('gh'))))
     .then((d) => {
       if (typeof d.stargazers_count !== 'number') return;

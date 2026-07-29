@@ -3,31 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lians pricing: start free, scale by usage, and unlock regulated controls: audit chain, information barriers, HIPAA encryption, GDPR erasure, air-gap, as you grow." />
+    <meta name="description" content="Lians pricing: free developer tools, self-serve usage tiers, and a paid design-partner pilot for financial research and risk agents." />
     <title>Pricing · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <header><div class="wrap"><nav class="nav" aria-label="Primary">
-      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
         <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
-        <a class="muted" href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
+        <a class="muted" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a class="muted" href="/login">Sign in</a><a class="cta" href="/login">Get API key →</a>
       </div>
     </nav></div></header>
 
     <main>
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Pricing</p>
-        <h1>Start free. Scale to <em>regulated</em>.</h1>
-        <p class="lede">The core SDK is open source and runs locally with no account. Paid tiers add headroom and unlock regulated controls as you need them.</p>
+        <h1>Build free. Bring us in when the decision needs <em>proof</em>.</h1>
+        <p class="lede">The core SDK is open source and runs locally with no account. Self-serve plans add capacity; deployment-bound controls and implementation support are scoped with your team.</p>
       </section>
 
       <section class="wrap block" aria-label="Tiers">
@@ -35,23 +35,30 @@
         <h2>Five tiers.</h2>
         <div class="list">
           <div class="item"><span class="head"><b>Free</b><span class="meta">$0/mo · 10K writes · 10K recalls</span></span><p>Memory writes · recalls · semantic search.</p></div>
-          <div class="item"><span class="head"><b>Starter</b><span class="meta">$15/mo · 100K writes · 50K recalls</span></span><p>Free, plus domain adapters and the audit log &amp; memory lineage.</p></div>
-          <div class="item"><span class="head"><b>Growth</b><span class="meta">$69/mo · 500K writes · 250K recalls</span></span><p>Starter, plus conflict detection, webhooks, compliance reports, and the Merkle audit chain.</p></div>
-          <div class="item"><span class="head"><b>Pro</b><span class="meta tag">Most popular · $199/mo</span></span><p>2M writes · 1M recalls. Growth, plus information barriers, HIPAA encryption, GDPR erasure certificates, and backtest checks.</p></div>
-          <div class="item"><span class="head"><b>Enterprise</b><span class="meta">Custom · priced by deployment boundary</span></span><p>Unlimited. Pro, plus air-gap mode, custom KMS, dedicated onboarding, and SLA.</p></div>
+          <div class="item"><span class="head"><b>Starter</b><span class="meta">$15/mo · 100K writes · 50K recalls</span></span><p>Free, plus domain adapters, memory lineage, and a developer audit log.</p></div>
+          <div class="item"><span class="head"><b>Growth</b><span class="meta">$69/mo · 500K writes · 250K recalls</span></span><p>Starter, plus conflict detection, webhooks, and stronger operational visibility for production teams.</p></div>
+          <div class="item"><span class="head"><b>Pro</b><span class="meta tag">$199/mo · production usage</span></span><p>2M writes · 1M recalls. Growth, plus backtest checks, metrics, and priority product support. It is not a compliance package.</p></div>
+          <div class="item"><span class="head"><b>Enterprise</b><span class="meta">Custom · deployment-bound</span></span><p>Information barriers, air-gapped operation, customer-managed KMS, security review, onboarding, and SLA are designed and priced for your environment.</p></div>
         </div>
-        <div class="actions"><a class="btn btn-primary" href="/login">Get an API key →</a><a class="tlink" href="/about#contact">Contact us about Enterprise →</a></div>
-        <p class="metaline">Overage on paid tiers is metered. Healthcare requires an executed BAA before PHI is processed.</p>
+        <div class="actions"><a class="tlink" href="/login" data-track="api_key_requested">Get an API key →</a></div>
+        <p class="metaline">Self-serve plans are for developer and product use. Your own counsel and control owners determine any regulatory obligations.</p>
+      </section>
+
+      <section class="wrap block partner-brief" aria-label="Design partner pilot pricing">
+        <p class="block-label">Founding Partner Cohort · Seven companies</p>
+        <h2>Need a production workflow proved, not another software subscription?</h2>
+        <p class="intro">Join the seven-company founding cohort. Implementation and evaluation tracks are separate from self-service software plans.</p>
+        <div class="actions"><a class="btn btn-primary" href="/design-partners">Join the founding cohort →</a></div>
       </section>
     </main>
 
-    <section class="band"><div class="wrap"><h2>The core SDK is free and open source.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
+    <section class="band"><div class="wrap"><h2>Bring us one answer that must remain defensible after the facts change.</h2><a class="btn" href="/design-partners">Join the founding cohort →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/ebeirne/Lians2" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/ebeirne/Lians2/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>

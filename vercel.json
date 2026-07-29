@@ -27,6 +27,22 @@
       "use": "@vercel/static"
     },
     {
+      "src": "marketing.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "marketing.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "marketing.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "lattice.js",
+      "use": "@vercel/static"
+    },
+    {
       "src": "governor.js",
       "use": "@vercel/static"
     },
@@ -155,6 +171,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "blog-eu-ai-act-article-12.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "llms.txt",
       "use": "@vercel/static"
     },
@@ -192,6 +212,10 @@
     },
     {
       "src": "og-card.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "og-evidence-layer.png",
       "use": "@vercel/static"
     },
     {
@@ -233,60 +257,99 @@
   ],
   "routes": [
     {
-      "src": "/memory-governor",
-      "dest": "/memory-governor.html"
+      "src": "/(memory-governor|records|solutions(?:/.*)?)",
+      "status": 308,
+      "headers": {
+        "Location": "/product"
+      }
     },
     {
-      "src": "/product",
-      "dest": "/product.html"
-    },
-    {
-      "src": "/records",
-      "dest": "/records.html"
-    },
-    {
-      "src": "/article-12",
-      "dest": "/article-12.html"
-    },
-    {
-      "src": "/compliance",
-      "dest": "/compliance.html"
-    },
-    {
-      "src": "/security",
-      "dest": "/security.html"
+      "src": "/(article-12|compliance|trust)",
+      "status": 308,
+      "headers": {
+        "Location": "/security"
+      }
     },
     {
       "src": "/sdks",
-      "dest": "/sdks.html"
+      "status": 308,
+      "headers": {
+        "Location": "/docs"
+      }
+    },
+    {
+      "src": "/(research|compare(?:/.*)?)",
+      "status": 308,
+      "headers": {
+        "Location": "/blog/locomo-benchmark"
+      }
+    },
+    {
+      "src": "/(changelog|blog/(?:backtest-lookahead|memory-lifecycle|eu-ai-act-article-12))",
+      "status": 308,
+      "headers": {
+        "Location": "/blog"
+      }
+    },
+    {
+      "src": "/integrations",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/memory-governor",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/product",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/records",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/article-12",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/compliance",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/security",
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/sdks",
+      "dest": "/marketing.html"
     },
     {
       "src": "/compare",
-      "dest": "/compare.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/pricing",
-      "dest": "/pricing.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/docs",
-      "dest": "/docs.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/solutions",
-      "dest": "/solutions.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/solutions/financial-services",
-      "dest": "/solutions-financial-services.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/solutions/healthcare",
-      "dest": "/solutions-healthcare.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/solutions/legal",
-      "dest": "/solutions-legal.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/privacy",
@@ -298,63 +361,67 @@
     },
     {
       "src": "/changelog",
-      "dest": "/changelog.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/about",
-      "dest": "/about.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/design-partners",
-      "dest": "/design-partners.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/status",
-      "dest": "/status.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/compare/mem0",
-      "dest": "/compare-mem0.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/compare/zep",
-      "dest": "/compare-zep.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/compare/letta",
-      "dest": "/compare-letta.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/compare/hindsight",
-      "dest": "/compare-hindsight.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/compare/supermemory",
-      "dest": "/compare-supermemory.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/trust",
-      "dest": "/trust.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/research",
-      "dest": "/research.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/blog",
-      "dest": "/blog.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/blog/locomo-benchmark",
-      "dest": "/blog-locomo-benchmark.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/blog/backtest-lookahead",
-      "dest": "/blog-backtest-lookahead.html"
+      "dest": "/marketing.html"
     },
     {
       "src": "/blog/memory-lifecycle",
-      "dest": "/blog-memory-lifecycle.html"
+      "dest": "/marketing.html"
+    },
+    {
+      "src": "/blog/eu-ai-act-article-12",
+      "dest": "/marketing.html"
     },
     {
       "handle": "filesystem"

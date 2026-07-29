@@ -114,13 +114,31 @@ const createLiansConsole = ({ apiUrl = '', adminSecret = '', clerk, log = () => 
       body: { agent_id: PLAYGROUND_AGENT, content, event_time: new Date().toISOString() },
     });
 
+  const writeMemory = (user, { agentId, content, eventTime = new Date().toISOString(), metadata = {} } = {}) =>
+    dataRequest(user, '/v1/memories', {
+      method: 'POST',
+      body: { agent_id: agentId, content, event_time: eventTime, metadata },
+    });
+
   const playgroundRecall = (user, query, asOf) =>
     dataRequest(user, '/v1/recall', {
       method: 'POST',
       body: { agent_id: PLAYGROUND_AGENT, query, k: 5, ...(asOf ? { as_of: asOf } : {}) },
     });
 
-  return { configured, namespaceFor, consoleKeyFor, dataRequest, governance, resolveSupersession, resolveAdmission, playgroundWrite, playgroundRecall };
+  const recall = (user, { agentId, query, k = 10, asOf, includeContext = true } = {}) =>
+    dataRequest(user, '/v1/recall', {
+      method: 'POST',
+      body: {
+        agent_id: agentId,
+        query,
+        k: Math.max(1, Math.min(Number(k) || 10, 200)),
+        include_context: Boolean(includeContext),
+        ...(asOf ? { as_of: asOf } : {}),
+      },
+    });
+
+  return { configured, namespaceFor, consoleKeyFor, dataRequest, governance, resolveSupersession, resolveAdmission, playgroundWrite, playgroundRecall, writeMemory, recall };
 };
 
 module.exports = { createLiansConsole, CONSOLE_KEY_LABEL, CONSOLE_KEY_SCOPES, PLAYGROUND_AGENT };

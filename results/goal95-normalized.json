@@ -1,0 +1,67 @@
+{
+  "suite": "lians-locomo-goal95-verifier-v1",
+  "protocol": "semantic top-200, frozen base+0.1 dialogue support, radius-2 attributed bundles, top-50 fair-share context",
+  "leakage_policy": "Gold evidence is used only after retrieval for scoring; no evidence IDs or answers enter retrieval, ranking, bundling, or compilation.",
+  "configuration": {
+    "base": 1,
+    "lexical": 0,
+    "neighbor": 0.1
+  },
+  "inputs": [
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_0_context_bundles_r2.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_1_context_bundles_r2.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_2_context_bundles_r2.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_3_context_bundles_r2.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_4_context_bundles_r2.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_5_context_bundles.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_6_context_bundles.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_7_context_bundles.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_8_context_bundles.json",
+    "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\results\\goal95\\conv_9_context_bundles.json"
+  ],
+  "reports": 10,
+  "questions": 1536,
+  "evidence_hits": 1502,
+  "evidence_hit": 0.9778645833333334,
+  "evidence_all_hits": 1390,
+  "evidence_all": 0.9049479166666666,
+  "compiled_evidence_hits": 1502,
+  "compiled_evidence_hit": 0.9778645833333334,
+  "compiled_evidence_all_hits": 1390,
+  "compiled_evidence_all": 0.9049479166666666,
+  "retrieved_hit_retention": 1,
+  "mean_context_tokens": 1084.2604166666667,
+  "token_budget": 1200,
+  "packs_over_budget": 0,
+  "by_category": {
+    "1": {
+      "questions": 282,
+      "evidence_hit": 0.9680851063829787,
+      "evidence_all": 0.6595744680851063
+    },
+    "2": {
+      "questions": 321,
+      "evidence_hit": 0.9781931464174455,
+      "evidence_all": 0.9688473520249221
+    },
+    "3": {
+      "questions": 92,
+      "evidence_hit": 0.9239130434782609,
+      "evidence_all": 0.6956521739130435
+    },
+    "4": {
+      "questions": 841,
+      "evidence_hit": 0.9869203329369798,
+      "evidence_all": 0.985731272294887
+    }
+  },
+  "gates": {
+    "complete_dataset": true,
+    "score_at_least_95": true,
+    "compiled_score_at_least_95": true,
+    "one_hundred_percent_retention": true,
+    "no_context_over_budget": true,
+    "all_categories_present": true
+  },
+  "passed": true
+}
