@@ -175,8 +175,46 @@ test('recall supports arbitrary agents and bounds k for adaptive learning', asyn
     query: 'How did refunds work?',
     k: 200,
     include_context: true,
+    strategy: 'adaptive',
+    max_query_variants: 4,
     as_of: '2026-07-01',
   });
+});
+
+test('context compilation is delegated to the Lians engine', async () => {
+  const { client, fetchImpl } = build({
+    metadata: { liansConsoleKey: 'agentmem_ok' },
+    routes: { 'POST /v1/context': { body: { context_text: 'governed', memories: [] } } },
+  });
+  const result = await client.context(USER, {
+    agentId: 'support-agent',
+    query: 'refund policy',
+    maxTokens: 1200,
+  });
+  assert.equal(result.context_text, 'governed');
+  const call = fetchImpl.calls.find((item) => item.key === 'POST /v1/context');
+  assert.equal(call.body.strategy, 'adaptive');
+  assert.equal(call.body.max_tokens, 1200);
+});
+
+test('experience outcomes and reflection review use canonical engine routes', async () => {
+  const { client, fetchImpl } = build({
+    metadata: { liansConsoleKey: 'agentmem_ok' },
+    routes: {
+      'PATCH /v1/experiences/exp-1/outcome': { body: { id: 'exp-1', status: 'completed' } },
+      'PATCH /v1/reflections/rp-1': { body: { id: 'rp-1', status: 'approved' } },
+    },
+  });
+  await client.recordExperienceOutcome(USER, 'exp-1', {
+    outcome: { accepted: true },
+    reward: 1,
+  });
+  await client.reviewReflection(USER, 'rp-1', {
+    action: 'approve',
+    reviewer: 'reviewer@example.com',
+  });
+  assert.ok(fetchImpl.calls.some((item) => item.key === 'PATCH /v1/experiences/exp-1/outcome'));
+  assert.ok(fetchImpl.calls.some((item) => item.key === 'PATCH /v1/reflections/rp-1'));
 });
 
 test('writeMemory promotes governed reflections with provenance metadata', async () => {

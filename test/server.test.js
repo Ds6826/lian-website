@@ -127,6 +127,33 @@ test('public pricing actions lead to the authenticated checkout flow', async () 
   assert.doesNotMatch(script, /href="\/login">Choose (Starter|Growth|Pro)/);
 });
 
+test('every internal marketing link resolves to an intended page', async () => {
+  const script = await (await get('/marketing.js')).text();
+  const paths = new Set(
+    [...script.matchAll(/href="(\/[^"#?]*)[^"]*"/g)].map((match) => match[1]),
+  );
+  assert.ok(paths.size >= 10, 'expected a meaningful set of internal destinations');
+  for (const path of paths) {
+    const res = await get(path);
+    assert.ok(
+      res.status >= 200 && res.status < 400,
+      `${path} returned ${res.status}`,
+    );
+  }
+});
+
+test('public positioning leads with historical reconstruction without unsupported partner claims', async () => {
+  const [html, script] = await Promise.all([
+    get('/').then((res) => res.text()),
+    get('/marketing.js').then((res) => res.text()),
+  ]);
+  assert.match(html, /Historical reconstruction for consequential AI/);
+  assert.match(script, /Prove what your AI knew when it acted/);
+  assert.match(script, /Observability shows what ran\. Lians reconstructs what was knowable/);
+  assert.match(script, /Grafana Labs has not reviewed or signed off/);
+  assert.doesNotMatch(script, /—/);
+});
+
 test('retired marketing routes redirect to a current canonical page', async () => {
   const redirects = new Map([
     ['/memory-governor', '/product'],

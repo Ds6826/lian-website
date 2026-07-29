@@ -4,9 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { createPartnerApplicationService, validateApplication } = require('./partner-applications');
-const { createExperienceLearningService, rerankRecall } = require('./experience-learning');
-const { compileContext } = require('./context-compiler');
-const { hybridRecall } = require('./hybrid-retrieval');
+const { createControlStore } = require('./control-store');
 
 const root = __dirname;
 const envFile = path.join(root, '.env');
@@ -17,7 +15,6 @@ if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forE
 const port = Number(process.env.PORT || 8000);
 const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? path.join('/tmp', 'lian-data') : path.join(root, 'data'));
-const dataFile = path.join(dataDir, 'lian-console.json');
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 
 const TIER_SCOPES = {
@@ -41,7 +38,6 @@ const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
 const partnerApplications = createPartnerApplicationService();
-const experienceLearning = createExperienceLearningService();
 
 // Error monitoring (Sentry). Only initialised when SENTRY_DSN is set, so local dev and
 // unconfigured deploys run without it. The DSN is safe to expose (it's also used client-side).
@@ -140,10 +136,39 @@ const SEC_HEADERS = {
 // ── rate limiting ─────────────────────────────────────────────────────────────
 
 const rateLimits = new Map();
-const rateLimit = (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
+let rateLimitRedis = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    const { Redis } = require('@upstash/redis');
+    rateLimitRedis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  } catch (error) {
+    console.warn('[Lians] distributed rate limiter unavailable:', error.message);
+  }
+}
+const rateLimit = async (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
   const key = `${bucket}:${ip}`;
   const now = Date.now();
+  if (rateLimitRedis) {
+    try {
+      const windowId = Math.floor(now / windowMs);
+      const redisKey = `lians:rate:${key}:${windowId}`;
+      const count = await rateLimitRedis.incr(redisKey);
+      if (count === 1) await rateLimitRedis.expire(redisKey, Math.ceil(windowMs / 1000) + 1);
+      if (count > max) {
+        const retryAfter = Math.max(1, Math.ceil(((windowId + 1) * windowMs - now) / 1000));
+        res.setHeader('retry-after', retryAfter);
+        json(res, 429, { error: 'Too many requests.' });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      log('distributed_rate_limit_failed', req, null, { error: error.message });
+    }
+  }
   let e = rateLimits.get(key);
   if (!e || now > e.resetAt) { e = { count: 0, resetAt: now + windowMs }; rateLimits.set(key, e); }
   e.count++;
@@ -155,9 +180,17 @@ setInterval(() => { const now = Date.now(); for (const [ip, e] of rateLimits) if
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 const log = (event, req, user, metadata = {}) => console.log(JSON.stringify({ timestamp: new Date().toISOString(), event, userId: user?.id || null, route: req?.url || null, ...metadata }));
-const defaultStore = () => ({ users: [], onboarding: {}, apiKeys: [] });
-const readStore = () => { try { return { ...defaultStore(), ...JSON.parse(fs.readFileSync(dataFile, 'utf8')) }; } catch { return defaultStore(); } };
-const writeStore = (store) => { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(dataFile, JSON.stringify(store, null, 2)); };
+const controlStore = createControlStore({
+  dataDir,
+  vercel: Boolean(process.env.VERCEL),
+  log: (event, metadata) => console.warn(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    event,
+    ...metadata,
+  })),
+});
+const readStore = () => controlStore.read();
+const writeStore = (store) => controlStore.write(store);
 const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 // Helpers use res.setHeader so security headers set at request start are preserved
 const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.writeHead(status); res.end(JSON.stringify(body)); };
@@ -189,7 +222,7 @@ const healthPage = ({ build, environment, authConfigured }) => `<!doctype html>
         <div class="health-flow" aria-label="Application workflow"><span>Sign in</span><i>→</i><span>Onboarding</span><i>→</i><span>Console</span></div>
         <div class="health-actions"><a class="button" href="/status">View full status →</a><a class="text-link" href="/api/health?format=json">View JSON</a></div>
       </section>
-      <p class="health-foot">Lians · Decision evidence for regulated AI</p>
+      <p class="health-foot">Lians · Durable memory for AI agents</p>
     </main>
   </body>
 </html>`;
@@ -359,6 +392,14 @@ const app = async (req, res) => {
 
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
+    if (
+      pathname.startsWith('/api/')
+      || pathname.startsWith('/console')
+      || pathname.startsWith('/onboarding')
+      || pathname === '/billing'
+    ) {
+      await controlStore.hydrate();
+    }
     // Clerk webhook - must be before CORS/rate-limit (server-to-server, no origin header)
     if (pathname === '/api/webhooks/clerk' && req.method === 'POST') {
       const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
@@ -379,12 +420,16 @@ const app = async (req, res) => {
 
       if (event.type === 'user.created') {
         const tier = event.data.public_metadata?.plan ?? 'free';
-        const scopes = TIER_SCOPES[tier] ?? TIER_SCOPES.free;
-        const rawKey = `lians_live_${crypto.randomBytes(32).toString('hex')}`;
-        const keyId = crypto.randomUUID();
         try {
+          const clerkUser = await clerk.users.getUser(clerkUserId);
           await clerk.users.updateUserMetadata(clerkUserId, {
-            privateMetadata: { pendingApiKey: rawKey, pendingKeyId: keyId, pendingKeyScopes: scopes, liansTier: tier },
+            privateMetadata: {
+              ...clerkUser.privateMetadata,
+              pendingApiKey: null,
+              pendingKeyId: null,
+              pendingKeyScopes: null,
+              liansTier: tier,
+            },
           });
           log('webhook_user_created', req, null, { clerkUserId, tier });
         } catch (err) { log('webhook_metadata_failed', req, null, { error: err.message, clerkUserId }); }
@@ -397,15 +442,40 @@ const app = async (req, res) => {
           const currentTier = clerkUser.privateMetadata?.liansTier;
           if (currentTier === newTier) return json(res, 200, { ok: true });
           const scopes = TIER_SCOPES[newTier] ?? TIER_SCOPES.free;
-          const rawKey = `lians_live_${crypto.randomBytes(32).toString('hex')}`;
-          const keyId = crypto.randomUUID();
-          // Revoke the old key in the store
-          const oldKeyId = clerkUser.privateMetadata?.liansKeyId;
-          if (oldKeyId) { const store = readStore(); const old = store.apiKeys.find((k) => k.id === oldKeyId); if (old) { old.revokedAt = new Date().toISOString(); writeStore(store); } }
+          const liansUserId = clerkUser.privateMetadata?.liansUserId;
+          if (liansConfigured() && liansUserId) {
+            const namespace = `ns_${liansUserId}`;
+            const keys = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`);
+            for (const key of Array.isArray(keys) ? keys : []) {
+              if (key.label !== CONSOLE_KEY_LABEL) {
+                await liansAdmin(`/api-keys/${encodeURIComponent(key.id)}`, {
+                  method: 'PATCH',
+                  body: { scopes },
+                });
+              }
+            }
+          } else if (liansUserId) {
+            const store = readStore();
+            for (const key of store.apiKeys.filter((item) => item.userId === liansUserId && !item.revokedAt)) {
+              key.scopes = scopes;
+            }
+            writeStore(store);
+          }
           await clerk.users.updateUserMetadata(clerkUserId, {
-            privateMetadata: { ...clerkUser.privateMetadata, pendingApiKey: rawKey, pendingKeyId: keyId, pendingKeyScopes: scopes, liansTier: newTier },
+            privateMetadata: {
+              ...clerkUser.privateMetadata,
+              pendingApiKey: null,
+              pendingKeyId: null,
+              pendingKeyScopes: null,
+              liansTier: newTier,
+            },
           });
-          log('webhook_tier_changed', req, null, { clerkUserId, from: currentTier, to: newTier });
+          log('webhook_tier_changed', req, null, {
+            clerkUserId,
+            from: currentTier,
+            to: newTier,
+            scopes,
+          });
         } catch (err) { log('webhook_tier_change_failed', req, null, { error: err.message, clerkUserId }); }
       }
 
@@ -415,7 +485,7 @@ const app = async (req, res) => {
     // Best-effort, site-wide flood protection (per IP, per server instance) for
     // every page and asset request. The stricter per-IP API limit still applies
     // below. (On serverless this is per-instance; pair with the platform WAF.)
-    if (!rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
+    if (!await rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
 
     // Block cross-origin requests to the API.
     // Allow both apex and www so a misconfigured BASE_URL env var never locks
@@ -423,7 +493,7 @@ const app = async (req, res) => {
     if (pathname.startsWith('/api/')) {
       const origin = req.headers.origin;
       if (origin && !allowedApiOrigins(req).has(origin)) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
-      if (!rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
+      if (!await rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
     }
 
     // Public config for client-side SDK initialisation (publishable keys only)
@@ -521,7 +591,7 @@ const app = async (req, res) => {
     // ── JSON API ──────────────────────────────────────────────────────────────
 
     if (pathname === '/api/partner-applications' && req.method === 'POST') {
-      if (!rateLimit(req, res, { max: 8, windowMs: 60 * 60_000, bucket: 'partner-applications' })) return;
+      if (!await rateLimit(req, res, { max: 8, windowMs: 60 * 60_000, bucket: 'partner-applications' })) return;
       const body = await readBody(req);
       const validation = validateApplication(body);
       if (!validation.ok) return json(res, 400, { error: validation.error, missing: validation.missing });
@@ -556,6 +626,7 @@ const app = async (req, res) => {
         environment: process.env.VERCEL ? 'vercel' : (process.env.NODE_ENV || 'local'),
         clerkPublishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
         clerkSecretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
+        controlStore: controlStore.status(),
         workflow: 'login->onboarding->console',
       };
       const wantsHtml = /\btext\/html\b/i.test(req.headers.accept || '') && url.searchParams.get('format') !== 'json';
@@ -676,7 +747,7 @@ const app = async (req, res) => {
           return json(res, 201, { key: { ...liansKeyView(created), prefix: `${String(created.key).slice(0, 16)}…` }, rawKey: created.key });
         } catch (err) { log('lians_key_create_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to create key via the Lians API. Please try again.' }); }
       }
-      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
+      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), scopes: TIER_SCOPES[user.billingPlan || 'free'] || TIER_SCOPES.free, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
     if (pathname.match(/^\/api\/keys\/[^/]+\/rotate$/) && req.method === 'POST') {
       const user = await apiOnboarding(req, res); if (!user) return;
       const id = pathname.split('/')[3];
@@ -777,31 +848,30 @@ const app = async (req, res) => {
     // All backed by a per-user, server-held API key on the user's own namespace.
     if (pathname.startsWith('/api/console/')) {
       const user = await apiOnboarding(req, res); if (!user) return;
-      const namespace = liansNamespace(user);
       const isLearningRoute = pathname.startsWith('/api/console/experiences') ||
         pathname.startsWith('/api/console/adaptive-recall') ||
         pathname.startsWith('/api/console/context') ||
         pathname.startsWith('/api/console/reflections');
-      if (isLearningRoute && !experienceLearning.configured()) {
-        return json(res, 503, { error: 'The experience learning store is not configured for this deployment.' });
+      if (isLearningRoute && !liansConsole.configured()) {
+        return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
       }
       try {
         if (pathname === '/api/console/experiences' && req.method === 'POST') {
-          const experience = await experienceLearning.createExperience(namespace, await readBody(req));
+          const experience = await liansConsole.createExperience(user, await readBody(req));
           log('agent_experience_created', req, user, { experienceId: experience.id, agentId: experience.agent_id });
           return json(res, 201, { experience });
         }
         if (pathname === '/api/console/experiences' && req.method === 'GET') {
-          const experiences = await experienceLearning.listExperiences(namespace, {
+          const result = await liansConsole.listExperiences(user, {
             agentId: String(url.searchParams.get('agent_id') || '').slice(0, 200) || null,
             status: String(url.searchParams.get('status') || '').slice(0, 30) || null,
             limit: url.searchParams.get('limit'),
           });
-          return json(res, 200, { experiences });
+          return json(res, 200, result);
         }
         const outcomeMatch = pathname.match(/^\/api\/console\/experiences\/([^/]+)\/outcome$/);
         if (outcomeMatch && req.method === 'PATCH') {
-          const experience = await experienceLearning.recordOutcome(namespace, outcomeMatch[1], await readBody(req));
+          const experience = await liansConsole.recordExperienceOutcome(user, outcomeMatch[1], await readBody(req));
           log('agent_experience_completed', req, user, { experienceId: experience.id, reward: experience.reward });
           return json(res, 200, { experience });
         }
@@ -813,21 +883,15 @@ const app = async (req, res) => {
           if (!agentId || !query) return json(res, 400, { error: 'agent_id and query are required.' });
           const requestedK = Math.max(1, Math.min(Number(body.k) || 50, 200));
           const asOf = body.as_of ? String(body.as_of) : null;
-          const useQueryExpansion = body.query_expansion === true || body.hybrid === true;
-          const recalled = useQueryExpansion
-            ? await hybridRecall({
-                recall: (request) => liansConsole.recall(user, request),
-                agentId,
-                query,
-                k: requestedK,
-                asOf,
-                maxVariants: body.max_query_variants,
-                perQueryK: body.per_query_k,
-              })
-            : await liansConsole.recall(user, { agentId, query, k: requestedK, asOf });
-          const experiences = await experienceLearning.listExperiences(namespace, { agentId, status: 'completed', limit: 500 });
-          const result = rerankRecall(recalled, experiences);
-          log('adaptive_recall_completed', req, user, { agentId, memories: result.memories?.length || 0, experiences: experiences.length });
+          const result = await liansConsole.recall(user, {
+            agentId,
+            query,
+            k: requestedK,
+            asOf,
+            strategy: 'adaptive',
+            maxQueryVariants: body.max_query_variants,
+          });
+          log('adaptive_recall_completed', req, user, { agentId, memories: result.memories?.length || 0 });
           return json(res, 200, result);
         }
         if (pathname === '/api/console/context' && req.method === 'POST') {
@@ -838,44 +902,34 @@ const app = async (req, res) => {
           if (!agentId || !query) return json(res, 400, { error: 'agent_id and query are required.' });
           const candidateK = Math.max(20, Math.min(Number(body.k) || 200, 200));
           const asOf = body.as_of ? String(body.as_of) : null;
-          const useQueryExpansion = body.query_expansion === true || body.hybrid === true;
-          const recalled = useQueryExpansion
-            ? await hybridRecall({
-                recall: (request) => liansConsole.recall(user, request),
-                agentId,
-                query,
-                k: candidateK,
-                asOf,
-                maxVariants: body.max_query_variants,
-                perQueryK: body.per_query_k,
-              })
-            : await liansConsole.recall(user, { agentId, query, k: candidateK, asOf });
-          const experiences = await experienceLearning.listExperiences(namespace, { agentId, status: 'completed', limit: 500 });
-          const context = compileContext({
-            recallResult: recalled,
-            experiences,
-            maxItems: body.max_items,
+          const context = await liansConsole.context(user, {
+            agentId,
+            query,
+            k: Math.min(candidateK, Number(body.max_items) || candidateK),
+            asOf,
             maxTokens: body.max_tokens,
-            minimumScore: body.minimum_score,
+            mmr: body.mmr === true,
+            maxQueryVariants: body.max_query_variants,
           });
           log('agent_context_compiled', req, user, {
             agentId,
             selected: context.memories.length,
             excluded: context.excluded.length,
-            estimatedTokens: context.budget.estimated_tokens,
+            estimatedTokens: context.token_estimate,
           });
           return json(res, 200, context);
         }
         if (pathname === '/api/console/reflections' && req.method === 'GET') {
           const status = String(url.searchParams.get('status') || 'pending').slice(0, 30);
-          const proposals = await experienceLearning.listReflectionProposals(namespace, status);
-          return json(res, 200, { proposals });
+          const result = await liansConsole.listReflections(user, status);
+          return json(res, 200, result);
         }
         if (pathname === '/api/console/reflections/generate' && req.method === 'POST') {
           const body = await readBody(req);
           const agentId = String(body.agent_id || '').trim().slice(0, 200);
           if (!agentId) return json(res, 400, { error: 'agent_id is required.' });
-          const proposals = await experienceLearning.createReflectionProposals(namespace, agentId);
+          const result = await liansConsole.generateReflections(user, { agent_id: agentId });
+          const proposals = result.proposals || [];
           log('reflection_proposals_generated', req, user, { agentId, created: proposals.length });
           return json(res, 201, { proposals });
         }
@@ -883,23 +937,11 @@ const app = async (req, res) => {
         if (reflectionMatch && req.method === 'PATCH') {
           const body = await readBody(req);
           const action = String(body.action || '');
-          let promotedMemoryId = null;
-          if (action === 'approve') {
-            if (!liansConsole.configured()) return json(res, 503, { error: 'The Lians backend is required to promote an approved reflection.' });
-            const pending = await experienceLearning.getReflectionProposal(namespace, reflectionMatch[1]);
-            const promoted = await liansConsole.writeMemory(user, {
-              agentId: pending.agent_id,
-              content: pending.content,
-              metadata: {
-                kind: 'governed_reflection',
-                reflection_proposal_id: pending.id,
-                supporting_experience_ids: pending.supporting_experience_ids,
-                confidence: pending.confidence,
-              },
-            });
-            promotedMemoryId = promoted.id;
-          }
-          const proposal = await experienceLearning.reviewReflectionProposal(namespace, reflectionMatch[1], action, body.note, promotedMemoryId);
+          const proposal = await liansConsole.reviewReflection(user, reflectionMatch[1], {
+            action,
+            reviewer: user.email || user.id,
+            note: body.note || null,
+          });
           log('reflection_proposal_reviewed', req, user, { proposalId: proposal.id, status: proposal.status });
           return json(res, 200, { proposal });
         }
@@ -1015,6 +1057,8 @@ const app = async (req, res) => {
     log('server_error', req, null, { message: error.message, stack: error.stack });
     if (Sentry) { Sentry.captureException(error); try { await Sentry.flush(2000); } catch {} }
     return json(res, 500, { error: 'Unexpected server error.' });
+  } finally {
+    await controlStore.flush();
   }
 };
 
