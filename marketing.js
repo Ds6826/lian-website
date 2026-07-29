@@ -154,16 +154,21 @@ document.querySelector("[data-menu-close]")?.addEventListener("click",()=>setMen
 document.querySelector("[data-site-back]")?.addEventListener("click",()=>history.back());
 document.querySelector("[data-site-forward]")?.addEventListener("click",()=>history.forward());
 links?.querySelectorAll("a").forEach((link)=>link.addEventListener("click",()=>setMenu(false)));
-fetch("/api/session",{credentials:"same-origin"}).then((response)=>response.ok?response.json():null).then((session)=>{
-  if(!session?.authenticated||!session.user)return;
+const refreshAuthLink=()=>{
   const link=document.querySelector("[data-auth-link]");if(!link)return;
-  link.href="/console";link.classList.add("profile-link");link.textContent="";
-  const avatar=document.createElement("span");avatar.className="profile-avatar";
-  if(session.user.avatarUrl){const image=document.createElement("img");image.src=session.user.avatarUrl;image.alt="";avatar.append(image)}
-  else avatar.textContent=(session.user.name||session.user.email||"U").slice(0,1).toUpperCase();
-  const label=document.createElement("span");label.textContent=session.user.name||session.user.email||"Your profile";
-  link.append(avatar,label);
-}).catch(()=>{});
+  link.href="/login";link.classList.remove("profile-link");link.textContent="Sign in";
+  fetch("/api/session",{credentials:"same-origin"}).then((response)=>response.ok?response.json():null).then((session)=>{
+    if(!session?.authenticated||!session.user)return;
+    link.href="/console";link.classList.add("profile-link");link.textContent="";
+    const avatar=document.createElement("span");avatar.className="profile-avatar";
+    if(session.user.avatarUrl){const image=document.createElement("img");image.src=session.user.avatarUrl;image.alt="";avatar.append(image)}
+    else avatar.textContent=(session.user.name||session.user.email||"U").slice(0,1).toUpperCase();
+    const label=document.createElement("span");label.textContent=session.user.name||session.user.email||"Your profile";
+    link.append(avatar,label);
+  }).catch(()=>{});
+};
+refreshAuthLink();
+window.addEventListener("pageshow",(event)=>{if(event.persisted)refreshAuthLink()});
 const evidenceSlider=document.querySelector("#evidence-slider"),evidenceDate=document.querySelector("#evidence-date");evidenceSlider?.addEventListener("input",()=>{evidenceDate.textContent=["2025-11-19","2026-01-15","2026-02-04","Today"][Number(evidenceSlider.value)]});
 const labFrames=[
   {date:"09:41:58",state:"INPUT CAPTURED",answer:"Pending · gathering evidence",note:"Two source facts have arrived. The decision has not been made yet.",facts:[["Identity verified","Known","good"],["Annual revenue · $1.2m","Known","good"],["Risk policy v4","Waiting","muted"],["Revenue revision · $780k","Future","future"]]},
