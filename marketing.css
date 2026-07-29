@@ -10,6 +10,7 @@
   --green: #66d49f;
   --red: #ff7070;
   --wrap: 1180px;
+  --title: "Space Mono", "Courier New", monospace;
 }
 
 * { box-sizing: border-box; }
@@ -110,9 +111,10 @@ button, input { font: inherit; }
 .hero-copy-v3 { min-width: 0; }
 .eyebrow { color: var(--blue-2); font-size: .77rem; margin: 0 0 20px; }
 h1, h2, h3, p { margin-top: 0; }
-h1 { max-width: 900px; margin-bottom: 24px; font-size: clamp(3rem, 7vw, 6.8rem); line-height: .98; letter-spacing: -.06em; }
-h2 { font-size: clamp(2rem, 4.5vw, 4rem); line-height: 1.05; letter-spacing: -.045em; }
-h3 { font-size: 1.12rem; }
+h1, h2, h3 { font-family: var(--title); }
+h1 { max-width: 900px; margin-bottom: 24px; font-size: clamp(3rem, 7vw, 6.8rem); line-height: .98; letter-spacing: -.075em; }
+h2 { font-size: clamp(2rem, 4.5vw, 4rem); line-height: 1.05; letter-spacing: -.06em; }
+h3 { font-size: 1.12rem; letter-spacing: -.025em; }
 .lede { max-width: 760px; color: #c0cad8; font-size: clamp(1.12rem, 2.1vw, 1.45rem); }
 .hero-v3 .lede { max-width: 620px; }
 .hero-v3 .framing { margin-top: 14px; color: white; font-size: 1.1rem; }
@@ -570,6 +572,7 @@ h3 { font-size: 1.12rem; }
 .locomo-proof .wrap { display: grid; grid-template-columns: minmax(280px,.8fr) minmax(0,1.2fr); gap: 72px; align-items: center; }
 .locomo-score { padding: 36px; border: 1px solid #315a9e; background: radial-gradient(circle at 30% 15%,rgba(47,112,255,.2),transparent 46%),var(--panel); box-shadow: 16px 16px 0 rgba(47,112,255,.08); }
 .locomo-score > span,.benchmark-seal span,.benchmark-protocol > span { color: var(--blue-2); font: 500 .68rem "DM Mono",monospace; letter-spacing: .08em; }
+.locomo-score > span { font: 700 clamp(1.15rem,2vw,1.55rem)/1 var(--title); letter-spacing: .12em; }
 .locomo-score > strong { display: block; margin: 28px 0 16px; font-size: clamp(4rem,9vw,7.5rem); line-height: .82; letter-spacing: -.08em; }
 .locomo-score > strong small { color: var(--blue-2); font-size: .35em; letter-spacing: -.03em; }
 .locomo-score p,.locomo-copy > p,.benchmark-report-head p,.benchmark-caveat { color: var(--muted); }
