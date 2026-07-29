@@ -634,11 +634,48 @@ footer { padding: 60px 0 30px; }
 .footer-brand p { color: var(--muted); }
 
 /* Landing-page eyebrow labels are intentionally omitted for a cleaner hierarchy. */
+.section-label,
 .loop-section .section-label,
 .riad-copy .section-label,
 .not-memory .section-label,
 .pricing-close-copy .eyebrow,
-.pricing-close-card > span { display: none; }
+.pricing-close-card > span,
+.experience-intro .section-label,
+.journey-step > span,
+.article-card > span,
+.outcome > span,
+.security-grid article > span,
+.pipe-row > span,
+.answer-score-note > span,
+.benchmark-seal > span,
+.benchmark-protocol > span,
+.signal-head > span:first-child,
+.decision-view > header > span,
+.grafana-panel > header > span,
+.riad-artifact > header > span,
+.asof-stage > header > span,
+.evidence-artifact > header > span { display: none; }
+
+.journey-step h3,
+.security-grid h2,
+.article-card h2 { margin-top: 0; }
+.benchmark-seal strong { margin-top: 0; }
+.benchmark-protocol dl { margin-top: 0; }
+.signal-head,
+.decision-view > header,
+.grafana-panel > header,
+.riad-artifact > header,
+.asof-stage > header,
+.evidence-artifact > header { justify-content: flex-end; }
+.signal-head > :last-child,
+.decision-view > header > b,
+.grafana-panel > header > b,
+.riad-artifact > header > b,
+.asof-stage > header > b,
+.evidence-artifact > header > b {
+  font-size: .82rem;
+  letter-spacing: .02em;
+}
 
 .experience-section { padding: 112px 0; border-bottom: 1px solid var(--line); }
 .experience-intro { max-width: 760px; margin-bottom: 46px; }
@@ -649,6 +686,7 @@ footer { padding: 60px 0 30px; }
 .asof-lab { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr); border: 1px solid var(--line); background: var(--panel); box-shadow: 0 26px 80px rgba(0,0,0,.26); }
 .asof-stage { min-width: 0; }
 .asof-stage > header, .mini-main > header { display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 20px; border-bottom: 1px solid var(--line); font-size: .69rem; letter-spacing: .08em; }
+.asof-stage > header { justify-content: flex-end; }
 .asof-stage > header span { color: var(--muted); }
 .asof-stage > header b { color: var(--green); }
 .lab-question { padding: 28px 28px 24px; border-bottom: 1px solid var(--line); }
@@ -682,7 +720,7 @@ footer { padding: 60px 0 30px; }
 .journey-step { position: relative; min-height: 270px; padding: 34px; overflow: hidden; border: 1px solid var(--line); background: rgba(11,16,25,.62); opacity: .38; transform: translateX(22px); transition: opacity .65s ease, transform .65s ease, border-color .65s ease; }
 .journey-step.active { opacity: 1; transform: translateX(0); border-color: #385386; }
 .journey-step > span { color: var(--blue-2); font-size: .67rem; letter-spacing: .09em; }
-.journey-step h3 { margin: 30px 0 8px; font-size: clamp(1.7rem,3vw,2.8rem); letter-spacing: -.04em; }
+.journey-step h3 { margin: 0 0 8px; font-size: clamp(1.7rem,3vw,2.8rem); letter-spacing: -.04em; }
 .journey-step > p { max-width: 610px; color: var(--muted); }
 .journey-signal { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
 .journey-signal i { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 12px var(--blue); animation: evidencePulse 2.1s ease-in-out infinite; }
@@ -751,6 +789,7 @@ footer { padding: 60px 0 30px; }
 .visual-motion-ready .story-row.is-visible { opacity: 1; transform: translateY(0); }
 @keyframes artifactPulse { 0%,100%{filter:brightness(1)} 45%{filter:brightness(1.18)} }
 .evidence-artifact > header { display: flex; justify-content: space-between; align-items: center; min-height: 60px; padding: 0 24px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .7rem; letter-spacing: .08em; }
+.evidence-artifact > header { justify-content: flex-end; }
 .evidence-artifact > header b { color: var(--blue-2); font-weight: 600; }
 .trace-artifact > div { display: grid; grid-template-columns: 82px 8px minmax(0,1fr) auto; gap: 16px; align-items: center; min-height: 82px; padding: 0 24px; border-bottom: 1px solid rgba(38,50,71,.65); }
 .trace-artifact > div:last-child { border-bottom: 0; }
