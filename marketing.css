@@ -515,6 +515,9 @@ h3 { font-size: 1.12rem; letter-spacing: -.025em; }
 .pricing-close-card .button { width: 100%; margin-top: 18px; }
 
 .content-grid { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 56px; padding-top: 80px; padding-bottom: 80px; }
+.content-grid-wide { grid-template-columns: minmax(0,1fr); }
+.content-grid-wide .prose { max-width: 980px; }
+.content-grid-wide form { max-width: 900px; }
 .content-grid > *, .prose { min-width: 0; }
 .product-story { display: block; }
 .product-story .prose { max-width: 1000px; }
