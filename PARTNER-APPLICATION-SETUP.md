@@ -5,11 +5,11 @@ The site owns the complete application pipeline. Pipedream is not used.
 ## Required production environment variables
 
 - `DATABASE_URL`: pooled Neon PostgreSQL connection string.
-- `SMTP_HOST`: `smtp.gmail.com`.
-- `SMTP_PORT`: `465`.
-- `SMTP_SECURE`: `true`.
-- `SMTP_USER`: Google Workspace mailbox, for example `info@lians.ai`.
-- `SMTP_PASSWORD`: Google app password for that mailbox.
+- `SMTP_HOST`: Optional; defaults to `smtp.gmail.com`.
+- `SMTP_PORT`: Optional; defaults to `465`.
+- `SMTP_SECURE`: Optional; defaults to `true`.
+- `SMTP_USER`: Optional Google Workspace mailbox, for example `info@lians.ai`.
+- `SMTP_PASSWORD`: Optional Google app password for that mailbox.
 - `PARTNER_EMAIL_FROM`: sender, for example `Lians <info@lians.ai>`.
 - `PARTNER_NOTIFICATION_TO`: internal recipient, for example `sales@lians.ai`.
 - `PARTNER_SCHEDULING_URL`: optional booking URL for high-fit applicants. Leave unset to schedule manually by email.
@@ -24,7 +24,10 @@ The site owns the complete application pipeline. Pipedream is not used.
 
 1. Enable two-step verification for the sending Google Workspace account.
 2. Create an app password for the website mailer.
-3. Store the mailbox as `SMTP_USER` and the 16-character app password as `SMTP_PASSWORD` in Vercel Production.
+3. To enable notifications, store the mailbox as `SMTP_USER` and a dedicated,
+   revocable app password as `SMTP_PASSWORD` in Vercel Production. Without
+   these variables, validated applications are still stored durably with
+   status `stored`; email delivery is not attempted.
 4. Set `PARTNER_EMAIL_FROM` to the same authenticated mailbox. Google may rewrite an unrelated From address.
 5. Set `PARTNER_NOTIFICATION_TO` to the internal application inbox.
 

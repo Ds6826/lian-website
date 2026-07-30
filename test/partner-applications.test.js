@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { highFitApplication, validateApplication } = require('../partner-applications');
+const { createPartnerApplicationService, highFitApplication, validateApplication } = require('../partner-applications');
 
 const valid = {
   work_email: 'buyer@example.com',
@@ -33,4 +33,40 @@ test('high-fit logic only books implementation-ready applicants', () => {
   assert.equal(highFitApplication(valid), true);
   assert.equal(highFitApplication({ ...valid, current_stage: 'Prototype' }), false);
   assert.equal(highFitApplication({ ...valid, preferred_track: 'Evaluation' }), false);
+});
+
+test('database capture remains available when email delivery is not configured', async () => {
+  const statements = [];
+  const sql = async (strings) => {
+    statements.push(strings.join('?'));
+    return [];
+  };
+  const service = createPartnerApplicationService({ env: {}, sql });
+
+  assert.equal(service.configured(), true);
+  assert.equal(service.emailConfigured(), false);
+  const result = await service.submit(valid, '7ff33278-bffa-4ec0-9db8-06595bf1b0aa');
+
+  assert.equal(result.notificationStatus, 'not_configured');
+  assert.equal(result.highFit, true);
+  assert.equal(statements.some((statement) => statement.includes('INSERT INTO partner_applications')), true);
+  assert.equal(statements.some((statement) => statement.includes("status = 'stored'")), true);
+});
+
+test('email failure is recorded without discarding an accepted application', async () => {
+  const statements = [];
+  const sql = async (strings) => {
+    statements.push(strings.join('?'));
+    return [];
+  };
+  const service = createPartnerApplicationService({
+    env: {},
+    sql,
+    sendEmail: async () => { throw new Error('mail unavailable'); },
+  });
+
+  const result = await service.submit(valid, '66b08a2d-cacf-48e5-b4a3-33992b17363d');
+
+  assert.equal(result.notificationStatus, 'failed');
+  assert.equal(statements.some((statement) => statement.includes("status = 'email_failed'")), true);
 });

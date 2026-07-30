@@ -16,11 +16,12 @@ const validateApplication = (body) => {
 
 const highFitApplication = (body) => ['Pilot', 'Production'].includes(body.current_stage) && ['Implementation', 'Unsure'].includes(body.preferred_track);
 
-const createPartnerApplicationService = ({ env = process.env, sendEmail } = {}) => {
+const createPartnerApplicationService = ({ env = process.env, sendEmail, sql: injectedSql } = {}) => {
   let schemaReady;
   let transporter;
-  const configured = () => Boolean(env.DATABASE_URL && env.SMTP_USER && env.SMTP_PASSWORD);
-  const sql = env.DATABASE_URL ? neon(env.DATABASE_URL) : null;
+  const sql = injectedSql || (env.DATABASE_URL ? neon(env.DATABASE_URL) : null);
+  const configured = () => Boolean(sql);
+  const emailConfigured = () => Boolean(sendEmail || (env.SMTP_USER && env.SMTP_PASSWORD));
   const deliver = sendEmail || (async ({ from, to, replyTo, subject, html, text }) => {
     if (!transporter) transporter = nodemailer.createTransport({
       host: env.SMTP_HOST || 'smtp.gmail.com',
@@ -72,20 +73,25 @@ const createPartnerApplicationService = ({ env = process.env, sendEmail } = {}) 
     const confirmationHtml = `<h1>Application received</h1><p>Thanks for applying to the Lians Founding Partner Cohort.</p><p>We will review your changing-facts workflow, reconstruction requirement, deployment fit, and preferred track. We will reply with a direct fit assessment and next step.</p><p><a href="https://www.lians.ai/#watch">Changing-facts demo</a> · <a href="https://www.lians.ai/research">Evaluation methodology</a> · <a href="https://www.lians.ai/design-partners">Cohort overview</a></p>`;
     const confirmationText = `Application received\n\nThanks for applying to the Lians Founding Partner Cohort. We will review your changing-facts workflow, reconstruction requirement, deployment fit, and preferred track. We will reply with a direct fit assessment and next step.\n\nDemo: https://www.lians.ai/#watch\nMethodology: https://www.lians.ai/research\nCohort: https://www.lians.ai/design-partners`;
 
+    if (!emailConfigured()) {
+      await sql`UPDATE partner_applications SET status = 'stored' WHERE id = ${id}`;
+      return { id, highFit, notificationStatus: 'not_configured' };
+    }
+
     try {
       const [internalEmailId, confirmationEmailId] = await Promise.all([
         deliver({ from: env.PARTNER_EMAIL_FROM || `Lians <${env.SMTP_USER}>`, to: env.PARTNER_NOTIFICATION_TO || 'sales@lians.ai', replyTo: body.work_email, subject: `New founding cohort application: ${String(body.company).replace(/[\r\n]+/g, ' ')}`, html: internalHtml, text: internalText }),
         deliver({ from: env.PARTNER_EMAIL_FROM || `Lians <${env.SMTP_USER}>`, to: body.work_email, replyTo: env.PARTNER_NOTIFICATION_TO || 'sales@lians.ai', subject: 'We received your Lians founding cohort application', html: confirmationHtml, text: confirmationText }),
       ]);
       await sql`UPDATE partner_applications SET status = 'notified', internal_email_id = ${internalEmailId}, confirmation_email_id = ${confirmationEmailId} WHERE id = ${id}`;
-      return { id, highFit, internalEmailId, confirmationEmailId };
-    } catch (error) {
+      return { id, highFit, internalEmailId, confirmationEmailId, notificationStatus: 'sent' };
+    } catch {
       await sql`UPDATE partner_applications SET status = 'email_failed' WHERE id = ${id}`;
-      throw error;
+      return { id, highFit, notificationStatus: 'failed' };
     }
   };
 
-  return { configured, submit };
+  return { configured, emailConfigured, submit };
 };
 
 module.exports = { createPartnerApplicationService, highFitApplication, validateApplication };

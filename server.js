@@ -96,14 +96,13 @@ const clerkFrontendApi = (() => {
 })();
 const clerkOrigin = clerkFrontendApi ? `https://${clerkFrontendApi}` : '';
 const clerkSignInUrl = process.env.CLERK_SIGN_IN_URL || 'https://accounts.lians.ai/sign-in';
-// Clerk's own CDN serves v4 for this account; v4 has no billing API (window.Clerk.billing).
-// Load v5 from jsDelivr (already in CSP) as primary - fall back to Clerk's CDN v4 if jsDelivr fails.
-// Keep ClerkJS aligned with the production Frontend API. Clerk v5 cannot
-// deserialize newer client/session states such as `expired`, which prevents
-// the login page from reaching an OAuth provider at all.
-const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
-const clerkJsFallbackUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js` : '';
-const clerkUiUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/ui@1/dist/ui.browser.js` : '';
+// Pin browser authentication dependencies and verify their exact bytes before
+// execution. Mutable tags such as `@latest` let an upstream release silently
+// change code inside the authenticated origin.
+const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.25.12/dist/clerk.browser.js';
+const clerkJsIntegrity = 'sha384-LnapP8Ix4zbGRY+e3VWaqAkXDNft/E8jBoiOMlNBe1x6SLshfoIEXclQYNW0x+8B';
+const clerkUiUrl = 'https://cdn.jsdelivr.net/npm/@clerk/ui@1.27.1/dist/ui.browser.js';
+const clerkUiIntegrity = 'sha384-Mz4gSLIJGLEGyOMhHJvNzGZKESnK3Db1ocMHfD4jYKU0lvYQMT/rQVzQ1irSUwKY';
 
 const SEC_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -502,7 +501,7 @@ const app = async (req, res) => {
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, clerkUiUrl, clerkSignInUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsIntegrity, clerkUiUrl, clerkUiIntegrity, clerkSignInUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
       return;
     }
 
@@ -603,7 +602,7 @@ const app = async (req, res) => {
       }
       try {
         const application = await partnerApplications.submit(body);
-        log('partner_application_submitted', req, null, { applicationId: application.id, stage: body.current_stage, track: body.preferred_track, highFit: application.highFit });
+        log('partner_application_submitted', req, null, { applicationId: application.id, stage: body.current_stage, track: body.preferred_track, highFit: application.highFit, notificationStatus: application.notificationStatus });
         return json(res, 201, { ok: true, applicationId: application.id, schedulingUrl: application.highFit ? (process.env.PARTNER_SCHEDULING_URL || '') : '' });
       } catch (err) {
         log('partner_application_failed', req, null, { error: err.message, company: body.company });
@@ -739,17 +738,17 @@ const app = async (req, res) => {
       } catch (err) { log('pending_key_check_failed', req, user, { error: err.message }); }
       return json(res, 200, { keys, freshKey });
     }
-    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' });
+    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); const cleanLabel = String(label || '').trim(); if (!cleanLabel) return json(res, 400, { error: 'A key label is required.' }); if (cleanLabel.length > 80 || /[\u0000-\u001f\u007f]/.test(cleanLabel)) return json(res, 400, { error: 'Key labels must be 80 printable characters or fewer.' });
       if (liansConfigured()) {
         try {
           const tier = user.billingPlan || 'free';
           const scopes = TIER_SCOPES[tier] || TIER_SCOPES.free;
-          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace: liansNamespace(user), scopes, label: label.trim() } });
+          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace: liansNamespace(user), scopes, label: cleanLabel } });
           log('api_key_created', req, user, { keyId: created.id, tier });
           return json(res, 201, { key: { ...liansKeyView(created), prefix: `${String(created.key).slice(0, 16)}…` }, rawKey: created.key });
         } catch (err) { log('lians_key_create_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to create key via the Lians API. Please try again.' }); }
       }
-      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), scopes: TIER_SCOPES[user.billingPlan || 'free'] || TIER_SCOPES.free, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
+      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: cleanLabel, prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), scopes: TIER_SCOPES[user.billingPlan || 'free'] || TIER_SCOPES.free, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
     if (pathname.match(/^\/api\/keys\/[^/]+\/rotate$/) && req.method === 'POST') {
       const user = await apiOnboarding(req, res); if (!user) return;
       const id = pathname.split('/')[3];

@@ -198,6 +198,9 @@ test('config.js exposes only publishable configuration', async () => {
   const body = await res.text();
   assert.match(body, /window\.__lian_config=/);
   assert.doesNotMatch(body, /sk_(live|test)/, 'must never leak a secret key');
+  assert.doesNotMatch(body, /@latest/, 'authentication dependencies must be pinned');
+  assert.match(body, /clerkJsIntegrity/);
+  assert.match(body, /clerkUiIntegrity/);
 });
 
 test('security headers are set on every response', async () => {

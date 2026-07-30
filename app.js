@@ -1,5 +1,6 @@
 ﻿const LIANS_CLIENT_BUILD = 'governor-20260702-v17';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
 const billingPage = document.querySelector('#billing-page');
@@ -197,7 +198,7 @@ const setWizard = async () => {
   const continueButton = document.querySelector(`.wizard-step[data-step="${step}"] .step-next`);
   if (continueButton) continueButton.hidden = false;
   if (step === 'context') { document.querySelector('#context').value = answers.context || ''; document.querySelector('#character-count').textContent = (answers.context || '').length; }
-  if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '-'}</b></div>`).join('');
+  if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${escapeHtml(label)}</span><b>${escapeHtml(answers[key] || '-')}</b></div>`).join('');
 };
 
 const BILLING_PLANS = [
@@ -651,7 +652,6 @@ const loadConsolePlan = async () => {
 
 // ── Projects (switch / create / rename / delete, per user - all in-page) ──────
 const projectsState = { items: [], current: null, editingId: null, confirmId: null };
-const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const renderProjects = () => {
   const nameEl = document.querySelector('#project-name');
   const current = projectsState.items.find((p) => p.id === projectsState.current) || projectsState.items[0];
@@ -1135,7 +1135,7 @@ const renderKeys = (keys) => {
   keys.forEach((key) => {
     const row = document.createElement('div');
     row.className = 'key-row';
-    row.innerHTML = `<b>${key.label}</b><code>${key.prefix}</code><span>${formatDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${key.id}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`;
+    row.innerHTML = `<b>${escapeHtml(key.label)}</b><code>${escapeHtml(key.prefix)}</code><span>${escapeHtml(formatDate(key.createdAt))}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${escapeHtml(key.id)}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${escapeHtml(key.id)}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`;
     table.append(row);
   });
   document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => {
