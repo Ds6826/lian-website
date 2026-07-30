@@ -41,3 +41,34 @@ test('Vercel fallback identifies itself as non-durable without Redis', () => {
     durable: false,
   });
 });
+
+test('Vercel KV environment aliases enable the durable Upstash control store', (t) => {
+  const previousUrl = process.env.KV_REST_API_URL;
+  const previousToken = process.env.KV_REST_API_TOKEN;
+  const previousUpstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const previousUpstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  t.after(() => {
+    if (previousUrl === undefined) delete process.env.KV_REST_API_URL;
+    else process.env.KV_REST_API_URL = previousUrl;
+    if (previousToken === undefined) delete process.env.KV_REST_API_TOKEN;
+    else process.env.KV_REST_API_TOKEN = previousToken;
+    if (previousUpstashUrl === undefined) delete process.env.UPSTASH_REDIS_REST_URL;
+    else process.env.UPSTASH_REDIS_REST_URL = previousUpstashUrl;
+    if (previousUpstashToken === undefined) delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    else process.env.UPSTASH_REDIS_REST_TOKEN = previousUpstashToken;
+  });
+  process.env.KV_REST_API_URL = 'https://example-kv.upstash.io';
+  process.env.KV_REST_API_TOKEN = 'test-token';
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  const store = createControlStore({
+    dataDir: path.join(os.tmpdir(), 'lians-control-store-kv-alias-test'),
+    vercel: true,
+  });
+
+  assert.deepEqual(store.status(), {
+    mode: 'upstash',
+    durable: true,
+  });
+});

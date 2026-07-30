@@ -153,12 +153,14 @@ const SEC_HEADERS = {
 
 const rateLimits = new Map();
 let rateLimitRedis = null;
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+const redisRestUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const redisRestToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+if (redisRestUrl && redisRestToken) {
   try {
     const { Redis } = require('@upstash/redis');
     rateLimitRedis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: redisRestUrl,
+      token: redisRestToken,
     });
   } catch (error) {
     console.warn('[Lians] distributed rate limiter unavailable:', error.message);

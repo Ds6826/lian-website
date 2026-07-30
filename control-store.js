@@ -16,8 +16,8 @@ const normalize = (value) => ({
 function createControlStore({
   dataDir,
   vercel = false,
-  redisUrl = process.env.UPSTASH_REDIS_REST_URL,
-  redisToken = process.env.UPSTASH_REDIS_REST_TOKEN,
+  redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
+  redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
   log = () => {},
 } = {}) {
   const dataFile = path.join(dataDir, 'lian-console.json');

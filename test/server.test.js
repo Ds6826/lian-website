@@ -242,3 +242,9 @@ test('security headers are set on every response', async () => {
   assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
   assert.match(res.headers.get('content-security-policy') || '', /default-src 'self'/);
 });
+
+test('distributed rate limiting accepts Vercel KV environment aliases', () => {
+  const serverSource = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(serverSource, /process\.env\.KV_REST_API_URL \|\| process\.env\.UPSTASH_REDIS_REST_URL/);
+  assert.match(serverSource, /process\.env\.KV_REST_API_TOKEN \|\| process\.env\.UPSTASH_REDIS_REST_TOKEN/);
+});
