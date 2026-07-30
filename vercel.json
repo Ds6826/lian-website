@@ -147,6 +147,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "compare-heartwood.html",
+      "use": "@vercel/static"
+    },
+    {
       "src": "trust.html",
       "use": "@vercel/static"
     },
@@ -179,6 +183,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "e84ab31f649b47bc8df03b9ccce11884.txt",
+      "use": "@vercel/static"
+    },
+    {
       "src": "sitemap.xml",
       "use": "@vercel/static"
     },
@@ -200,6 +208,14 @@
     },
     {
       "src": "favicon.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.ico",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.svg",
       "use": "@vercel/static"
     },
     {
@@ -396,6 +412,10 @@
       "dest": "/marketing.html"
     },
     {
+      "src": "/compare/heartwood",
+      "dest": "/compare-heartwood.html"
+    },
+    {
       "src": "/trust",
       "dest": "/marketing.html"
     },
@@ -422,6 +442,10 @@
     {
       "src": "/blog/eu-ai-act-article-12",
       "dest": "/marketing.html"
+    },
+    {
+      "src": "/blog/eu-ai-act-article-12",
+      "dest": "/blog-eu-ai-act-article-12.html"
     },
     {
       "handle": "filesystem"

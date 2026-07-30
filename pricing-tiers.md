@@ -4,7 +4,7 @@
 > `docs/pricing-tiers.md` (packaging philosophy). Keep this file, the `/pricing`
 > page, and `app.js` `BILLING_PLANS` / `PLAN_LIMITS` in sync.
 
-## Free — $0 / mo
+## Free - $0 / mo
 *Start building at no cost.*
 
 **Limits:** 10K writes · 10K recalls / mo
@@ -16,7 +16,7 @@
 
 ---
 
-## Starter — $15 / mo
+## Starter - $15 / mo
 *For growing projects.*
 
 **Limits:** 100K writes · 50K recalls / mo
@@ -28,7 +28,7 @@
 
 ---
 
-## Growth — $69 / mo
+## Growth - $69 / mo
 *For production workloads.*
 
 **Limits:** 500K writes · 250K recalls / mo
@@ -42,7 +42,7 @@
 
 ---
 
-## Pro — $199 / mo ⭐ (highlighted)
+## Pro - $199 / mo ⭐ (highlighted)
 *For regulated environments.*
 
 **Limits:** 2M writes · 1M recalls / mo
@@ -57,8 +57,8 @@
 
 ---
 
-## Enterprise — Custom pricing
-*For banks, hospitals, law firms, insurers, and government — priced by deployment boundary.*
+## Enterprise - Custom pricing
+*For banks, hospitals, law firms, insurers, and government - priced by deployment boundary.*
 
 **Limits:** Unlimited writes · Unlimited recalls
 
@@ -73,7 +73,7 @@
 
 **Notes:**
 - Overage on paid tiers is metered (writes + recalls) via Stripe usage metering.
-- Enterprise is contract-based, not a flat monthly tier — do not position the
+- Enterprise is contract-based, not a flat monthly tier - do not position the
   enterprise product as a $200/mo SaaS plan.
 - Healthcare requires an executed BAA before PHI is processed.
 - Managed Cloud is available only where the customer's compliance posture permits

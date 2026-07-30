@@ -56,7 +56,7 @@ test('consoleKeyFor mints once with the internal label/scopes and stores the sec
   assert.equal(mint.headers['X-Admin-Secret'], 'admin-secret');
   assert.deepEqual(mint.body, { namespace: 'ns_u-1', scopes: CONSOLE_KEY_SCOPES, label: CONSOLE_KEY_LABEL });
   assert.equal(clerk.state.metadata.liansConsoleKey, 'agentmem_secret_1');
-  // Second call is served from the in-process cache — no new admin calls.
+  // Second call is served from the in-process cache - no new admin calls.
   const before = fetchImpl.calls.length;
   assert.equal(await client.consoleKeyFor(USER), 'agentmem_secret_1');
   assert.equal(fetchImpl.calls.length, before);

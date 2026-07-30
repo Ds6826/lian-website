@@ -97,7 +97,7 @@ and estimated-token budgets so the caller can pass the result directly into an
 agent without building its own memory orchestration layer.
 
 The context header explicitly marks recalled content as reference data rather
-than executable instructions. This reduces—but does not eliminate—the need for
+than executable instructions. This reduces, but does not eliminate, the need for
 the consuming agent to apply its own prompt-injection and policy controls.
 
 Both `/api/console/context` and `/api/console/adaptive-recall` use one semantic
