@@ -832,7 +832,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     return;
   }
   if (route === '/billing') {
-    if (destination !== '/billing') { window.location.assign(destination); return; }
+    if (!complete) { window.location.assign(destination); return; }
     setBillingPage();
     workflowState.running = false;
     return;
