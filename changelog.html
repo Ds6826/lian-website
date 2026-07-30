@@ -3,9 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="canonical" href="https://www.lians.ai/changelog" />
-    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
-    <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content="What shipped in the Lians engine, SDKs, MCP server, console, and site, in the open, release by release." />
     <title>Changelog · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,13 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
     <link rel="stylesheet" href="/lians-visuals.css" />
-    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <header><div class="wrap"><nav class="nav" aria-label="Primary">
-      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
         <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
@@ -34,30 +31,9 @@
         <p class="lede">Everything ships in the open: engine, five SDKs, MCP server, console, and this site. Full detail in the <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer">repo changelog ↗</a>.</p>
       </section>
 
-      <section class="wrap block" aria-label="Python SDK v0.4.2 packaging fix">
-        <p class="block-label">2026-07-17 &middot; Python v0.4.2</p>
-        <h2>Real semantic embeddings now install with local and MCP modes.</h2>
-        <div class="list">
-          <div class="item"><span class="head"><b>Local installation dependency fixed</b><span class="meta tag">Fixed</span></span><p>The <code class="ic">local</code> and <code class="ic">mcp</code> extras now install <code class="ic">sentence-transformers</code> by default, preventing clean installations from silently using deterministic test-grade embeddings.</p></div>
-          <div class="item"><span class="head"><b>Packaging contract tested</b><span class="meta tag">Verified</span></span><p>Regression tests now require semantic embeddings in the <code class="ic">local</code>, <code class="ic">mcp</code>, and <code class="ic">all</code> extras.</p></div>
-        </div>
-        <p class="metaline">Python 0.4.2 is live on PyPI. Other language SDK versions are unchanged. <a class="tlink" href="https://github.com/Lians-ai/Lians/releases/tag/lians-v0.4.2" target="_blank" rel="noreferrer">Python release</a></p>
-      </section>
-
-      <section class="wrap block" aria-label="v0.4.1 package discovery release">
-        <p class="block-label">2026-07-17 · v0.4.1</p>
-        <h2>Package discovery, integration accuracy, and reproducible evidence.</h2>
-        <div class="list">
-          <div class="item"><span class="head"><b>Registry pages rebuilt around verifiable capabilities</b><span class="meta tag">Shipped</span></span><p>Python, TypeScript, and Java package pages now lead with bitemporal recall, deterministic supersession, audit history, and runnable evaluation evidence.</p></div>
-          <div class="item"><span class="head"><b>OpenAI Agents SDK example corrected</b><span class="meta tag">Fixed</span></span><p>The integration now uses the official <code class="ic">agents</code> import path and documents all four memory tools.</p></div>
-          <div class="item"><span class="head"><b>Machine-readable regulated-memory evidence</b><span class="meta tag">New</span></span><p>The preprint repository now includes a versioned JSON Schema and a validated five-invariant Lians live run.</p></div>
-        </div>
-        <p class="metaline">PyPI, Go, Maven Central, and GitHub release artifacts are live at 0.4.1. npm remains on 0.4.0 while registry authorization is repaired. <a class="tlink" href="https://github.com/Lians-ai/Lians/releases/tag/v0.4.1" target="_blank" rel="noreferrer">GitHub Release</a></p>
-      </section>
-
       <section class="wrap block" aria-label="LOCOMO benchmark result">
         <p class="block-label">2026-07-09 · benchmarks</p>
-        <h2>LOCOMO, LLM-judged: 92.9% - above mem0's published 91.6.</h2>
+        <h2>LOCOMO, LLM-judged: 92.9%, above mem0's published 91.6.</h2>
         <p class="metaline">Scored end-to-end by the unmodified mem0ai/memory-benchmarks harness (gpt-5 answerer + judge) over Lians retrieval · arctic-embed-l-v2.0 + tuned hybrid ranking · <a class="tlink" href="https://github.com/Lians-ai/Lians/blob/master/agentmem/docs/benchmarks/locomo-judged-2026-07-09.md" target="_blank" rel="noreferrer">full report ↗</a></p>
       </section>
 
@@ -102,10 +78,10 @@
     <section class="band"><div class="wrap"><h2>Watch it evolve in the open.</h2><a class="btn" href="https://github.com/Lians-ai/Lians">Star the repo ↗</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/issues" target="_blank" rel="noreferrer">Issues ↗</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>

@@ -1,5 +1,6 @@
 ﻿const LIANS_CLIENT_BUILD = 'governor-20260702-v17';
 console.info('Lians client build:', LIANS_CLIENT_BUILD);
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const authPage = document.querySelector('#auth-page');
 const onboardingPage = document.querySelector('#onboarding-page');
 const billingPage = document.querySelector('#billing-page');
@@ -197,15 +198,15 @@ const setWizard = async () => {
   const continueButton = document.querySelector(`.wizard-step[data-step="${step}"] .step-next`);
   if (continueButton) continueButton.hidden = false;
   if (step === 'context') { document.querySelector('#context').value = answers.context || ''; document.querySelector('#character-count').textContent = (answers.context || '').length; }
-  if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${label}</span><b>${answers[key] || '-'}</b></div>`).join('');
+  if (step === 'review') document.querySelector('#review-list').innerHTML = Object.entries(labels).map(([key, label]) => `<div><span>${escapeHtml(label)}</span><b>${escapeHtml(answers[key] || '-')}</b></div>`).join('');
 };
 
 const BILLING_PLANS = [
   { id: 'free', name: 'Free', price: '$0', period: '/ mo', tagline: 'Start building at no cost.', features: ['Memory writes', 'Memory recalls', 'Semantic search'], cta: 'Get started free' },
   { id: 'starter', name: 'Starter', price: '$15', period: '/ mo', tagline: 'For growing projects.', features: ['Everything in Free', 'Domain adapters', 'Finance, healthcare, legal', 'Audit log'], cta: 'Choose Starter' },
-  { id: 'growth', name: 'Growth', price: '$69', period: '/ mo', tagline: 'For production workloads.', features: ['Everything in Starter', 'Conflict detection', 'Webhooks', 'Compliance reports', 'Merkle audit chain'], cta: 'Choose Growth' },
-  { id: 'pro', name: 'Pro', price: '$199', period: '/ mo', tagline: 'For regulated environments.', features: ['Everything in Growth', 'Information barriers', 'HIPAA encryption', 'GDPR erasure certifications', 'Backtest', 'Prometheus metrics'], cta: 'Choose Pro', highlight: true },
-  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', tagline: 'For enterprise deployments.', features: ['Everything in Pro', 'Air-gap mode', 'Custom KMS (AWS / Azure / Vault)', 'Dedicated onboarding', 'SLA'], cta: 'Contact us', contact: true },
+  { id: 'growth', name: 'Growth', price: '$69', period: '/ mo', tagline: 'For production workloads.', features: ['Everything in Starter', 'Conflict detection', 'Webhooks', 'Operational reports', 'Merkle audit chain'], cta: 'Choose Growth' },
+  { id: 'pro', name: 'Pro', price: '$199', period: '/ mo', tagline: 'For established production teams.', features: ['Everything in Growth', 'Backtest checks', 'Prometheus metrics', 'Priority product support'], cta: 'Choose Pro', highlight: true },
+  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', tagline: 'For deployment-bound controls.', features: ['Information barriers (RLS)', 'Customer-managed KMS', 'Air-gap mode', 'Security review & onboarding', 'SLA'], cta: 'Contact us', contact: true },
 ];
 const PLAN_NAMES = { free: 'Free', starter: 'Starter', growth: 'Growth', pro: 'Pro', enterprise: 'Enterprise' };
 const PLAN_LIMITS = { free: { memories: '10K', recalls: '10K' }, starter: { memories: '100K', recalls: '50K' }, growth: { memories: '500K', recalls: '250K' }, pro: { memories: '2M', recalls: '1M' }, enterprise: { memories: 'Unlimited', recalls: 'Unlimited' } };
@@ -277,7 +278,7 @@ const renderPlanCards = async (gridNode, plans, redirectUrl, note) => {
   gridNode.innerHTML = plans.map((plan) => {
     const matched = plan.contact || plan.id === 'free' ? null : matchClerkPlan(clerkPlans, plan);
     const cta = plan.contact
-      ? `<a class="plan-cta plan-cta-link" href="/about#contact" target="_blank" rel="noreferrer">${plan.cta} →</a>`
+      ? `<a class="plan-cta plan-cta-link" href="/design-partners">${plan.cta} →</a>`
       : plan.id === 'free'
         ? `<button class="plan-cta" type="button" data-plan="free">${plan.cta}</button>`
         : matched
@@ -331,11 +332,13 @@ const setBillingPage = () => {
   }
 
   const redirectUrl = `${location.origin}/billing?billing_complete=sync`;
-  // Our custom card UI, with Clerk's per-plan CheckoutButton as the CTA (opens the
-  // real checkout drawer). If this clerk-js build doesn't expose CheckoutButton,
-  // fall back to Clerk's full PricingTable so checkout always works.
-  if (checkoutButtonAvailable()) renderPlanCards(grid, BILLING_PLANS, redirectUrl, note);
-  else mountClerkPricingTable(grid, redirectUrl);
+  // Keep the billing surface visually consistent with the rest of Lians. Clerk
+  // still supplies the live plan ids and secure checkout drawer behind each CTA.
+  if (checkoutButtonAvailable()) {
+    renderPlanCards(grid, BILLING_PLANS, redirectUrl, note);
+  } else if (!mountClerkPricingTable(grid, redirectUrl) && note) {
+    note.textContent = 'Checkout is unavailable right now. Please refresh or contact us.';
+  }
 };
 const doSignOut = async () => {
   sessionStorage.setItem('lians:signingOutAt', String(Date.now()));
@@ -368,18 +371,17 @@ const setUpgradePage = (sessionData) => {
   if (!grid) return;
   const redirectUrl = `${location.origin}/upgrade?billing_complete=sync`;
   if (!upgradable.length) {
-    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="/about#contact" target="_blank" rel="noreferrer">Contact us</a> for custom solutions.</p>';
+    grid.innerHTML = '<p class="upgrade-maxed">You\'re on our highest tier. <a href="/design-partners">Contact us</a> for custom solutions.</p>';
     return;
   }
-  // Our custom cards with Clerk's per-plan CheckoutButton as the CTA; PricingTable fallback.
-  // The "Continue to console" option is rendered as a final dark card so the whole row
-  // reads left-to-right with no separate block below.
   if (checkoutButtonAvailable()) {
     renderPlanCards(grid, upgradable, redirectUrl, note).then(() => {
       if (!grid.querySelector('.plan-continue')) grid.appendChild(buildContinueCard());
     });
+  } else if (mountClerkPricingTable(grid, redirectUrl)) {
+    if (!grid.parentElement.querySelector('.plan-continue')) grid.insertAdjacentElement('afterend', buildContinueCard());
   } else {
-    mountClerkPricingTable(grid, redirectUrl);
+    if (note) note.textContent = 'Checkout is unavailable right now. Please refresh or contact us.';
     if (!grid.parentElement.querySelector('.plan-continue')) grid.insertAdjacentElement('afterend', buildContinueCard());
   }
 };
@@ -465,22 +467,22 @@ document.querySelector('#skip-setup')?.addEventListener('click', async (event) =
   const btn = event.currentTarget;
   btn.disabled = true; btn.textContent = 'Skipping…';
   try {
-    for (let i = 0; i < onboardingSteps.length; i++) {
-      const state = await (await authedFetch('/api/onboarding')).json();
-      if (state.onboardingComplete) break;
-      const step = state.nextStep;
-      if (!step || step === 'review') break;
-      const resp = await authedFetch(`/api/onboarding/${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value: step === 'context' ? '' : 'Skipped; answer later' }) });
-      if (!resp.ok) break;
-    }
-    const done = await authedFetch('/api/onboarding/complete', { method: 'POST' });
-    if (done.ok) { window.location.assign('/console'); return; }
+    const response = await onceInFlight('onboarding:skip', () => authedFetch('/api/onboarding/skip', { method: 'POST' }));
+    const result = await response.json().catch(() => ({}));
+    if (response.ok) { window.location.assign(result.next || '/console'); return; }
+    setOnboardingError(result.error || 'We could not skip setup. Please try again.', { status: response.status });
   } catch (err) { console.warn('[Lians onboarding] skip failed', err); }
   btn.disabled = false; btn.textContent = 'Skip setup →';
 });
 
 const authButtons = document.querySelectorAll('[data-auth-provider]');
 const authNote = document.querySelector('.auth-note');
+const hostedSignInUrl = () => {
+  const target = window.__lian_config?.clerkSignInUrl || 'https://accounts.lians.ai/sign-in';
+  const url = new URL(target);
+  url.searchParams.set('redirect_url', `${window.location.origin}/sso-callback`);
+  return url.toString();
+};
 const setAuthMessage = (message) => { if (authNote) authNote.textContent = message; };
 const setAuthButtonsDisabled = (disabled) => authButtons.forEach((button) => {
   button.setAttribute('aria-disabled', String(disabled));
@@ -546,6 +548,10 @@ const beginSocialSignIn = async (provider, button) => {
     const message = /Origin header must be equal to or a subdomain/i.test(clerkError || '')
       ? 'This Clerk key is configured for the production domain. For local testing, use Clerk development keys or configure localhost in Clerk.'
       : clerkError;
+    if (/expired not supported/i.test(clerkError || '')) {
+      window.location.assign(hostedSignInUrl());
+      return;
+    }
     setAuthMessage(message || `Unable to continue with ${provider === 'google' ? 'Google' : 'GitHub'}. Check that this connection is enabled in Clerk.`);
     button.dataset.loading = 'false';
     button.setAttribute('aria-disabled', 'false');
@@ -553,6 +559,10 @@ const beginSocialSignIn = async (provider, button) => {
   }
 };
 authButtons.forEach((button) => button.addEventListener('click', (event) => { event.preventDefault(); beginSocialSignIn(button.dataset.authProvider, button); }));
+document.querySelector('[data-auth-email]')?.addEventListener('click', (event) => {
+  event.preventDefault();
+  window.location.assign(hostedSignInUrl());
+});
 const setCallbackMessage = (msg) => { const el = document.querySelector('#callback-note'); if (el) el.textContent = msg; };
 const handleClerkError = (message) => {
   setAuthButtonsDisabled(true);
@@ -623,8 +633,8 @@ const loadConsolePlan = async () => {
     if (billingMetrics) billingMetrics.innerHTML = `<article><span>MEMORY WRITES</span><strong>${fmtCount(writes)}</strong><small>of ${limits.memories} / mo${usage.configured ? '' : ' · engine not connected'}</small></article><article><span>RECALLS</span><strong>${fmtCount(recalls)}</strong><small>of ${limits.recalls} / mo</small></article><article><span>PLAN</span><strong>${planName}</strong><small>${priceLabel || '&nbsp;'}</small></article>`;
     const billingActions = document.querySelector('#console-billing-actions');
     if (billingActions) billingActions.innerHTML = plan === 'enterprise'
-      ? '<a class="plan-cta-link" href="/about#contact" target="_blank" rel="noreferrer">Contact us ↗</a>'
-      : `<button class="console-button" onclick="window.location.assign('/upgrade')">${plan === 'free' ? 'Upgrade your plan' : 'Change plan'} <span>→</span></button>`;
+      ? '<a class="plan-cta-link" href="/design-partners">Contact us ↗</a>'
+      : `<button class="console-button" onclick="window.location.assign('/billing')">${plan === 'free' ? 'Choose a plan' : 'Change plan'} <span>→</span></button>`;
     // Top-tier users don't need the upgrade nudge in the header
     if (plan === 'enterprise') document.querySelector('.upgrade-button')?.setAttribute('hidden', '');
     renderFeatureTiers(plan);
@@ -642,7 +652,6 @@ const loadConsolePlan = async () => {
 
 // ── Projects (switch / create / rename / delete, per user - all in-page) ──────
 const projectsState = { items: [], current: null, editingId: null, confirmId: null };
-const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const renderProjects = () => {
   const nameEl = document.querySelector('#project-name');
   const current = projectsState.items.find((p) => p.id === projectsState.current) || projectsState.items[0];
@@ -802,8 +811,88 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
   }
   workflowState.running = false;
 };
+const mountLiansSignIn = () => {
+  const node = document.querySelector('#clerk-sign-in');
+  if (!node || !window.Clerk?.mountSignIn || window.Clerk?.user || window.Clerk?.session || node.dataset.mounted === 'true') return;
+  node.hidden = false;
+  node.dataset.mounted = 'true';
+  document.querySelector('.oauth-stack')?.setAttribute('hidden', '');
+  document.querySelector('.auth-note')?.setAttribute('hidden', '');
+  window.Clerk.mountSignIn(node, {
+    fallbackRedirectUrl: `${window.location.origin}/sso-callback`,
+    signUpFallbackRedirectUrl: `${window.location.origin}/sso-callback`,
+    appearance: {
+      theme: 'simple',
+      variables: {
+        colorPrimary: '#2f70ff',
+        colorPrimaryForeground: '#ffffff',
+        colorBackground: '#0b1019',
+        colorForeground: '#f4f7fb',
+        colorMuted: '#0f1623',
+        colorMutedForeground: '#98a6bb',
+        colorNeutral: '#34435d',
+        colorInput: '#0f1623',
+        colorInputForeground: '#f4f7fb',
+        colorDanger: '#ff7070',
+        borderRadius: '0px',
+        fontFamily: 'Manrope, sans-serif',
+        fontFamilyButtons: 'Manrope, sans-serif'
+      },
+      options: {
+        elevation: 'flush',
+        socialButtonsPlacement: 'top',
+        socialButtonsVariant: 'blockButton'
+      },
+      elements: {
+        rootBox: { width: '100%' },
+        cardBox: { width: '100%', boxShadow: 'none' },
+        card: { width: '100%', padding: '0', background: 'transparent', boxShadow: 'none' },
+        header: { display: 'none' },
+        footer: { display: 'none' },
+        main: { gap: '18px' },
+        socialButtonsBlockButton: {
+          minHeight: '48px',
+          border: '1px solid #34435d',
+          background: '#0b1019',
+          color: '#f4f7fb',
+          boxShadow: 'none',
+          fontWeight: '600'
+        },
+        dividerLine: { background: '#263247' },
+        dividerText: {
+          color: '#98a6bb',
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '10px',
+          textTransform: 'uppercase',
+          letterSpacing: '.08em'
+        },
+        formFieldLabel: {
+          color: '#c5cfdd',
+          fontFamily: 'DM Mono, monospace',
+          fontSize: '11px',
+          letterSpacing: '.03em'
+        },
+        formFieldInput: {
+          minHeight: '48px',
+          border: '1px solid #34435d',
+          background: '#0f1623',
+          color: '#f4f7fb',
+          boxShadow: 'none'
+        },
+        formButtonPrimary: {
+          minHeight: '48px',
+          background: '#2f70ff',
+          color: '#ffffff',
+          boxShadow: 'none',
+          fontWeight: '700'
+        }
+      }
+    }
+  });
+};
 const onClerkReady = () => {
   setAuthButtonsDisabled(false);
+  if (route === '/login' && !window.Clerk?.user && !window.Clerk?.session) mountLiansSignIn();
   if (route === '/sso-callback') completeClerkCallback();
   else if (route === '/login' || route.startsWith('/onboarding') || route === '/billing' || route === '/upgrade' || route.startsWith('/console')) runWorkflowGate('clerk_ready');
 };
@@ -814,13 +903,47 @@ if (window.__liansClerkStatus?.state === 'error') handleClerkError(window.__lian
 if (window.__liansClerkStatus?.state === 'loading') setAuthButtonsDisabled(true);
 if (window.__liansClerkStatus?.state === 'ready') onClerkReady();
 
-const installContent = { python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> lians-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'mem.<em>add</em>(agent_id="desk", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="desk", query="NVDA guidance", as_of=...)']], node: [['Install the SDK', 'Add the Node package to your existing agent application.', 'npm <em>install</em> @lians-ai/lians'], ['Create the client', 'Point the client at your local or hosted Lians endpoint.', 'import { <em>LiansClient</em> } from "@lians-ai/lians"'], ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'await client.<em>recall</em>({ agent_id: "desk", query: "NVDA guidance" })']], curl: [['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl -X <em>POST</em> /v1/memory'], ['Recall it', 'Use the optional as_of field for historical recall.', 'curl -X <em>POST</em> /v1/recall'], ['Reconstruct the trail', 'Reconstruct the memory state behind an agent decision.', 'curl /v1/audit/<em>reconstruct</em>']] };
-const renderSteps = (language) => { document.querySelector('#install-steps').innerHTML = installContent[language].map((step, index) => `<article class="install-step"><span class="step-number">${index + 1}</span><div><h3>${step[0]}</h3><p>${step[1]}</p></div><div class="code-block"><header>${language}</header><pre>${step[2]}</pre></div></article>`).join(''); };
-renderSteps('python');
+const installContent = {
+  sdk: {
+    python: [['Install the SDK', 'Install the local-first Python SDK. No Docker or account is required for the first run.', 'pip <em>install</em> lians-sdk[local]'], ['Add a memory', 'Store an event with its real-world timestamp and structured metadata.', 'mem.<em>add</em>(agent_id="desk", content="NVDA guidance raised to $40B")'], ['Recall at a point in time', 'Ask what was valid when a decision was made.', 'mem.<em>recall_at</em>(agent_id="desk", query="NVDA guidance", as_of=...)']],
+    node: [['Install the SDK', 'Add the Node package to your existing agent application.', 'npm <em>install</em> @lians-ai/lians'], ['Create the client', 'Point the client at your local or hosted Lians endpoint.', 'import { <em>LiansClient</em> } from "@lians-ai/lians"'], ['Recall a fact', 'Request context that is valid right now or at a prior date.', 'await client.<em>recall</em>({ agent_id: "desk", query: "NVDA guidance" })']],
+    curl: [['Write a memory', 'Send a fact, its event time, and metadata to the memory service.', 'curl -X <em>POST</em> /v1/memory'], ['Recall it', 'Use the optional as_of field for historical recall.', 'curl -X <em>POST</em> /v1/recall'], ['Reconstruct the trail', 'Reconstruct the memory state behind an agent decision.', 'curl /v1/audit/<em>reconstruct</em>']]
+  },
+  docker: {
+    python: [['Start the stack', 'Run the API, worker, and database on infrastructure you control.', 'docker compose <em>up -d</em>'], ['Point Python at it', 'Use the same SDK against the self-hosted endpoint.', 'LiansClient(base_url=<em>"http://localhost:8000"</em>)'], ['Verify the service', 'Confirm health before sending production traces.', 'curl http://localhost:8000/<em>health</em>']],
+    node: [['Start the stack', 'Bring up the complete self-hosted deployment.', 'docker compose <em>up -d</em>'], ['Point Node at it', 'Use the Node client against your deployment.', 'new LiansClient({ baseUrl: <em>"http://localhost:8000"</em> })'], ['Inspect the logs', 'Check that ingestion and persistence are healthy.', 'docker compose <em>logs -f</em>']],
+    curl: [['Start the stack', 'Bring up the local API and its dependencies.', 'docker compose <em>up -d</em>'], ['Check readiness', 'Wait for the service to report healthy.', 'curl http://localhost:8000/<em>health</em>'], ['Send a request', 'Exercise the API without an SDK.', 'curl -X <em>POST</em> http://localhost:8000/v1/memory']]
+  },
+  mcp: {
+    python: [['Install the tool server', 'Install the Lians MCP package beside your Python agent.', 'pip <em>install</em> lians-mcp'], ['Register the server', 'Add the command to your AI client MCP configuration.', '"command": <em>"lians-mcp"</em>'], ['Use governed recall', 'Let the agent call the registered recall tool.', 'tools.call(<em>"lians_recall"</em>, query=...)']],
+    node: [['Install the tool server', 'Add the Lians MCP server to your Node environment.', 'npm <em>install</em> @lians-ai/mcp'], ['Register the command', 'Point your AI client at the local server process.', '"command": <em>"npx"</em>, "args": ["@lians-ai/mcp"]'], ['Call a tool', 'Use Lians through the client tool interface.', 'client.callTool({ name: <em>"lians_recall"</em> })']],
+    curl: [['Start the MCP server', 'Expose Lians tools over the supported transport.', 'lians-mcp <em>serve</em>'], ['List tools', 'Confirm the client can discover the available operations.', 'curl /mcp/<em>tools/list</em>'], ['Invoke recall', 'Call governed memory through the tool boundary.', 'curl -X POST /mcp/<em>tools/call</em>']]
+  }
+};
+let activeInstallPath = 'sdk';
+let activeInstallLanguage = 'python';
+const renderSteps = (language = activeInstallLanguage) => {
+  activeInstallLanguage = language;
+  document.querySelector('#install-steps').innerHTML = installContent[activeInstallPath][language].map((step, index) => `<article class="install-step"><span class="step-number">${index + 1}</span><div><h3>${step[0]}</h3><p>${step[1]}</p></div><div class="code-block"><header>${language}</header><pre>${step[2]}</pre></div></article>`).join('');
+};
+renderSteps();
 document.querySelectorAll('.language-tabs button').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.language-tabs button').forEach((item) => item.classList.remove('active')); button.classList.add('active'); renderSteps(button.dataset.language); }));
-document.querySelectorAll('.path-card').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.path-card').forEach((item) => item.classList.remove('active')); button.classList.add('active'); }));
+document.querySelectorAll('.path-card').forEach((button) => button.addEventListener('click', () => {
+  document.querySelectorAll('.path-card').forEach((item) => item.classList.remove('active'));
+  button.classList.add('active');
+  activeInstallPath = button.dataset.path;
+  renderSteps();
+}));
 
-const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], dashboard: ['ACTIVITY', 'Dashboard'], governance: ['MEMORY GOVERNOR', 'Governance review'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], memories: ['ACTIVITY', 'Memories'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
+const viewMeta = { 'get-started': ['SETUP', 'Get started'], playground: ['SETUP', 'Playground'], 'api-keys': ['SETUP', 'API keys'], agents: ['COLLABORATION', 'Agents'], spaces: ['COLLABORATION', 'Memory spaces'], dashboard: ['ACTIVITY', 'Dashboard'], activity: ['ACTIVITY', 'Activity timeline'], governance: ['MEMORY GOVERNOR', 'Governance review'], requests: ['ACTIVITY', 'Requests'], entities: ['ACTIVITY', 'Entities'], memories: ['ACTIVITY', 'Memories'], graph: ['ACTIVITY', 'Graph'], webhooks: ['ACTIVITY', 'Webhooks'], exports: ['ACTIVITY', 'Memory exports'], settings: ['ACCOUNT', 'Settings'], billing: ['ACCOUNT', 'Usage & billing'] };
+const viewOrder = Object.keys(viewMeta);
+const updateViewHistory = (view) => {
+  const index = viewOrder.indexOf(view);
+  const previous = document.querySelector('#view-previous');
+  const next = document.querySelector('#view-next');
+  if (previous) previous.disabled = index <= 0;
+  if (next) next.disabled = index < 0 || index >= viewOrder.length - 1;
+};
 // Declared before activateView: the top-level route handler below runs during
 // script evaluation, and landing directly on /console/governance would hit
 // loadGovernance() -> govState while it was still in the temporal dead zone.
@@ -831,6 +954,7 @@ const activateView = (view, updateUrl = false) => {
   document.querySelectorAll('.view').forEach((item) => item.classList.toggle('active', item.id === `view-${view}`));
   document.querySelector('#view-label').textContent = viewMeta[view][0];
   document.querySelector('#view-title').textContent = viewMeta[view][1];
+  updateViewHistory(view);
   if (updateUrl) {
     const nextUrl = `/console/${view}`;
     if (window.location.pathname !== nextUrl) window.history.pushState({ view }, '', nextUrl);
@@ -839,6 +963,16 @@ const activateView = (view, updateUrl = false) => {
   if (view === 'governance') loadGovernance();
 };
 document.querySelectorAll('.nav-item[data-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.view, true)));
+document.querySelector('#view-previous')?.addEventListener('click', () => {
+  const current = document.querySelector('.nav-item[data-view].active')?.dataset.view || 'get-started';
+  const index = viewOrder.indexOf(current);
+  if (index > 0) activateView(viewOrder[index - 1], true);
+});
+document.querySelector('#view-next')?.addEventListener('click', () => {
+  const current = document.querySelector('.nav-item[data-view].active')?.dataset.view || 'get-started';
+  const index = viewOrder.indexOf(current);
+  if (index >= 0 && index < viewOrder.length - 1) activateView(viewOrder[index + 1], true);
+});
 if (route.startsWith('/console')) activateView(route.split('/')[2] || 'get-started');
 window.addEventListener('popstate', () => {
   if (window.location.pathname.startsWith('/console')) activateView(window.location.pathname.split('/')[2] || 'get-started');
@@ -1001,7 +1135,7 @@ const renderKeys = (keys) => {
   keys.forEach((key) => {
     const row = document.createElement('div');
     row.className = 'key-row';
-    row.innerHTML = `<b>${key.label}</b><code>${key.prefix}</code><span>${formatDate(key.createdAt)}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${key.id}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${key.id}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`;
+    row.innerHTML = `<b>${escapeHtml(key.label)}</b><code>${escapeHtml(key.prefix)}</code><span>${escapeHtml(formatDate(key.createdAt))}</span><span class="key-status ${key.revokedAt ? 'revoked' : ''}">${key.revokedAt ? 'Revoked' : 'Active'}</span><button data-rotate="${escapeHtml(key.id)}" ${key.revokedAt ? 'disabled' : ''} style="margin-right:4px">Rotate</button><button data-revoke="${escapeHtml(key.id)}" ${key.revokedAt ? 'disabled' : ''}>${key.revokedAt ? 'Revoked' : 'Revoke'}</button>`;
     table.append(row);
   });
   document.querySelectorAll('[data-revoke]').forEach((button) => button.addEventListener('click', async () => {
@@ -1120,26 +1254,35 @@ document.querySelector('.upgrade-button')?.addEventListener('click', () => windo
 document.querySelector('.avatar')?.addEventListener('click', () => activateView('settings', true));
 document.querySelector('.mobile-menu').addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
 
-// Theme toggle (light / dark) in the console header.
-(function () {
-  const root = document.documentElement;
-  const isLight = () => root.getAttribute('data-theme') === 'light';
-  const label = () => (isLight() ? '☾ Dark' : '☀ Light');
-  const actions = document.querySelector('.header-actions');
-  if (!actions) return;
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'theme-toggle';
-  btn.setAttribute('aria-label', 'Toggle light or dark mode');
-  btn.textContent = label();
-  btn.addEventListener('click', () => {
-    const next = isLight() ? 'dark' : 'light';
-    if (next === 'light') root.setAttribute('data-theme', 'light'); else root.removeAttribute('data-theme');
-    try { localStorage.setItem('lians-theme', next); } catch (e) {}
-    btn.textContent = label();
-  });
-  actions.insertBefore(btn, actions.firstChild);
-})();
+const consolePageShell = document.querySelector('#console-page');
+const consoleSidebar = document.querySelector('.sidebar');
+const sidebarBrand = consoleSidebar?.querySelector('.console-brand');
+if (consolePageShell && consoleSidebar && sidebarBrand) {
+  const closeSidebar = document.createElement('button');
+  closeSidebar.type = 'button';
+  closeSidebar.className = 'sidebar-close';
+  closeSidebar.setAttribute('aria-label', 'Close navigation');
+  closeSidebar.textContent = '×';
+  sidebarBrand.after(closeSidebar);
+  const collapseSidebar = document.createElement('button');
+  collapseSidebar.type = 'button';
+  collapseSidebar.className = 'sidebar-collapse';
+  collapseSidebar.setAttribute('aria-label', 'Collapse sidebar');
+  collapseSidebar.textContent = '‹';
+  document.querySelector('.console-header')?.prepend(collapseSidebar);
+  const setSidebarCollapsed = (collapsed) => {
+    consolePageShell.classList.toggle('sidebar-collapsed', collapsed);
+    if (collapsed) consoleSidebar.classList.remove('open');
+    collapseSidebar.textContent = collapsed ? '›' : '‹';
+    collapseSidebar.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    try { localStorage.setItem('lians-sidebar-collapsed', String(collapsed)); } catch {}
+  };
+  let savedCollapsed = false;
+  try { savedCollapsed = localStorage.getItem('lians-sidebar-collapsed') === 'true'; } catch {}
+  setSidebarCollapsed(savedCollapsed);
+  collapseSidebar.addEventListener('click', () => setSidebarCollapsed(!consolePageShell.classList.contains('sidebar-collapsed')));
+  closeSidebar.addEventListener('click', () => { consoleSidebar.classList.remove('open'); if (innerWidth > 820) setSidebarCollapsed(true); });
+}
 
 // Feature → tier availability, rendered in Usage & billing for the current plan.
 const FEATURE_TIERS = [
@@ -1147,11 +1290,10 @@ const FEATURE_TIERS = [
   { name: 'Audit log & memory lineage', tier: 'starter' },
   { name: 'Conflict detection', tier: 'growth' },
   { name: 'Webhooks', tier: 'growth' },
-  { name: 'Compliance reports', tier: 'growth' },
+  { name: 'Operational reports', tier: 'growth' },
   { name: 'Merkle audit chain', tier: 'growth' },
-  { name: 'Information barriers (RLS)', tier: 'pro' },
-  { name: 'HIPAA encryption', tier: 'pro' },
-  { name: 'GDPR erasure certificates', tier: 'pro' },
+  { name: 'Information barriers (RLS)', tier: 'enterprise' },
+  { name: 'Customer-managed encryption & erasure records', tier: 'enterprise' },
   { name: 'Backtest contamination check', tier: 'pro' },
   { name: 'Prometheus metrics', tier: 'pro' },
   { name: 'Air-gap mode', tier: 'enterprise' },
@@ -1171,3 +1313,84 @@ const renderFeatureTiers = (plan) => {
     }).join('')}</ul>
     ${curIdx < PLAN_ORDER.length - 1 ? '<button class="console-button" type="button" onclick="window.location.assign(\'/upgrade\')" style="width:max-content;margin-top:18px">Upgrade for more <span>→</span></button>' : ''}`;
 };
+
+// Collaboration model prototype. Stored locally until the product API exposes
+// agent identities and policy-scoped memory spaces.
+const collaborationSeed = {
+  agents: [
+    { id: 'research', name: 'Research Agent', handle: '@lians/research', framework: 'LangGraph', environment: 'Production', status: 'online', spaces: ['investment-committee', 'market-research'], lastSeen: 'Just now' },
+    { id: 'reviewer', name: 'Compliance Reviewer', handle: '@lians/compliance-reviewer', framework: 'OpenAI', environment: 'Production', status: 'online', spaces: ['investment-committee'], lastSeen: '2 min ago' },
+    { id: 'support', name: 'Support Copilot', handle: '@lians/support', framework: 'MCP', environment: 'Staging', status: 'idle', spaces: ['customer-context'], lastSeen: '18 min ago' }
+  ],
+  spaces: [
+    { id: 'investment-committee', name: 'Investment Committee', handle: '@space/investment-committee', members: 2, memories: 1842, policy: 'Approval required', retention: '7 years' },
+    { id: 'market-research', name: 'Market Research', handle: '@space/market-research', members: 1, memories: 724, policy: 'Monitor', retention: '1 year' },
+    { id: 'customer-context', name: 'Customer Context', handle: '@space/customer-context', members: 1, memories: 316, policy: 'PII restricted', retention: '90 days' }
+  ]
+};
+const timelineSeed = [
+  { type: 'recall', actor: '@lians/research', action: 'Recalled 6 memories', detail: 'Query: “What was NVDA guidance at the April committee meeting?”', space: '@space/investment-committee', time: '10:42:18', state: 'completed' },
+  { type: 'policy', actor: 'Memory Governor', action: 'Approved proposed supersession', detail: '$32B guidance superseded by the May update of $40B · reviewer @lians/compliance-reviewer', space: '@space/investment-committee', time: '10:41:52', state: 'verified' },
+  { type: 'write', actor: '@lians/research', action: 'Proposed a memory update', detail: 'NVDA FY2026 revenue guidance raised to $40B · confidence 96%', space: '@space/investment-committee', time: '10:40:09', state: 'reviewed' },
+  { type: 'policy', actor: 'Admission policy', action: 'Quarantined a write', detail: 'Possible prompt injection detected in an untrusted attachment', space: '@space/market-research', time: '10:32:44', state: 'held' },
+  { type: 'write', actor: '@lians/support', action: 'Stored customer preference', detail: 'Encrypted under the subject key · PII policy applied', space: '@space/customer-context', time: '10:18:03', state: 'completed' }
+];
+const loadCollaboration = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('lians-collaboration'));
+    return saved && saved.agents && saved.spaces ? saved : structuredClone(collaborationSeed);
+  } catch { return structuredClone(collaborationSeed); }
+};
+let collaborationState = loadCollaboration();
+const saveCollaboration = () => {
+  try { localStorage.setItem('lians-collaboration', JSON.stringify(collaborationState)); } catch {}
+};
+const renderAgents = () => {
+  const host = document.querySelector('#agent-registry');
+  if (!host) return;
+  host.innerHTML = collaborationState.agents.map((agent) => `<article class="registry-card">
+    <div class="registry-card-head"><span class="agent-mark">${escapeHtml(agent.name.slice(0, 2).toUpperCase())}</span><span class="status-dot ${agent.status}"></span></div>
+    <h3>${escapeHtml(agent.name)}</h3><code>${escapeHtml(agent.handle)}</code>
+    <dl><div><dt>Framework</dt><dd>${escapeHtml(agent.framework)}</dd></div><div><dt>Environment</dt><dd>${escapeHtml(agent.environment)}</dd></div><div><dt>Memory spaces</dt><dd>${agent.spaces.length}</dd></div><div><dt>Last activity</dt><dd>${escapeHtml(agent.lastSeen)}</dd></div></dl>
+    <button class="card-action" type="button" data-agent="${escapeHtml(agent.id)}">Manage permissions →</button>
+  </article>`).join('');
+};
+const renderSpaces = () => {
+  const host = document.querySelector('#space-registry');
+  if (!host) return;
+  host.innerHTML = collaborationState.spaces.map((space) => `<article class="space-card">
+    <div class="space-top"><span class="space-icon">◇</span><span class="policy-chip">${escapeHtml(space.policy)}</span></div>
+    <h3>${escapeHtml(space.name)}</h3><code>${escapeHtml(space.handle)}</code>
+    <div class="space-metrics"><span><b>${space.members}</b> agents</span><span><b>${space.memories.toLocaleString()}</b> memories</span><span><b>${escapeHtml(space.retention)}</b> retention</span></div>
+    <button class="card-action" type="button" data-space="${escapeHtml(space.id)}">Open policy & access →</button>
+  </article>`).join('');
+};
+const renderTimeline = (filter = 'all') => {
+  const host = document.querySelector('#activity-timeline');
+  if (!host) return;
+  const events = filter === 'all' ? timelineSeed : timelineSeed.filter((event) => event.type === filter);
+  host.innerHTML = events.map((event) => `<article class="timeline-event" data-type="${event.type}">
+    <span class="event-node">${event.type === 'write' ? '+' : event.type === 'policy' ? '✓' : '↗'}</span>
+    <div class="event-body"><div class="event-title"><b>${escapeHtml(event.action)}</b><time>${event.time}</time></div>
+    <p>${escapeHtml(event.detail)}</p><div class="event-meta"><code>${escapeHtml(event.actor)}</code><span>${escapeHtml(event.space)}</span><em class="${event.state}">${escapeHtml(event.state)}</em></div></div>
+  </article>`).join('') || '<div class="empty-state"><h3>No matching events</h3><p>Try another activity filter.</p></div>';
+};
+document.querySelector('#activity-filters')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-filter]');
+  if (!button) return;
+  document.querySelectorAll('#activity-filters button').forEach((item) => item.classList.toggle('active', item === button));
+  renderTimeline(button.dataset.filter);
+});
+document.querySelector('#add-agent')?.addEventListener('click', () => {
+  const count = collaborationState.agents.length + 1;
+  collaborationState.agents.push({ id: `agent-${Date.now()}`, name: `New Agent ${count}`, handle: `@lians/agent-${count}`, framework: 'Unconfigured', environment: 'Development', status: 'idle', spaces: [], lastSeen: 'Never' });
+  saveCollaboration(); renderAgents();
+});
+document.querySelector('#add-space')?.addEventListener('click', () => {
+  const count = collaborationState.spaces.length + 1;
+  collaborationState.spaces.push({ id: `space-${Date.now()}`, name: `New Memory Space ${count}`, handle: `@space/new-${count}`, members: 0, memories: 0, policy: 'Monitor', retention: 'Customer defined' });
+  saveCollaboration(); renderSpaces();
+});
+renderAgents();
+renderSpaces();
+renderTimeline();

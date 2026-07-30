@@ -3,22 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="canonical" href="https://www.lians.ai/security" />
-    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="description" content="Lians security architecture: PostgreSQL row-level security information barriers, per-subject AES-256-GCM encryption with KMS, RBAC, SSO, SIEM streaming, and a non-superuser DB posture." />
+    <meta name="description" content="Lians security architecture: a self-hosted reference deployment with database-enforced isolation, customer-controlled keys, and exportable evidence records." />
     <title>Security · Lians</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
-    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <header><div class="wrap"><nav class="nav" aria-label="Primary">
-      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
         <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
@@ -29,9 +26,22 @@
     <main>
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Product / Security</p>
-        <h1>Compliance is <em>architecture</em>.</h1>
-        <p class="lede">Isolation, encryption, and access control live in the database and key-management layers, where a bug or a compromised service can't route around them.</p>
+        <h1>Security controls belong in the <em>architecture</em>.</h1>
+        <p class="lede">Isolation, encryption, and access control live in the database and key-management layers, where a bug or a compromised service has fewer ways to route around them.</p>
         <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians/blob/master/docs/security-whitepaper.md" target="_blank" rel="noreferrer">Security whitepaper ↗</a></div>
+      </section>
+
+      <section class="wrap block" aria-label="Self-hosted reference architecture">
+        <p class="block-label">Reference deployment</p>
+        <h2>Keep the workflow inside your boundary.</h2>
+        <p class="intro">This is a self-hosted reference topology, not a blanket statement about every deployment. Your security team defines the final boundary, keys, retention, and monitoring.</p>
+        <div class="architecture-map" role="img" aria-label="Your agent service sends approved writes and recall requests to Lians in your VPC. Lians enforces policy and point-in-time retrieval against your Postgres, KMS, and SIEM.">
+          <div class="architecture-node"><span>Your environment</span><b>Research / risk agent</b><p>Approved writes and recall requests</p></div>
+          <div class="architecture-arrow" aria-hidden="true">→</div>
+          <div class="architecture-node architecture-core"><span>Your VPC</span><b>Lians engine</b><p>Policy gate · point-in-time recall · evidence receipt</p></div>
+          <div class="architecture-arrow" aria-hidden="true">→</div>
+          <div class="architecture-node"><span>Your accounts</span><b>Postgres · KMS · SIEM</b><p>Data, keys, and audit export stay under your control</p></div>
+        </div>
       </section>
 
       <section class="wrap block" aria-label="Isolation">
@@ -41,7 +51,7 @@
           <div class="item"><span class="head"><b>Namespace RLS</b></span><p>Row-level security restricts every query to the requesting namespace.</p></div>
           <div class="item"><span class="head"><b>Information barriers</b></span><p>RESTRICTIVE policies deny cross-barrier reads even for the table owner, verified in CI against a non-superuser role.</p></div>
           <div class="item"><span class="head"><b>Non-superuser posture</b></span><p>The app runs as a non-superuser, non-BYPASSRLS Postgres role, documented and tested.</p></div>
-          <div class="item"><span class="head"><b>Compromise-resistant</b></span><p>A compromised service with valid DB credentials still cannot read across a wall.</p></div>
+          <div class="item"><span class="head"><b>Defense in depth</b></span><p>Database policies provide a second enforcement layer when application credentials are compromised; validate this in your deployment and test plan.</p></div>
         </div>
       </section>
 
@@ -78,10 +88,10 @@
     <section class="band"><div class="wrap"><h2>Audit it before you deploy it.</h2><a class="btn" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Read the source ↗</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/issues" target="_blank" rel="noreferrer">Issues ↗</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>

@@ -2,14 +2,18 @@
   "name": "lian-website",
   "version": "1.0.0",
   "private": true,
+  "main": "api/server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "benchmark:light": "node benchmarks/lightweight-learning.js",
+    "benchmark:locomo": "node benchmarks/locomo-context.js"
   },
   "dependencies": {
     "@clerk/backend": "^1.24.0",
     "@neondatabase/serverless": "^1.1.0",
-    "@sentry/node": "^8.0.0",
+    "@sentry/node": "^10.69.0",
+    "@upstash/redis": "^1.38.0",
     "nodemailer": "^9.0.3",
     "svix": "^1.96.1"
   }

@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { createPartnerApplicationService, validateApplication } = require('./partner-applications');
+const { createControlStore } = require('./control-store');
 
 const root = __dirname;
 const envFile = path.join(root, '.env');
@@ -14,7 +15,6 @@ if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forE
 const port = Number(process.env.PORT || 8000);
 const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? path.join('/tmp', 'lian-data') : path.join(root, 'data'));
-const dataFile = path.join(dataDir, 'lian-console.json');
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 
 const TIER_SCOPES = {
@@ -95,10 +95,14 @@ const clerkFrontendApi = (() => {
   }
 })();
 const clerkOrigin = clerkFrontendApi ? `https://${clerkFrontendApi}` : '';
-// Clerk's own CDN serves v4 for this account; v4 has no billing API (window.Clerk.billing).
-// Load v5 from jsDelivr (already in CSP) as primary - fall back to Clerk's CDN v4 if jsDelivr fails.
-const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
-const clerkJsFallbackUrl = clerkOrigin ? `${clerkOrigin}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js` : '';
+const clerkSignInUrl = process.env.CLERK_SIGN_IN_URL || 'https://accounts.lians.ai/sign-in';
+// Pin browser authentication dependencies and verify their exact bytes before
+// execution. Mutable tags such as `@latest` let an upstream release silently
+// change code inside the authenticated origin.
+const clerkJsUrl = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.25.12/dist/clerk.browser.js';
+const clerkJsIntegrity = 'sha384-LnapP8Ix4zbGRY+e3VWaqAkXDNft/E8jBoiOMlNBe1x6SLshfoIEXclQYNW0x+8B';
+const clerkUiUrl = 'https://cdn.jsdelivr.net/npm/@clerk/ui@1.27.1/dist/ui.browser.js';
+const clerkUiIntegrity = 'sha384-Mz4gSLIJGLEGyOMhHJvNzGZKESnK3Db1ocMHfD4jYKU0lvYQMT/rQVzQ1irSUwKY';
 
 const SEC_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -131,10 +135,39 @@ const SEC_HEADERS = {
 // ── rate limiting ─────────────────────────────────────────────────────────────
 
 const rateLimits = new Map();
-const rateLimit = (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
+let rateLimitRedis = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    const { Redis } = require('@upstash/redis');
+    rateLimitRedis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  } catch (error) {
+    console.warn('[Lians] distributed rate limiter unavailable:', error.message);
+  }
+}
+const rateLimit = async (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
   const key = `${bucket}:${ip}`;
   const now = Date.now();
+  if (rateLimitRedis) {
+    try {
+      const windowId = Math.floor(now / windowMs);
+      const redisKey = `lians:rate:${key}:${windowId}`;
+      const count = await rateLimitRedis.incr(redisKey);
+      if (count === 1) await rateLimitRedis.expire(redisKey, Math.ceil(windowMs / 1000) + 1);
+      if (count > max) {
+        const retryAfter = Math.max(1, Math.ceil(((windowId + 1) * windowMs - now) / 1000));
+        res.setHeader('retry-after', retryAfter);
+        json(res, 429, { error: 'Too many requests.' });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      log('distributed_rate_limit_failed', req, null, { error: error.message });
+    }
+  }
   let e = rateLimits.get(key);
   if (!e || now > e.resetAt) { e = { count: 0, resetAt: now + windowMs }; rateLimits.set(key, e); }
   e.count++;
@@ -146,16 +179,56 @@ setInterval(() => { const now = Date.now(); for (const [ip, e] of rateLimits) if
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 const log = (event, req, user, metadata = {}) => console.log(JSON.stringify({ timestamp: new Date().toISOString(), event, userId: user?.id || null, route: req?.url || null, ...metadata }));
-const defaultStore = () => ({ users: [], onboarding: {}, apiKeys: [] });
-const readStore = () => { try { return { ...defaultStore(), ...JSON.parse(fs.readFileSync(dataFile, 'utf8')) }; } catch { return defaultStore(); } };
-const writeStore = (store) => { fs.mkdirSync(dataDir, { recursive: true }); fs.writeFileSync(dataFile, JSON.stringify(store, null, 2)); };
+const controlStore = createControlStore({
+  dataDir,
+  vercel: Boolean(process.env.VERCEL),
+  log: (event, metadata) => console.warn(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    event,
+    ...metadata,
+  })),
+});
+const readStore = () => controlStore.read();
+const writeStore = (store) => controlStore.write(store);
 const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 // Helpers use res.setHeader so security headers set at request start are preserved
 const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.writeHead(status); res.end(JSON.stringify(body)); };
+const healthPage = ({ build, environment, authConfigured }) => `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>System operational · Lians</title>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/marketing.css?v=20260728-health">
+  </head>
+  <body class="health-body">
+    <main class="health-shell">
+      <a class="health-brand" href="/" aria-label="Lians home"><img src="/logo-blue.png" alt="Lians"></a>
+      <section class="health-panel">
+        <div class="health-status"><span aria-hidden="true"></span><p>All systems operational</p></div>
+        <h1>The evidence layer is online.</h1>
+        <p class="health-lede">The public API edge is responding normally. Authentication and the application workflow are available.</p>
+        <div class="health-grid">
+          <article><span>API EDGE</span><strong>Operational</strong><small>Requests are being accepted</small></article>
+          <article><span>AUTHENTICATION</span><strong>${authConfigured ? 'Configured' : 'Local mode'}</strong><small>${authConfigured ? 'Clerk services connected' : 'External sign-in not configured'}</small></article>
+          <article><span>ENVIRONMENT</span><strong>${environment}</strong><small>Build ${build.slice(0, 12)}</small></article>
+        </div>
+        <div class="health-flow" aria-label="Application workflow"><span>Sign in</span><i>→</i><span>Onboarding</span><i>→</i><span>Console</span></div>
+        <div class="health-actions"><a class="button" href="/status">View full status →</a><a class="text-link" href="/api/health?format=json">View JSON</a></div>
+      </section>
+      <p class="health-foot">Lians · Durable memory for AI agents</p>
+    </main>
+  </body>
+</html>`;
 const readBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Invalid JSON')); } }); });
 const readRawBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => resolve(body)); req.on('error', reject); });
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
-const redirect = (res, location) => { res.setHeader('location', location); res.writeHead(302); res.end(); };
+const redirect = (res, location, status = 302) => { res.setHeader('location', location); res.writeHead(status); res.end(); };
 const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
 const allowedApiOrigins = (req) => {
   const proto = (req.headers['x-forwarded-proto'] || (req.headers.host?.startsWith('localhost') ? 'http' : 'https')).split(',')[0].trim();
@@ -318,6 +391,14 @@ const app = async (req, res) => {
 
   const url = new URL(req.url, baseUrl); const { pathname } = url;
   try {
+    if (
+      pathname.startsWith('/api/')
+      || pathname.startsWith('/console')
+      || pathname.startsWith('/onboarding')
+      || pathname === '/billing'
+    ) {
+      await controlStore.hydrate();
+    }
     // Clerk webhook - must be before CORS/rate-limit (server-to-server, no origin header)
     if (pathname === '/api/webhooks/clerk' && req.method === 'POST') {
       const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
@@ -338,12 +419,16 @@ const app = async (req, res) => {
 
       if (event.type === 'user.created') {
         const tier = event.data.public_metadata?.plan ?? 'free';
-        const scopes = TIER_SCOPES[tier] ?? TIER_SCOPES.free;
-        const rawKey = `lians_live_${crypto.randomBytes(32).toString('hex')}`;
-        const keyId = crypto.randomUUID();
         try {
+          const clerkUser = await clerk.users.getUser(clerkUserId);
           await clerk.users.updateUserMetadata(clerkUserId, {
-            privateMetadata: { pendingApiKey: rawKey, pendingKeyId: keyId, pendingKeyScopes: scopes, liansTier: tier },
+            privateMetadata: {
+              ...clerkUser.privateMetadata,
+              pendingApiKey: null,
+              pendingKeyId: null,
+              pendingKeyScopes: null,
+              liansTier: tier,
+            },
           });
           log('webhook_user_created', req, null, { clerkUserId, tier });
         } catch (err) { log('webhook_metadata_failed', req, null, { error: err.message, clerkUserId }); }
@@ -356,25 +441,52 @@ const app = async (req, res) => {
           const currentTier = clerkUser.privateMetadata?.liansTier;
           if (currentTier === newTier) return json(res, 200, { ok: true });
           const scopes = TIER_SCOPES[newTier] ?? TIER_SCOPES.free;
-          const rawKey = `lians_live_${crypto.randomBytes(32).toString('hex')}`;
-          const keyId = crypto.randomUUID();
-          // Revoke the old key in the store
-          const oldKeyId = clerkUser.privateMetadata?.liansKeyId;
-          if (oldKeyId) { const store = readStore(); const old = store.apiKeys.find((k) => k.id === oldKeyId); if (old) { old.revokedAt = new Date().toISOString(); writeStore(store); } }
+          const liansUserId = clerkUser.privateMetadata?.liansUserId;
+          if (liansConfigured() && liansUserId) {
+            const namespace = `ns_${liansUserId}`;
+            const keys = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`);
+            for (const key of Array.isArray(keys) ? keys : []) {
+              if (key.label !== CONSOLE_KEY_LABEL) {
+                await liansAdmin(`/api-keys/${encodeURIComponent(key.id)}`, {
+                  method: 'PATCH',
+                  body: { scopes },
+                });
+              }
+            }
+          } else if (liansUserId) {
+            const store = readStore();
+            for (const key of store.apiKeys.filter((item) => item.userId === liansUserId && !item.revokedAt)) {
+              key.scopes = scopes;
+            }
+            writeStore(store);
+          }
           await clerk.users.updateUserMetadata(clerkUserId, {
-            privateMetadata: { ...clerkUser.privateMetadata, pendingApiKey: rawKey, pendingKeyId: keyId, pendingKeyScopes: scopes, liansTier: newTier },
+            privateMetadata: {
+              ...clerkUser.privateMetadata,
+              pendingApiKey: null,
+              pendingKeyId: null,
+              pendingKeyScopes: null,
+              liansTier: newTier,
+            },
           });
-          log('webhook_tier_changed', req, null, { clerkUserId, from: currentTier, to: newTier });
+          log('webhook_tier_changed', req, null, {
+            clerkUserId,
+            from: currentTier,
+            to: newTier,
+            scopes,
+          });
         } catch (err) { log('webhook_tier_change_failed', req, null, { error: err.message, clerkUserId }); }
       }
 
       return json(res, 200, { ok: true });
     }
 
-    // Best-effort, site-wide flood protection (per IP, per server instance) for
-    // every page and asset request. The stricter per-IP API limit still applies
-    // below. (On serverless this is per-instance; pair with the platform WAF.)
-    if (!rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
+    // Best-effort flood protection for navigations and dynamic routes. Static
+    // assets are deliberately excluded: one page view fans out into many font,
+    // image, CSS, and JavaScript requests and must not exhaust the user's page
+    // quota. The stricter per-IP API limit still applies below.
+    const isStaticAsset = /\.[a-z0-9]{2,8}$/i.test(pathname);
+    if (!isStaticAsset && !await rateLimit(req, res, { max: 300, windowMs: 60_000, bucket: 'all' })) return;
 
     // Block cross-origin requests to the API.
     // Allow both apex and www so a misconfigured BASE_URL env var never locks
@@ -382,14 +494,14 @@ const app = async (req, res) => {
     if (pathname.startsWith('/api/')) {
       const origin = req.headers.origin;
       if (origin && !allowedApiOrigins(req).has(origin)) { log('cors_blocked', req, null, { origin }); return json(res, 403, { error: 'Forbidden.' }); }
-      if (!rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
+      if (!await rateLimit(req, res, { max: 60, windowMs: 60_000 })) return;
     }
 
     // Public config for client-side SDK initialisation (publishable keys only)
     if (pathname === '/config.js') {
       res.setHeader('content-type', 'application/javascript; charset=utf-8');
       res.writeHead(200);
-      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsFallbackUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
+      res.end(`window.__lian_config=${JSON.stringify({ clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY || '', clerkJsUrl, clerkJsIntegrity, clerkUiUrl, clerkUiIntegrity, clerkSignInUrl, canonicalOrigin: baseUrl, sentryDsn: process.env.SENTRY_DSN || '', billingPlans: { free: process.env.CLERK_BILLING_PLAN_ID_FREE || '', starter: process.env.CLERK_BILLING_PLAN_ID_STARTER || '', growth: process.env.CLERK_BILLING_PLAN_ID_GROWTH || '', pro: process.env.CLERK_BILLING_PLAN_ID_PRO || '', enterprise: process.env.CLERK_BILLING_PLAN_ID_ENTERPRISE || '' } })};`);
       return;
     }
 
@@ -398,13 +510,37 @@ const app = async (req, res) => {
     // asynchronously after OAuth and a cookie-miss here causes a redirect loop.
     // Auth is enforced on every /api/* route instead.
     if (pathname === '/auth/google' || pathname === '/auth/github') return redirect(res, '/login');
-    if (pathname === '/memory-governor') return serveFile(res, path.join(root, 'memory-governor.html'));
     if (pathname === '/memory-governor.html') return redirect(res, '/memory-governor');
+    const LEGACY_REDIRECTS = {
+      '/memory-governor': '/product',
+      '/records': '/product',
+      '/article-12': '/security',
+      '/compliance': '/security',
+      '/trust': '/security',
+      '/sdks': '/docs',
+      '/research': '/blog/locomo-benchmark',
+      '/compare': '/blog/locomo-benchmark',
+      '/compare/mem0': '/blog/locomo-benchmark',
+      '/compare/zep': '/blog/locomo-benchmark',
+      '/compare/letta': '/blog/locomo-benchmark',
+      '/compare/hindsight': '/blog/locomo-benchmark',
+      '/compare/supermemory': '/blog/locomo-benchmark',
+      '/solutions': '/product',
+      '/solutions/financial-services': '/product',
+      '/solutions/healthcare': '/product',
+      '/solutions/legal': '/product',
+      '/changelog': '/blog',
+      '/blog/backtest-lookahead': '/blog',
+      '/blog/memory-lifecycle': '/blog',
+      '/blog/eu-ai-act-article-12': '/blog',
+    };
+    if (LEGACY_REDIRECTS[pathname]) return redirect(res, LEGACY_REDIRECTS[pathname], 308);
 
     // Marketing content pages - pretty URLs mapped to their static .html.
     // Keep this in sync with vercel.json routes.
     const CONTENT_PAGES = {
       '/product': 'product.html',
+      '/integrations': 'marketing.html',
       '/records': 'records.html',
       '/article-12': 'article-12.html',
       '/compliance': 'compliance.html',
@@ -436,7 +572,9 @@ const app = async (req, res) => {
       '/blog/memory-lifecycle': 'blog-memory-lifecycle.html',
       '/blog/eu-ai-act-article-12': 'blog-eu-ai-act-article-12.html',
     };
-    if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, CONTENT_PAGES[pathname]));
+    if (pathname === '/privacy') return serveFile(res, path.join(root, 'privacy.html'));
+    if (pathname === '/terms') return serveFile(res, path.join(root, 'terms.html'));
+    if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, 'marketing.html'));
     if (pathname.endsWith('.html')) {
       const pretty = Object.entries(CONTENT_PAGES).find(([, file]) => `/${file}` === pathname)?.[0];
       if (pretty) return redirect(res, pretty);
@@ -454,7 +592,7 @@ const app = async (req, res) => {
     // ── JSON API ──────────────────────────────────────────────────────────────
 
     if (pathname === '/api/partner-applications' && req.method === 'POST') {
-      if (!rateLimit(req, res, { max: 8, windowMs: 60 * 60_000, bucket: 'partner-applications' })) return;
+      if (!await rateLimit(req, res, { max: 8, windowMs: 60 * 60_000, bucket: 'partner-applications' })) return;
       const body = await readBody(req);
       const validation = validateApplication(body);
       if (!validation.ok) return json(res, 400, { error: validation.error, missing: validation.missing });
@@ -464,7 +602,7 @@ const app = async (req, res) => {
       }
       try {
         const application = await partnerApplications.submit(body);
-        log('partner_application_submitted', req, null, { applicationId: application.id, stage: body.current_stage, track: body.preferred_track, highFit: application.highFit });
+        log('partner_application_submitted', req, null, { applicationId: application.id, stage: body.current_stage, track: body.preferred_track, highFit: application.highFit, notificationStatus: application.notificationStatus });
         return json(res, 201, { ok: true, applicationId: application.id, schedulingUrl: application.highFit ? (process.env.PARTNER_SCHEDULING_URL || '') : '' });
       } catch (err) {
         log('partner_application_failed', req, null, { error: err.message, company: body.company });
@@ -483,14 +621,28 @@ const app = async (req, res) => {
     }
 
     if (pathname === '/api/health' && req.method === 'GET') {
-      return json(res, 200, {
+      const health = {
         ok: true,
         build: APP_BUILD,
         environment: process.env.VERCEL ? 'vercel' : (process.env.NODE_ENV || 'local'),
         clerkPublishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
         clerkSecretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
+        controlStore: controlStore.status(),
         workflow: 'login->onboarding->console',
-      });
+      };
+      const wantsHtml = /\btext\/html\b/i.test(req.headers.accept || '') && url.searchParams.get('format') !== 'json';
+      if (wantsHtml) {
+        res.setHeader('vary', 'accept');
+        res.setHeader('content-type', 'text/html; charset=utf-8');
+        res.writeHead(200);
+        res.end(healthPage({
+          build: health.build,
+          environment: health.environment,
+          authConfigured: health.clerkPublishableKeyConfigured && health.clerkSecretKeyConfigured,
+        }));
+        return;
+      }
+      return json(res, 200, health);
     }
 
     if (pathname === '/api/session' && req.method === 'GET') {
@@ -505,6 +657,41 @@ const app = async (req, res) => {
 
     // Onboarding
     if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; const complete = hasCompletedOnboarding(user); return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: complete, nextStep: complete ? null : firstIncomplete(user) }); }
+    if (pathname === '/api/onboarding/skip' && req.method === 'POST') {
+      const user = await apiAuth(req, res);
+      if (!user) return;
+      const store = readStore();
+      const completedAt = new Date().toISOString();
+      const answers = {
+        ...(store.onboarding[user.id] || {}),
+        ...Object.fromEntries(requiredSteps.map((step) => [step, 'Skipped; answer later'])),
+        context: '',
+        updatedAt: completedAt,
+        completedAt,
+      };
+      const target = store.users.find((item) => item.id === user.id);
+      if (!target) return json(res, 404, { error: 'User workspace not found.' });
+      target.onboardingComplete = true;
+      target.onboardingCompletedAt = completedAt;
+      store.onboarding[user.id] = answers;
+      writeStore(store);
+      try {
+        const cu = await clerk.users.getUser(user.clerkUserId);
+        await clerk.users.updateUserMetadata(user.clerkUserId, {
+          privateMetadata: {
+            ...cu.privateMetadata,
+            onboardingComplete: true,
+            onboardingCompletedAt: completedAt,
+            onboardingAnswers: answers,
+          },
+        });
+      } catch (err) {
+        log('clerk_skip_sync_failed', req, user, { error: err.message, status: err.status });
+        return json(res, 503, { error: 'Workspace setup was saved, but account synchronization is still pending. Please try again.' });
+      }
+      log('onboarding_skipped', req, target);
+      return json(res, 200, { next: '/console' });
+    }
     if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected) return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingAnswers: { ...store.onboarding[user.id] } } }); } catch (err) { log('clerk_answers_backup_failed', req, user, { error: err.message }); } return json(res, 200, { next: `/onboarding/${next}` }); }
     if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; const completedAt = new Date().toISOString(); target.onboardingCompletedAt = completedAt; store.onboarding[user.id] = { ...answers, completedAt }; writeStore(store); log('onboarding_completed', req, target); let synced = false; for (let attempt = 0; attempt < 4 && !synced; attempt++) { if (attempt > 0) await new Promise((r2) => setTimeout(r2, 1500 * attempt)); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingComplete: true, onboardingCompletedAt: completedAt, onboardingAnswers: store.onboarding[user.id] } }); synced = true; } catch (err) { log('clerk_complete_sync_failed', req, user, { error: err.message, status: err.status, attempt }); } } log('clerk_complete_sync_result', req, user, { synced }); return json(res, 200, { next: '/console' }); }
     if (pathname === '/api/billing/select' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding before selecting a plan.' }); const body = await readBody(req); const plan = String(body.plan || '').toLowerCase(); if (!['free', 'starter', 'growth', 'pro', 'enterprise'].includes(plan)) return json(res, 400, { error: 'Invalid plan.' }); if (plan !== 'free') { try { const sub = await clerk.users.getUserBillingSubscription(user.clerkUserId); const clerkPlan = sub?.data?.plan?.slug; if (!clerkPlan || clerkPlan === 'free') return json(res, 403, { error: 'No active paid subscription found. Please complete checkout.' }); } catch (err) { log('billing_select_verify_warning', req, user, { error: err.message, plan }); return json(res, 503, { error: 'Unable to verify subscription status. Please try again.' }); } } const store = readStore(); const target = store.users.find((item) => item.id === user.id); target.billingPlan = plan; target.billingSelectedAt = new Date().toISOString(); writeStore(store); log('billing_plan_selected', req, target, { plan }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: plan, billingSelectedAt: target.billingSelectedAt } }); } catch (err) { log('billing_metadata_sync_failed', req, user, { error: err.message }); } return json(res, 200, { next: '/console', plan }); }
@@ -551,17 +738,17 @@ const app = async (req, res) => {
       } catch (err) { log('pending_key_check_failed', req, user, { error: err.message }); }
       return json(res, 200, { keys, freshKey });
     }
-    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); if (!label?.trim()) return json(res, 400, { error: 'A key label is required.' });
+    if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); const cleanLabel = String(label || '').trim(); if (!cleanLabel) return json(res, 400, { error: 'A key label is required.' }); if (cleanLabel.length > 80 || /[\u0000-\u001f\u007f]/.test(cleanLabel)) return json(res, 400, { error: 'Key labels must be 80 printable characters or fewer.' });
       if (liansConfigured()) {
         try {
           const tier = user.billingPlan || 'free';
           const scopes = TIER_SCOPES[tier] || TIER_SCOPES.free;
-          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace: liansNamespace(user), scopes, label: label.trim() } });
+          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace: liansNamespace(user), scopes, label: cleanLabel } });
           log('api_key_created', req, user, { keyId: created.id, tier });
           return json(res, 201, { key: { ...liansKeyView(created), prefix: `${String(created.key).slice(0, 16)}…` }, rawKey: created.key });
         } catch (err) { log('lians_key_create_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to create key via the Lians API. Please try again.' }); }
       }
-      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: label.trim(), prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
+      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: cleanLabel, prefix: `${rawKey.slice(0, 18)}…`, hashedKey: sha256(rawKey), scopes: TIER_SCOPES[user.billingPlan || 'free'] || TIER_SCOPES.free, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); const { hashedKey, ...safeKey } = key; log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key: safeKey, rawKey }); }
     if (pathname.match(/^\/api\/keys\/[^/]+\/rotate$/) && req.method === 'POST') {
       const user = await apiOnboarding(req, res); if (!user) return;
       const id = pathname.split('/')[3];
@@ -662,6 +849,108 @@ const app = async (req, res) => {
     // All backed by a per-user, server-held API key on the user's own namespace.
     if (pathname.startsWith('/api/console/')) {
       const user = await apiOnboarding(req, res); if (!user) return;
+      const isLearningRoute = pathname.startsWith('/api/console/experiences') ||
+        pathname.startsWith('/api/console/adaptive-recall') ||
+        pathname.startsWith('/api/console/context') ||
+        pathname.startsWith('/api/console/reflections');
+      if (isLearningRoute && !liansConsole.configured()) {
+        return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
+      }
+      try {
+        if (pathname === '/api/console/experiences' && req.method === 'POST') {
+          const experience = await liansConsole.createExperience(user, await readBody(req));
+          log('agent_experience_created', req, user, { experienceId: experience.id, agentId: experience.agent_id });
+          return json(res, 201, { experience });
+        }
+        if (pathname === '/api/console/experiences' && req.method === 'GET') {
+          const result = await liansConsole.listExperiences(user, {
+            agentId: String(url.searchParams.get('agent_id') || '').slice(0, 200) || null,
+            status: String(url.searchParams.get('status') || '').slice(0, 30) || null,
+            limit: url.searchParams.get('limit'),
+          });
+          return json(res, 200, result);
+        }
+        const outcomeMatch = pathname.match(/^\/api\/console\/experiences\/([^/]+)\/outcome$/);
+        if (outcomeMatch && req.method === 'PATCH') {
+          const experience = await liansConsole.recordExperienceOutcome(user, outcomeMatch[1], await readBody(req));
+          log('agent_experience_completed', req, user, { experienceId: experience.id, reward: experience.reward });
+          return json(res, 200, { experience });
+        }
+        if (pathname === '/api/console/adaptive-recall' && req.method === 'POST') {
+          if (!liansConsole.configured()) return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
+          const body = await readBody(req);
+          const agentId = String(body.agent_id || '').trim().slice(0, 200);
+          const query = String(body.query || '').trim().slice(0, 500);
+          if (!agentId || !query) return json(res, 400, { error: 'agent_id and query are required.' });
+          const requestedK = Math.max(1, Math.min(Number(body.k) || 50, 200));
+          const asOf = body.as_of ? String(body.as_of) : null;
+          const result = await liansConsole.recall(user, {
+            agentId,
+            query,
+            k: requestedK,
+            asOf,
+            strategy: 'adaptive',
+            maxQueryVariants: body.max_query_variants,
+          });
+          log('adaptive_recall_completed', req, user, { agentId, memories: result.memories?.length || 0 });
+          return json(res, 200, result);
+        }
+        if (pathname === '/api/console/context' && req.method === 'POST') {
+          if (!liansConsole.configured()) return json(res, 503, { error: 'The Lians backend is not configured for this deployment.' });
+          const body = await readBody(req);
+          const agentId = String(body.agent_id || '').trim().slice(0, 200);
+          const query = String(body.query || '').trim().slice(0, 500);
+          if (!agentId || !query) return json(res, 400, { error: 'agent_id and query are required.' });
+          const candidateK = Math.max(20, Math.min(Number(body.k) || 200, 200));
+          const asOf = body.as_of ? String(body.as_of) : null;
+          const context = await liansConsole.context(user, {
+            agentId,
+            query,
+            k: Math.min(candidateK, Number(body.max_items) || candidateK),
+            asOf,
+            maxTokens: body.max_tokens,
+            mmr: body.mmr === true,
+            maxQueryVariants: body.max_query_variants,
+          });
+          log('agent_context_compiled', req, user, {
+            agentId,
+            selected: context.memories.length,
+            excluded: context.excluded.length,
+            estimatedTokens: context.token_estimate,
+          });
+          return json(res, 200, context);
+        }
+        if (pathname === '/api/console/reflections' && req.method === 'GET') {
+          const status = String(url.searchParams.get('status') || 'pending').slice(0, 30);
+          const result = await liansConsole.listReflections(user, status);
+          return json(res, 200, result);
+        }
+        if (pathname === '/api/console/reflections/generate' && req.method === 'POST') {
+          const body = await readBody(req);
+          const agentId = String(body.agent_id || '').trim().slice(0, 200);
+          if (!agentId) return json(res, 400, { error: 'agent_id is required.' });
+          const result = await liansConsole.generateReflections(user, { agent_id: agentId });
+          const proposals = result.proposals || [];
+          log('reflection_proposals_generated', req, user, { agentId, created: proposals.length });
+          return json(res, 201, { proposals });
+        }
+        const reflectionMatch = pathname.match(/^\/api\/console\/reflections\/([^/]+)$/);
+        if (reflectionMatch && req.method === 'PATCH') {
+          const body = await readBody(req);
+          const action = String(body.action || '');
+          const proposal = await liansConsole.reviewReflection(user, reflectionMatch[1], {
+            action,
+            reviewer: user.email || user.id,
+            note: body.note || null,
+          });
+          log('reflection_proposal_reviewed', req, user, { proposalId: proposal.id, status: proposal.status });
+          return json(res, 200, { proposal });
+        }
+      } catch (err) {
+        const status = err.status >= 400 && err.status < 500 ? err.status : 502;
+        log('experience_learning_request_failed', req, user, { route: pathname, error: err.message, status: err.status });
+        return json(res, status, { error: status === 502 ? 'Unable to access the experience learning store. Please try again.' : err.message });
+      }
       if (!liansConsole.configured()) {
         // Governance view renders an unconfigured empty state instead of erroring.
         if (pathname === '/api/console/governance' && req.method === 'GET') {
@@ -761,7 +1050,7 @@ const app = async (req, res) => {
     }
 
     // Static files
-    const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+    const relative = pathname === '/' ? 'marketing.html' : pathname.replace(/^\//, '');
     const file = path.resolve(root, relative);
     if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
     return serveFile(res, file);
@@ -769,6 +1058,8 @@ const app = async (req, res) => {
     log('server_error', req, null, { message: error.message, stack: error.stack });
     if (Sentry) { Sentry.captureException(error); try { await Sentry.flush(2000); } catch {} }
     return json(res, 500, { error: 'Unexpected server error.' });
+  } finally {
+    await controlStore.flush();
   }
 };
 

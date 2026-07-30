@@ -114,13 +114,107 @@ const createLiansConsole = ({ apiUrl = '', adminSecret = '', clerk, log = () => 
       body: { agent_id: PLAYGROUND_AGENT, content, event_time: new Date().toISOString() },
     });
 
+  const writeMemory = (user, { agentId, content, eventTime = new Date().toISOString(), metadata = {} } = {}) =>
+    dataRequest(user, '/v1/memories', {
+      method: 'POST',
+      body: { agent_id: agentId, content, event_time: eventTime, metadata },
+    });
+
   const playgroundRecall = (user, query, asOf) =>
     dataRequest(user, '/v1/recall', {
       method: 'POST',
       body: { agent_id: PLAYGROUND_AGENT, query, k: 5, ...(asOf ? { as_of: asOf } : {}) },
     });
 
-  return { configured, namespaceFor, consoleKeyFor, dataRequest, governance, resolveSupersession, resolveAdmission, playgroundWrite, playgroundRecall };
+  const recall = (user, {
+    agentId,
+    query,
+    k = 10,
+    asOf,
+    includeContext = true,
+    strategy = 'adaptive',
+    maxQueryVariants = 4,
+  } = {}) =>
+    dataRequest(user, '/v1/recall', {
+      method: 'POST',
+      body: {
+        agent_id: agentId,
+        query,
+        k: Math.max(1, Math.min(Number(k) || 10, 200)),
+        include_context: Boolean(includeContext),
+        strategy,
+        max_query_variants: maxQueryVariants,
+        ...(asOf ? { as_of: asOf } : {}),
+      },
+    });
+
+  const context = (user, {
+    agentId,
+    query,
+    k = 50,
+    asOf,
+    maxTokens = 2000,
+    mmr = false,
+    maxQueryVariants = 4,
+  } = {}) =>
+    dataRequest(user, '/v1/context', {
+      method: 'POST',
+      body: {
+        agent_id: agentId,
+        query,
+        k: Math.max(1, Math.min(Number(k) || 50, 200)),
+        max_tokens: Math.max(128, Math.min(Number(maxTokens) || 2000, 32000)),
+        mmr: Boolean(mmr),
+        strategy: 'adaptive',
+        max_query_variants: maxQueryVariants,
+        ...(asOf ? { as_of: asOf } : {}),
+      },
+    });
+
+  const createExperience = (user, body) =>
+    dataRequest(user, '/v1/experiences', { method: 'POST', body });
+  const listExperiences = (user, { agentId, status, limit = 100 } = {}) => {
+    const params = new URLSearchParams();
+    if (agentId) params.set('agent_id', agentId);
+    if (status) params.set('status', status);
+    params.set('limit', String(limit));
+    return dataRequest(user, `/v1/experiences?${params}`);
+  };
+  const recordExperienceOutcome = (user, id, body) =>
+    dataRequest(user, `/v1/experiences/${encodeURIComponent(id)}/outcome`, {
+      method: 'PATCH',
+      body,
+    });
+  const generateReflections = (user, body) =>
+    dataRequest(user, '/v1/reflections/generate', { method: 'POST', body });
+  const listReflections = (user, status = 'pending') =>
+    dataRequest(user, `/v1/reflections?status=${encodeURIComponent(status)}`);
+  const reviewReflection = (user, id, body) =>
+    dataRequest(user, `/v1/reflections/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body,
+    });
+
+  return {
+    configured,
+    namespaceFor,
+    consoleKeyFor,
+    dataRequest,
+    governance,
+    resolveSupersession,
+    resolveAdmission,
+    playgroundWrite,
+    playgroundRecall,
+    writeMemory,
+    recall,
+    context,
+    createExperience,
+    listExperiences,
+    recordExperienceOutcome,
+    generateReflections,
+    listReflections,
+    reviewReflection,
+  };
 };
 
 module.exports = { createLiansConsole, CONSOLE_KEY_LABEL, CONSOLE_KEY_SCOPES, PLAYGROUND_AGENT };

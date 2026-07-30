@@ -3,13 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="canonical" href="https://www.lians.ai/compare" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Lians vs agent memory alternatives" />
-    <meta property="og:description" content="Reproducible LOCOMO, LongMemEval-S, and regulated-memory results across leading agent memory systems." />
-    <meta property="og:url" content="https://www.lians.ai/compare" />
-    <meta property="og:image" content="https://www.lians.ai/og-card.png" />
-    <meta name="twitter:card" content="summary_large_image" />
     <meta name="description" content="Lians vs mem0, Zep, Letta, Hindsight, and Supermemory on the regulated-memory invariants that accumulate-everything stores fail by design: stale suppression, point-in-time recall, provable erasure, lookahead guard, and audit snapshot." />
     <title>Compare · Lians vs mem0, Zep, Letta, Hindsight &amp; Supermemory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,13 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
     <link rel="stylesheet" href="/lians-visuals.css" />
-    <link rel="icon" href="/favicon.png?v=4" type="image/png" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
     <header><div class="wrap"><nav class="nav" aria-label="Primary">
-      <a class="brand" href="/"><span class="mark">L</span> Lians</a>
+      <a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a>
       <button class="menu-btn" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
       <div class="links">
         <a href="/product">Product</a><a href="/solutions">Solutions</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a><a href="/compare">Compare</a>
@@ -35,7 +28,7 @@
       <section class="wrap hero">
         <p class="crumb"><a href="/">Home</a> / Compare</p>
         <h1>Win the bake-off on the <em>numbers</em>.</h1>
-        <p class="lede">Recall quality on LOCOMO judged by mem0's own harness, plus five regulated invariants scored across six products - all reproducible from the open repo.</p>
+        <p class="lede">Recall quality on LOCOMO judged by mem0's own harness, plus five regulated invariants scored across six products. All results are reproducible from the open repo.</p>
         <div class="actions"><a class="btn btn-primary" href="https://github.com/Lians-ai/Lians/blob/master/docs/regulated-eval-results.md" target="_blank" rel="noreferrer">Methodology ↗</a></div>
       </section>
 
@@ -56,7 +49,7 @@
           <span class="s"><b>89.4%</b><span>Lians · LLM-judged, all 500 questions</span></span>
           <span class="s"><b>94.8%</b><span>mem0 · their published score</span></span>
         </div>
-        <p class="metaline">Same unmodified harness, same models. Retrieval already surfaces the answer sessions for 97% of questions - the gap is answer assembly, and the fix is in progress on the open repo.</p>
+        <p class="metaline">Same unmodified harness, same models. Retrieval already surfaces the answer sessions for 97% of questions. The gap is answer assembly, and the fix is in progress on the open repo.</p>
       </section>
 
       <section class="wrap block" aria-label="Eval">
@@ -86,7 +79,6 @@
           <a class="item" href="/compare/letta"><span class="head"><b>vs Letta</b><span class="meta">full comparison →</span></span><p>Excellent self-editing context, but edits are silent overwrites with no validity windows.</p></a>
           <a class="item" href="/compare/hindsight"><span class="head"><b>vs Hindsight</b><span class="meta">full comparison →</span></span><p>Temporal-aware episodic banks without validity-gated supersession or provable erasure.</p></a>
           <a class="item" href="/compare/supermemory"><span class="head"><b>vs Supermemory</b><span class="meta">full comparison →</span></span><p>Fast ingestion and retrieval, but accumulate-and-rank, with no point-in-time reconstruction.</p></a>
-          <a class="item" href="/compare/heartwood"><span class="head"><b>vs Heartwood Memory</b><span class="meta">full comparison →</span></span><p>Strong policy, provenance, and erasure controls. Lians adds bitemporal state, deterministic supersession, and point-in-time reconstruction.</p></a>
         </div>
       </section>
     </main>
@@ -94,10 +86,10 @@
     <section class="band"><div class="wrap"><h2>Bring the numbers to your compliance officer.</h2><a class="btn" href="/login">Get an API key →</a></div></section>
 
     <footer class="foot"><div class="wrap">
-      <div class="foot-top"><a class="brand" href="/"><span class="mark">L</span> Lians</a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
+      <div class="foot-top"><a class="brand" href="/"><img class="logo-on-dark" src="/logo-white.png" alt="Lians" /><img class="logo-on-light" src="/logo-blue.png" alt="Lians" /></a><p>Regulated AI memory infrastructure: bitemporal, auditable, and crypto-shreddable.</p></div>
       <div class="foot-cols">
         <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/issues" target="_blank" rel="noreferrer">Issues ↗</a></div>
+        <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
         <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
         <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
       </div>

@@ -10,15 +10,26 @@
   }
 
   setStatus('loading');
-  const clerkScriptUrls = [...new Set([config.clerkJsUrl, config.clerkJsFallbackUrl].filter(Boolean))];
   let loadTimeout;
+  const loadClerkUi = () => new Promise((resolve, reject) => {
+    if (window.__internal_ClerkUICtor) return resolve();
+    if (!config.clerkUiUrl) return reject(new Error('Clerk UI is not configured.'));
+    const uiScript = document.createElement('script');
+    uiScript.async = true;
+    uiScript.crossOrigin = 'anonymous';
+    uiScript.integrity = config.clerkUiIntegrity;
+    uiScript.src = config.clerkUiUrl;
+    uiScript.onload = resolve;
+    uiScript.onerror = () => reject(new Error('Unable to load the secure sign-in interface.'));
+    document.head.append(uiScript);
+  });
 
   const fail = () => {
     window.clearTimeout(loadTimeout);
     setStatus('error', 'Unable to load secure sign-in. Check your Clerk publishable key, allowed domains, and network connection.');
   };
-  const loadScript = (index = 0) => {
-    if (!clerkScriptUrls[index]) return fail();
+  const loadScript = () => {
+    if (!config.clerkJsUrl || !config.clerkJsIntegrity) return fail();
     window.clearTimeout(loadTimeout);
     // Failover timer covers only the script DOWNLOAD. It must be cleared the moment
     // onload fires - otherwise it can fire during the (network-bound) Clerk.load()
@@ -26,19 +37,24 @@
     // the v4 CDN, leaving window.Clerk half-initialized and billing checkout broken.
     loadTimeout = window.setTimeout(() => {
       script.remove();
-      loadScript(index + 1);
+      fail();
     }, 6000);
 
     const script = document.createElement('script');
     script.async = true;
     script.crossOrigin = 'anonymous';
+    script.integrity = config.clerkJsIntegrity;
     script.dataset.clerkJsScript = 'true';
     script.dataset.clerkPublishableKey = config.clerkPublishableKey;
     script.src = clerkScriptUrls[index];
     script.onload = async () => {
       window.clearTimeout(loadTimeout);
       try {
-        await window.Clerk.load({ publishableKey: config.clerkPublishableKey });
+        await loadClerkUi();
+        await window.Clerk.load({
+          publishableKey: config.clerkPublishableKey,
+          ui: { ClerkUI: window.__internal_ClerkUICtor },
+        });
         setStatus('ready');
       } catch (error) {
         window.clearTimeout(loadTimeout);
@@ -52,7 +68,7 @@
     script.onerror = () => {
       window.clearTimeout(loadTimeout);
       script.remove();
-      loadScript(index + 1);
+      fail();
     };
     document.head.append(script);
   };

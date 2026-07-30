@@ -3,29 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Bitemporal memory for AI agents. Reconstruct exactly what an agent knew at any past moment, suppress stale facts, and produce a tamper-evident record." />
-    <link rel="canonical" href="https://www.lians.ai/" />
-    <meta property="og:title" content="Lians | Bitemporal memory for AI agents" />
-    <meta property="og:description" content="Stop AI agents from answering yesterday's questions with today's facts. Open source, self-hostable, and audit-ready." />
+    <meta name="description" content="Lians is the system of record for AI in regulated industries: one tamper-evident ledger for what AI systems knew, did, and why." />
+    <meta property="og:title" content="Lians · Regulated AI memory infrastructure" />
+    <meta property="og:description" content="A memory control plane for AI agents on time-sensitive, audited, and confidential data: bitemporal, tamper-evident, and crypto-shreddable." />
     <meta property="og:url" content="https://www.lians.ai/" />
     <meta property="og:image" content="https://www.lians.ai/og-card.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Lians | Bitemporal memory for AI agents" />
-    <meta name="twitter:description" content="Point-in-time recall, stale-fact suppression, and a tamper-evident record for AI agents." />
     <meta name="twitter:image" content="https://www.lians.ai/og-card.png" />
     <link rel="alternate" type="application/rss+xml" title="Lians Blog" href="https://www.lians.ai/feed.xml" />
-    <title>Lians | Bitemporal memory for AI agents</title>
+    <title>Lians · Regulated AI memory infrastructure</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/lians.css" />
     <link rel="stylesheet" href="/lians-visuals.css" />
-    <link rel="icon" href="/favicon.ico?v=4" sizes="any" />
-    <link rel="icon" href="/favicon.png?v=4" type="image/png" sizes="512x512" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
     <script>(function(){try{var t=localStorage.getItem("lians-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();</script>
-    <script type="application/ld+json">
-      {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Lians","applicationCategory":"DeveloperApplication","operatingSystem":"Linux, macOS, Windows","url":"https://www.lians.ai/","downloadUrl":"https://pypi.org/project/lians-sdk/","codeRepository":"https://github.com/Lians-ai/Lians","license":"https://www.apache.org/licenses/LICENSE-2.0","description":"Bitemporal memory for AI agents with point-in-time recall, stale-fact suppression, tamper-evident audit records, and crypto-shred erasure."}
-    </script>
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
@@ -51,28 +44,16 @@
 
     <main>
       <section class="wrap hero">
-        <p class="eyebrow"><span class="dot"></span> Open source · Runs locally · No account required</p>
-        <h1>Stop AI agents from answering yesterday's questions with <em>today's facts</em>.</h1>
-        <p class="lede">Lians is bitemporal memory for AI agents. It suppresses stale facts, reconstructs exactly what was knowable at a past moment, and produces the record behind every answer.</p>
-
-        <div class="actions hero-actions">
-          <a class="btn btn-primary" href="#watch">Run the 40-second demo →</a>
-          <a class="btn" href="/compare">See benchmark results →</a>
-          <a class="tlink" href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">Inspect the source ↗</a>
-        </div>
-
-        <div class="stats hero-stats" aria-label="Published benchmark results">
-          <a class="s" href="/compare"><b>92.9%</b><span>LOCOMO</span></a>
-          <a class="s" href="/compare"><b>89.4%</b><span>LongMemEval-S</span></a>
-          <a class="s" href="/research"><b>5 / 5</b><span>regulated invariants</span></a>
-        </div>
+        <p class="eyebrow"><span class="dot"></span> Founding Partner Cohort · Seven companies · Early access</p>
+        <h1>The system of record for AI <em>in regulated industries</em>.</h1>
+        <p class="lede">One tamper-evident, bitemporal, erasure-compatible ledger for what AI systems knew, what they did, and why. Start with audit-grade memory. Add behavioral records and Evidence Packs without building a second compliance stack.</p>
 
         <div class="term" aria-label="Install and use Lians">
           <div class="term-tabs" role="tablist" aria-label="Language">
             <button class="term-tab active" role="tab" aria-selected="true" data-lang="python" data-install="pip install lians-sdk[local]">python</button>
             <button class="term-tab" role="tab" aria-selected="false" data-lang="node" data-install="npm install @lians-ai/lians">typescript</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="go" data-install="go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1">go</button>
-            <button class="term-tab" role="tab" aria-selected="false" data-lang="java" data-install="ai.lians:lians-sdk:0.4.1">java</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="go" data-install="go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0">go</button>
+            <button class="term-tab" role="tab" aria-selected="false" data-lang="java" data-install="ai.lians:lians-sdk:0.4.0">java</button>
             <button class="term-tab" role="tab" aria-selected="false" data-lang="c" data-install="cmake -B build &amp;&amp; cmake --build build">c</button>
             <div class="term-dots" aria-hidden="true"><i></i><i></i><i></i></div>
             <button class="term-copy" type="button" aria-label="Copy install command">copy</button>
@@ -93,7 +74,7 @@ mem.<span class="kw">recall_at</span>(query=<span class="st">"NVDA guidance"</sp
 
 <span class="kw">await</span> client.<span class="kw">recall</span>({ query: <span class="st">"NVDA guidance"</span>, as_of: <span class="st">"2025-03-01"</span> })
 <span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="go" hidden><span class="pr">$</span> go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1
+<pre class="term-body" data-term="go" hidden><span class="pr">$</span> go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0
 
 c.<span class="kw">AddMemory</span>(ctx, lians.AddMemoryRequest{AgentID: <span class="st">"desk"</span>,
     Content:   <span class="st">"NVDA guidance raised to $40B"</span>,
@@ -102,7 +83,7 @@ c.<span class="kw">AddMemory</span>(ctx, lians.AddMemoryRequest{AgentID: <span c
 c.<span class="kw">RecallAt</span>(ctx, <span class="st">"desk"</span>, <span class="st">"NVDA guidance"</span>,
     time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC), 5)
 <span class="cm">// →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B)</span><span class="cursor"></span></pre>
-<pre class="term-body" data-term="java" hidden><span class="cm">// Maven Central:</span> ai.lians:lians-sdk:0.4.1
+<pre class="term-body" data-term="java" hidden><span class="cm">// Maven Central →</span> ai.lians:lians-sdk:0.4.0
 
 client.<span class="kw">addMemory</span>(<span class="st">"desk"</span>, <span class="st">"NVDA guidance raised to $40B"</span>,
     Instant.parse(<span class="st">"2025-11-19T00:00:00Z"</span>), Map.of());
@@ -120,7 +101,12 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
 <span class="cm">/* →</span> <span class="out">"$32B"</span> <span class="cm">(valid then, not today's $40B) */</span><span class="cursor"></span></pre>
         </div>
 
-        <p class="metaline trustline"><span class="ok">Verified distribution</span> · <a href="https://registry.modelcontextprotocol.io/" target="_blank" rel="noreferrer">Official MCP Registry</a> · <a href="https://glama.ai/mcp/servers/Lians-ai/Lians" target="_blank" rel="noreferrer">Glama approved</a> · Apache 2.0 · Self-hostable</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/design-partners">Apply to the founding cohort →</a>
+          <a class="tlink" href="#watch">▶ Run the changing-facts demo</a>
+        </div>
+
+        <p class="metaline">Three founder-led implementation partners · Four technical evaluation partners · Open source · Self-hostable · MCP-native</p>
       </section>
 
       <section class="wrap block" aria-label="Lians products">
@@ -133,8 +119,23 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
         </div>
       </section>
 
+      <section class="wrap block" id="integrations" aria-label="Integration surfaces">
+        <p class="block-label">Integration surfaces · Technical preview</p>
+        <h2>Keep the systems your teams already use. Add the evidence layer underneath.</h2>
+        <div class="list">
+          <a class="item" href="https://github.com/Lians-ai/Lians/tree/master/integrations/grafana-lians-app" target="_blank" rel="noreferrer">
+            <span class="head"><b>Grafana + OpenTelemetry</b><span class="meta">working OTLP/HTTP receiver</span></span>
+            <p>Send unsampled traces to Lians through the authenticated <code>POST /v1/traces</code> endpoint while Grafana Alloy fans the same stream into Grafana Cloud. GenAI semantic attributes are retained and indexed by model. The Lians Grafana app is buildable submission source; it is not yet catalog-listed or approved by Grafana Labs.</p>
+          </a>
+          <a class="item" href="https://github.com/Lians-ai/Lians/blob/master/docs/partner-integrations.md#validmind" target="_blank" rel="noreferrer">
+            <span class="head"><b>ValidMind</b><span class="meta">custom integration API</span></span>
+            <p>Expose observed models, AI agents, and review findings through ValidMind's <code>/api/v1</code> reference contract, including schema discovery and <code>vm_cuid</code> write-back. This is a Lians-built custom integration surface, not a claim that ValidMind ships a built-in connector.</p>
+          </a>
+        </div>
+      </section>
+
       <section class="wrap block partner-brief" aria-label="Design partner pilot">
-        <p class="block-label">Founding Partner Cohort · 7 openings</p>
+        <p class="block-label">Founding Partner Cohort · Seven companies</p>
         <h2>Turn a changing-facts failure into a production-grade evidence trail.</h2>
         <p class="intro">An eight-week, paid implementation for financial-research, risk, and compliance-agent vendors. We instrument one high-value workflow, define what “correct as of” means, and leave you with a reproducible acceptance suite.</p>
         <div class="actions"><a class="btn btn-primary" href="/design-partners">See the pilot scope →</a><a class="tlink" href="/research">Inspect the evaluation method →</a></div>
@@ -208,8 +209,8 @@ client.<span class="kw">recallAt</span>(<span class="st">"desk"</span>, <span cl
 1. Detect the stack and install the SDK:
    - Python:            pip install lians-sdk            (extras: [langchain] [langgraph] [crewai] [mcp] [all])
    - TypeScript / Node:  npm install @lians-ai/lians
-   - Go:                go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.1
-   - Java (JVM 11+):    ai.lians:lians-sdk:0.4.1 (Maven Central)
+   - Go:                go get github.com/Lians-ai/Lians/agentmem/sdk/go@v0.4.0
+   - Java (JVM 11+):    ai.lians:lians-sdk:0.4.0 (Maven Central)
 
 2. Configure via environment only (never hardcode secrets): read LIANS_URL and LIANS_API_KEY.
    If they are unset, add both to .env.example and tell me to get a key at https://www.lians.ai/login
@@ -254,7 +255,7 @@ Docs: https://www.lians.ai/docs · SDKs: https://www.lians.ai/sdks · API keys: 
         </div>
         <div class="foot-cols">
           <div><span>Product</span><a href="/product">How it works</a><a href="/compliance">Audit &amp; compliance</a><a href="/security">Security</a><a href="/trust">Trust center</a><a href="/memory-governor">Memory Governor</a></div>
-          <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/issues" target="_blank" rel="noreferrer">Issues ↗</a></div>
+          <div><span>Developers</span><a href="/sdks">SDKs · Python/TS/Go/Java/C</a><a href="/docs">Docs</a><a href="/research">Research</a><a href="/changelog">Changelog</a><a href="https://github.com/Lians-ai/Lians" target="_blank" rel="noreferrer">GitHub ↗</a><a href="https://github.com/Lians-ai/Lians/discussions" target="_blank" rel="noreferrer">Discussions ↗</a></div>
           <div><span>Solutions</span><a href="/solutions/financial-services">Financial services</a><a href="/solutions/healthcare">Healthcare</a><a href="/solutions/legal">Legal</a></div>
           <div><span>Company</span><a href="/about">About</a><a href="/blog">Blog</a><a href="/compare">Compare alternatives</a><a href="/pricing">Pricing</a><a href="/status">Status</a><a href="/login">Sign in</a><a href="https://x.com/Liansdev" target="_blank" rel="noreferrer">X ↗</a><a href="https://www.linkedin.com/company/lians-ai" target="_blank" rel="noreferrer">LinkedIn ↗</a></div>
         </div>

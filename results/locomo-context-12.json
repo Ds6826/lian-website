@@ -1,0 +1,3568 @@
+{
+  "suite": "lians-locomo-context-pack-v1",
+  "generated_at": "2026-07-28T21:35:20.494Z",
+  "protocol": "judge-free lexical retrieval and context-budget evidence retention",
+  "note": "Outcome learning is intentionally disabled: LoCoMo supplies no leakage-safe prior outcome log.",
+  "dataset": "C:\\Users\\jedie\\Downloads\\lian-website-main\\.projects\\Lians-canonical\\agentmem\\benchmarks\\data\\locomo10.json",
+  "conversations": 2,
+  "questions": 231,
+  "configuration": {
+    "retrieval_k": 20,
+    "max_items": 12,
+    "max_tokens": 1200
+  },
+  "metrics": {
+    "raw_evidence_hit_at_k": 0.5368,
+    "compiled_evidence_hit": 0.4545,
+    "evidence_hit_retention": 0.8468,
+    "raw_evidence_all_at_k": 0.4805,
+    "compiled_evidence_all": 0.4069,
+    "mean_selected_items": 12,
+    "mean_estimated_tokens": 491.27,
+    "elapsed_ms": 610.04
+  },
+  "detail": [
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to the LGBTQ support group?",
+      "evidence": [
+        "D1:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 617
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie paint a sunrise?",
+      "evidence": [
+        "D1:12"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 393
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "What fields would Caroline be likely to pursue in her educaton?",
+      "evidence": [
+        "D1:9",
+        "D1:11"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 412
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What did Caroline research?",
+      "evidence": [
+        "D2:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 359
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What is Caroline's identity?",
+      "evidence": [
+        "D1:5"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 371
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie run a charity race?",
+      "evidence": [
+        "D2:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 416
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When is Melanie planning on going camping?",
+      "evidence": [
+        "D2:7"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 498
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What is Caroline's relationship status?",
+      "evidence": [
+        "D3:13",
+        "D2:14"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 348
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline give a speech at a school?",
+      "evidence": [
+        "D3:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 397
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline meet up with her friends, family, and mentors?",
+      "evidence": [
+        "D3:11"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 537
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "How long has Caroline had her current group of friends for?",
+      "evidence": [
+        "D3:13"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 555
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "Where did Caroline move from 4 years ago?",
+      "evidence": [
+        "D3:13",
+        "D4:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 560
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "How long ago was Caroline's 18th birthday?",
+      "evidence": [
+        "D4:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 506
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What career path has Caroline decided to persue?",
+      "evidence": [
+        "D4:13",
+        "D1:11"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 393
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Caroline still want to pursue counseling as a career if she hadn't received support growing up?",
+      "evidence": [
+        "D4:15",
+        "D3:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 657
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What activities does Melanie partake in?",
+      "evidence": [
+        "D5:4",
+        "D9:1",
+        "D1:12",
+        "D1:18"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 376
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie sign up for a pottery class?",
+      "evidence": [
+        "D5:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 560
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When is Caroline going to the transgender conference?",
+      "evidence": [
+        "D5:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 613
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "Where has Melanie camped?",
+      "evidence": [
+        "D6:16",
+        "D4:6",
+        "D8:32"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 353
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What do Melanie's kids like?",
+      "evidence": [
+        "D6:6",
+        "D4:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 549
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go to the museum?",
+      "evidence": [
+        "D6:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 428
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline have a picnic?",
+      "evidence": [
+        "D6:11"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 348
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Caroline likely have Dr. Seuss books on her bookshelf?",
+      "evidence": [
+        "D6:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 414
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What books has Melanie read?",
+      "evidence": [
+        "D7:8",
+        "D6:10"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 412
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What does Melanie do to destress?",
+      "evidence": [
+        "D7:22",
+        "D5:4"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 386
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to the LGBTQ conference?",
+      "evidence": [
+        "D7:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 494
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie read the book \"nothing is impossible\"?",
+      "evidence": [
+        "D7:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 483
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Caroline pursue writing as a career option?",
+      "evidence": [
+        "D7:5",
+        "D7:9"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 427
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to the adoption meeting?",
+      "evidence": [
+        "D8:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 537
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go to the pottery workshop?",
+      "evidence": [
+        "D8:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 624
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go camping in June?",
+      "evidence": [
+        "D4:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 462
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What LGBTQ+ events has Caroline participated in?",
+      "evidence": [
+        "D5:1",
+        "D8:17",
+        "D3:1",
+        "D1:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 511
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go to a pride parade during the summer?",
+      "evidence": [
+        "D5:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 668
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What events has Caroline participated in to help children?",
+      "evidence": [
+        "D9:2",
+        "D3:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 530
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go camping in July?",
+      "evidence": [
+        "D9:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 462
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline join a mentorship program?",
+      "evidence": [
+        "D9:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 414
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What did Melanie paint recently?",
+      "evidence": [
+        "D8:6; D9:17"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 449
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What activities has Melanie done with her family?",
+      "evidence": [
+        "D8:4",
+        "D8:6",
+        "D9:1",
+        "D6:4",
+        "D1:18",
+        "D3:14"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 552
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "In what ways is Caroline participating in the LGBTQ community?",
+      "evidence": [
+        "D10:3",
+        "D5:1",
+        "D9:12",
+        "D9:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 645
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "How many times has Melanie gone to the beach in 2023?",
+      "evidence": [
+        "D10:8",
+        "D6:16"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 632
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline join a new activist group?",
+      "evidence": [
+        "D10:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 490
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Melanie be more interested in going to a national park or a theme park?",
+      "evidence": [
+        "D10:12",
+        "D10:14"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 548
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What kind of art does Caroline make?",
+      "evidence": [
+        "D11:12",
+        "D11:8",
+        "D9:14"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 502
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When is Melanie's daughter's birthday?",
+      "evidence": [
+        "D11:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 398
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline attend a pride parade in August?",
+      "evidence": [
+        "D11:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 655
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "Who supports Caroline when she has a negative experience?",
+      "evidence": [
+        "D12:1",
+        "D3:11"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 442
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What types of pottery have Melanie and her kids made?",
+      "evidence": [
+        "D12:14",
+        "D8:4",
+        "D5:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 617
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline and Melanie go to a pride fesetival together?",
+      "evidence": [
+        "D12:15"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 409
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "What would Caroline's political leaning likely be?",
+      "evidence": [
+        "D12:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 342
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What has Melanie painted?",
+      "evidence": [
+        "D13:8",
+        "D8:6",
+        "D1:12"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 396
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What are Melanie's pets' names?",
+      "evidence": [
+        "D13:4",
+        "D7:18"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 372
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline apply to adoption agencies?",
+      "evidence": [
+        "D13:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 626
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline draw a self-portrait?",
+      "evidence": [
+        "D13:11"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 502
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What subject have Caroline and Melanie both painted?",
+      "evidence": [
+        "D14:5",
+        "D8:6"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 412
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What symbols are important to Caroline?",
+      "evidence": [
+        "D14:15",
+        "D4:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 494
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline encounter people on a hike and have a negative experience?",
+      "evidence": [
+        "D14:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 802
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie make a plate in pottery class?",
+      "evidence": [
+        "D14:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 540
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Caroline be considered religious?",
+      "evidence": [
+        "D14:19",
+        "D12:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 345
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What instruments does Melanie play?",
+      "evidence": [
+        "D15:26",
+        "D2:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 384
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What musical artists/bands has Melanie seen?",
+      "evidence": [
+        "D15:16",
+        "D11:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 346
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie go to the park?",
+      "evidence": [
+        "D15:2"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 428
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When is Caroline's youth center putting on a talent show?",
+      "evidence": [
+        "D15:11"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 599
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Melanie likely enjoy the song \"The Four Seasons\" by Vivaldi?",
+      "evidence": [
+        "D15:28"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 442
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What are some changes Caroline has faced during her transition journey?",
+      "evidence": [
+        "D16:15",
+        "D11:14"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 499
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What does Melanie do with her family on hikes?",
+      "evidence": [
+        "D16:4",
+        "D10:12"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 561
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline go biking with friends?",
+      "evidence": [
+        "D16:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 434
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "How long has Melanie been practicing art?",
+      "evidence": [
+        "D16:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 567
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "What personality traits might Melanie say Caroline has?",
+      "evidence": [
+        "D16:18",
+        "D13:16",
+        "D7:4"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 381
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What transgender-specific events has Caroline attended?",
+      "evidence": [
+        "D17:19",
+        "D15:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 570
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What book did Melanie read from Caroline's suggestion?",
+      "evidence": [
+        "D7:11",
+        "D17:10"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 458
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie's friend adopt a child?",
+      "evidence": [
+        "D17:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 427
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie get hurt?",
+      "evidence": [
+        "D17:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 447
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie's family go on a roadtrip?",
+      "evidence": [
+        "D18:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 561
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "How many children does Melanie have?",
+      "evidence": [
+        "D18:1",
+        "D18:7"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 407
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "When did Melanie go on a hike after the roadtrip?",
+      "evidence": [
+        "D18:17"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 515
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Melanie go on another roadtrip soon?",
+      "evidence": [
+        "D18:3",
+        "D18:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 466
+    },
+    {
+      "sample": "conv-26",
+      "category": 1,
+      "question": "What items has Melanie bought?",
+      "evidence": [
+        "D19:2",
+        "D7:18"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 353
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Caroline pass the adoption interview?",
+      "evidence": [
+        "D19:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 535
+    },
+    {
+      "sample": "conv-26",
+      "category": 2,
+      "question": "When did Melanie buy the figurines?",
+      "evidence": [
+        "D19:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 353
+    },
+    {
+      "sample": "conv-26",
+      "category": 3,
+      "question": "Would Caroline want to move back to her home country soon?",
+      "evidence": [
+        "D19:1",
+        "D19:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 647
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did the charity race raise awareness for?",
+      "evidence": [
+        "D2:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 730
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Melanie realize after the charity race?",
+      "evidence": [
+        "D2:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 536
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How does Melanie prioritize self-care?",
+      "evidence": [
+        "D2:5"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 579
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What are Caroline's plans for the summer?",
+      "evidence": [
+        "D2:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 443
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What type of individuals does the adoption agency Caroline is considering support?",
+      "evidence": [
+        "D2:12"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 489
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Why did Caroline choose the adoption agency?",
+      "evidence": [
+        "D2:12"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 652
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What is Caroline excited about in the adoption process?",
+      "evidence": [
+        "D2:14"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 601
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What does Melanie think about Caroline's decision to adopt?",
+      "evidence": [
+        "D2:15"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 464
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How long have Mel and her husband been married?",
+      "evidence": [
+        "D3:16"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 494
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What does Caroline's necklace symbolize?",
+      "evidence": [
+        "D4:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 390
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What country is Caroline's grandma from?",
+      "evidence": [
+        "D4:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 402
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What was grandma's gift to Caroline?",
+      "evidence": [
+        "D4:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 454
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What is Melanie's hand-painted bowl a reminder of?",
+      "evidence": [
+        "D4:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 593
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Melanie and her family do while camping?",
+      "evidence": [
+        "D4:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 578
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What kind of counseling and mental health services is Caroline interested in pursuing?",
+      "evidence": [
+        "D4:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 642
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What workshop did Caroline attend recently?",
+      "evidence": [
+        "D4:13"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 345
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What was discussed in the LGBTQ+ counseling workshop?",
+      "evidence": [
+        "D4:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 623
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What motivated Caroline to pursue counseling?",
+      "evidence": [
+        "D4:15"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 466
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What kind of place does Caroline want to create for people?",
+      "evidence": [
+        "D4:15"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 785
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Did Melanie make the black and white bowl in the photo?",
+      "evidence": [
+        "D5:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 658
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What kind of books does Caroline have in her library?",
+      "evidence": [
+        "D6:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 504
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What was Melanie's favorite book from her childhood?",
+      "evidence": [
+        "D6:10"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 530
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What book did Caroline recommend to Melanie?",
+      "evidence": [
+        "D7:11"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 397
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Caroline take away from the book \"Becoming Nicole\"?",
+      "evidence": [
+        "D7:13"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 569
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What are the new shoes that Melanie got used for?",
+      "evidence": [
+        "D7:19"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 510
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What is Melanie's reason for getting into running?",
+      "evidence": [
+        "D7:21"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 534
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What does Melanie say running has been great for?",
+      "evidence": [
+        "D7:24"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 436
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Mel and her kids make during the pottery workshop?",
+      "evidence": [
+        "D8:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 636
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What kind of pot did Mel and her kids make with clay?",
+      "evidence": [
+        "D8:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 624
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What creative project do Mel and her kids do together besides pottery?",
+      "evidence": [
+        "D8:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 581
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Mel and her kids paint in their latest project in July 2023?",
+      "evidence": [
+        "D8:6"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 465
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Caroline see at the council meeting for adoption?",
+      "evidence": [
+        "D8:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 541
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What do sunflowers represent according to Caroline?",
+      "evidence": [
+        "D8:11"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 378
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Why are flowers important to Melanie?",
+      "evidence": [
+        "D8:12"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 566
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What inspired Caroline's painting for the art show?",
+      "evidence": [
+        "D9:16"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 641
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How often does Melanie go to the beach with her kids?",
+      "evidence": [
+        "D10:10"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 646
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Melanie and her family see during their camping trip last year?",
+      "evidence": [
+        "D10:14"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 693
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How did Melanie feel while watching the meteor shower?",
+      "evidence": [
+        "D10:18"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 651
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Whose birthday did Melanie celebrate recently?",
+      "evidence": [
+        "D11:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 442
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Who performed at the concert at Melanie's daughter's birthday?",
+      "evidence": [
+        "D11:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 471
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Why did Melanie choose to use colors and patterns in her pottery project?",
+      "evidence": [
+        "D12:6"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 608
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What pet does Caroline have?",
+      "evidence": [
+        "D13:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 348
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What pets does Melanie have?",
+      "evidence": [
+        "D13:4"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 365
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Where did Oliver hide his bone once?",
+      "evidence": [
+        "D13:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 840
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What activity did Caroline used to do with her dad?",
+      "evidence": [
+        "D13:7"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 376
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Caroline make for a local church?",
+      "evidence": [
+        "D14:17"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 492
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Caroline find in her neighborhood during her walk?",
+      "evidence": [
+        "D14:23"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 392
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Which song motivates Caroline to be courageous?",
+      "evidence": [
+        "D15:23"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 422
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Which  classical musicians does Melanie enjoy listening to?",
+      "evidence": [
+        "D15:28"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 387
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "Who is Melanie a fan of in terms of modern music?",
+      "evidence": [
+        "D15:28"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 483
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How long has Melanie been creating art?",
+      "evidence": [
+        "D16:7"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 585
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What precautionary sign did Melanie see at the café?",
+      "evidence": [
+        "D16:16"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 585
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What advice does Caroline give for getting started with adoption?",
+      "evidence": [
+        "D17:7"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 601
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What setback did Melanie face in October 2023?",
+      "evidence": [
+        "D17:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 392
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What does Melanie do to keep herself busy during her pottery break?",
+      "evidence": [
+        "D17:10"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 575
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What painting did Melanie show to Caroline on October 13, 2023?",
+      "evidence": [
+        "D17:12"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 516
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What kind of painting did Caroline share with Melanie on October 13, 2023?",
+      "evidence": [
+        "D17:14"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 444
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What was the poetry reading that Caroline attended about?",
+      "evidence": [
+        "D17:18"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 615
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did the posters at the poetry reading say?",
+      "evidence": [
+        "D17:19"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 762
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What does Caroline's drawing symbolize for her?",
+      "evidence": [
+        "D17:23"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 471
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How do Melanie and Caroline describe their journey through life together?",
+      "evidence": [
+        "D17:25"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 461
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What happened to Melanie's son on their road trip?",
+      "evidence": [
+        "D18:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 461
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How did Melanie's son handle the accident?",
+      "evidence": [
+        "D18:6",
+        "D18:7"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 512
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How did Melanie feel about her family after the accident?",
+      "evidence": [
+        "D18:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 583
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How did Melanie's children handle the accident?",
+      "evidence": [
+        "D18:7"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 464
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How did Melanie feel after the accident?",
+      "evidence": [
+        "D18:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 615
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What was Melanie's reaction to her children enjoying the Grand Canyon?",
+      "evidence": [
+        "D18:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 424
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What do Melanie's family give her?",
+      "evidence": [
+        "D18:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 587
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "How did Melanie feel about her family supporting her?",
+      "evidence": [
+        "D18:13"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 478
+    },
+    {
+      "sample": "conv-26",
+      "category": 4,
+      "question": "What did Melanie do after the road trip to relax?",
+      "evidence": [
+        "D18:17"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 589
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When Jon has lost his job as a banker?",
+      "evidence": [
+        "D1:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 459
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When Gina has lost her job at Door Dash?",
+      "evidence": [
+        "D1:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 405
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How do Jon and Gina both like to destress?",
+      "evidence": [
+        "D1:7",
+        "D1:6"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 314
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "What do Jon and Gina both have in common?",
+      "evidence": [
+        "D1:2",
+        "D1:3",
+        "D1:4",
+        "D2:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 306
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "Why did Jon decide to start his dance studio?",
+      "evidence": [
+        "D1:2",
+        "D1:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 674
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "What Jon thinks the ideal dance studio should look like?",
+      "evidence": [
+        "D1:20",
+        "D2:4",
+        "D2:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 646
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When is Jon's group performing at a festival?",
+      "evidence": [
+        "D1:24"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 470
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina launch an ad campaign for her store?",
+      "evidence": [
+        "D2:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 398
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When was Jon in Paris?",
+      "evidence": [
+        "D2:4"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 268
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "Which city have both Jean and John visited?",
+      "evidence": [
+        "D2:5",
+        "D15:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 683
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina team up with a local artist for some cool designs?",
+      "evidence": [
+        "D5:5"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 465
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina get her tattoo?",
+      "evidence": [
+        "D5:15"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 302
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon start to go to the gym?",
+      "evidence": [
+        "D6:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 335
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina open her online clothing store?",
+      "evidence": [
+        "D6:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 625
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon start expanding his studio's social media presence?",
+      "evidence": [
+        "D8:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 542
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon host a dance competition?",
+      "evidence": [
+        "D8:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 555
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon go to a fair to get more exposure for his dance studio?",
+      "evidence": [
+        "D10:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 691
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "Why did Gina decide to start her own clothing store?",
+      "evidence": [
+        "D6:8",
+        "D1:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 593
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "Do Jon and Gina start businesses out of what they love?",
+      "evidence": [
+        "D1:4",
+        "D6:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 330
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina interview for a design internship?",
+      "evidence": [
+        "D11:14"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 368
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina get accepted for the design internship?",
+      "evidence": [
+        "D12:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 405
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon start reading \"The Lean Startup\"?",
+      "evidence": [
+        "D12:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 326
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina develop a video presentation to teach how to style her fashion pieces? ",
+      "evidence": [
+        "D13:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 502
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "How did Gina promote her clothes store?",
+      "evidence": [
+        "D5:5",
+        "D16:3",
+        "D8:4",
+        "D13:4"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 485
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "Which events has Jon participated in to promote his business venture?",
+      "evidence": [
+        "D10:1",
+        "D16:6",
+        "D8:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 506
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "What does Jon's dance studio offer?",
+      "evidence": [
+        "D13:7",
+        "D8:13"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 701
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon receive mentorship to promote his venture?",
+      "evidence": [
+        "D14:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 268
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "Did Jon and Gina both participate in dance competitions?",
+      "evidence": [
+        "D1:14",
+        "D14:14",
+        "D1:16",
+        "D1:17",
+        "D9:10"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 466
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When was Jon in Rome?",
+      "evidence": [
+        "D15:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 290
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "Which cities has Jon visited?",
+      "evidence": [
+        "D2:4",
+        "D15:1"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 271
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When Jon is planning to open his dance studio?",
+      "evidence": [
+        "D15:5"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 701
+    },
+    {
+      "sample": "conv-30",
+      "category": 1,
+      "question": "How long did it take for Jon to open his studio?",
+      "evidence": [
+        "D1:2",
+        "D15:13"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 420
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina design a limited collection of hoodies?",
+      "evidence": [
+        "D16:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 329
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon visit networking events for his store?",
+      "evidence": [
+        "D16:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 547
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina start being recognized by fashion editors?",
+      "evidence": [
+        "D17:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 429
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon start learning marketing and analytics tools?",
+      "evidence": [
+        "D17:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 410
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Jon and Gina decide to collaborate to create dance content?",
+      "evidence": [
+        "D18:18"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 462
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina mention Shia Labeouf?",
+      "evidence": [
+        "D19:4"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 259
+    },
+    {
+      "sample": "conv-30",
+      "category": 2,
+      "question": "When did Gina go to a dance class with a group of friends?",
+      "evidence": [
+        "D19:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 571
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What is Gina's favorite style of dance?",
+      "evidence": [
+        "D1:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 496
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What is Jon's favorite style of dance?",
+      "evidence": [
+        "D1:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 502
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What was Gina's favorite dancing memory?",
+      "evidence": [
+        "D1:17"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 352
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What kind of dance piece did Gina's team perform to win first place?",
+      "evidence": [
+        "D1:19"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 663
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What do the dancers in the photo represent?",
+      "evidence": [
+        "D1:25"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 745
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What does Gina say about the dancers in the photo?",
+      "evidence": [
+        "D1:26"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 657
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What is Jon's attitude towards being part of the dance festival?",
+      "evidence": [
+        "D1:28"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 430
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What kind of flooring is Jon looking for in his dance studio?",
+      "evidence": [
+        "D2:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 668
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Gina find for her clothing store on 1 February, 2023?",
+      "evidence": [
+        "D3:2"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 502
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Gina design for her store?",
+      "evidence": [
+        "D3:4"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 411
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Gina want her customers to feel in her store?",
+      "evidence": [
+        "D3:6",
+        "D3:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 556
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Jon say about Gina's progress with her store?",
+      "evidence": [
+        "D3:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 406
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What made Gina choose the furniture and decor for her store?",
+      "evidence": [
+        "D3:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 419
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Jon say about creating a special experience for customers?",
+      "evidence": [
+        "D3:9"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 484
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Gina say about creating an experience for her customers?",
+      "evidence": [
+        "D3:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 517
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How is Gina's store doing?",
+      "evidence": [
+        "D4:2"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 445
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What does Gina's tattoo symbolize?",
+      "evidence": [
+        "D5:15"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 296
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Jon and Gina compare their entrepreneurial journeys to?",
+      "evidence": [
+        "D6:15",
+        "D6:16"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 307
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What advice does Gina give to Jon about running a successful business?",
+      "evidence": [
+        "D7:5"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 471
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "Why did Jon shut down his bank account?",
+      "evidence": [
+        "D8:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 344
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "Why did Gina combine her clothing business with dance?",
+      "evidence": [
+        "D8:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 505
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What does Jon's dance make him?",
+      "evidence": [
+        "D9:5"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 510
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Gina receive from a dance contest?",
+      "evidence": [
+        "D9:10"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 546
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How does Gina stay confident in her business?",
+      "evidence": [
+        "D10:8"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 519
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What kind of professional experience did Gina get accepted for on May 23, 2023?",
+      "evidence": [
+        "D12:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 313
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "Where is Gina's fashion internship?",
+      "evidence": [
+        "D12:3"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 343
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What book is Jon currently reading?",
+      "evidence": [
+        "D12:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 305
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What is Jon offering to the dancers at his dance studio?",
+      "evidence": [
+        "D13:7"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 695
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How does Jon use the clipboard with a notepad attached to it?",
+      "evidence": [
+        "D13:11"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 328
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What does Jon tell Gina he won't do?",
+      "evidence": [
+        "D14:17"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 334
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Jon take a trip to Rome for?",
+      "evidence": [
+        "D15:1"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 318
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What is Jon working on opening?",
+      "evidence": [
+        "D15:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 393
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How does Gina describe the studio that Jon has opened?",
+      "evidence": [
+        "D15:6"
+      ],
+      "raw_hit": true,
+      "compiled_hit": false,
+      "raw_all": true,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 326
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How does Jon feel about the opening night of his dance studio?",
+      "evidence": [
+        "D15:7"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 758
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "How does Gina describe the feeling that dance brings?",
+      "evidence": [
+        "D15:8"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 698
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What does Jon plan to do at the grand opening of his dance studio?",
+      "evidence": [
+        "D15:9"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 672
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What does Gina say to Jon about the grand opening?",
+      "evidence": [
+        "D15:12"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 349
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What is the general sentiment about the upcoming grand opening?",
+      "evidence": [
+        "D15:18",
+        "D15:19"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 570
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What did Gina make a limited edition line of?",
+      "evidence": [
+        "D16:3"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 444
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "According to Gina, what makes Jon a perfect mentor and guide?",
+      "evidence": [
+        "D17:7"
+      ],
+      "raw_hit": true,
+      "compiled_hit": true,
+      "raw_all": true,
+      "compiled_all": true,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 382
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What plans does Jon have after receiving advice at the networking event?",
+      "evidence": [
+        "D18:10"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 535
+    },
+    {
+      "sample": "conv-30",
+      "category": 4,
+      "question": "What offer does Gina make to Jon regarding social media?",
+      "evidence": [
+        "D18:13"
+      ],
+      "raw_hit": false,
+      "compiled_hit": false,
+      "raw_all": false,
+      "compiled_all": false,
+      "candidates": 20,
+      "selected": 12,
+      "estimated_tokens": 400
+    }
+  ]
+}

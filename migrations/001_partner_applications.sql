@@ -18,4 +18,3 @@ CREATE TABLE IF NOT EXISTS partner_applications (
   internal_email_id text,
   confirmation_email_id text
 );
-
