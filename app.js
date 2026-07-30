@@ -160,6 +160,39 @@ const readSession = async () => {
   workflowLog({ reason: 'session_checked', sessionStatus: response.status, next: data.next, authenticated: Boolean(data.authenticated) });
   return { status: response.status, ...data };
 };
+const renderAuthenticatedProfile = (user = {}) => {
+  const button = document.querySelector('.avatar');
+  if (!button) return;
+  const clerkUser = window.Clerk?.user;
+  const email = clerkUser?.primaryEmailAddress?.emailAddress || user.email || '';
+  const name = clerkUser?.fullName
+    || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ')
+    || user.name
+    || email;
+  const avatarUrl = clerkUser?.imageUrl || user.avatarUrl || '';
+  button.replaceChildren();
+  if (avatarUrl) {
+    const image = document.createElement('img');
+    image.src = avatarUrl;
+    image.alt = '';
+    image.referrerPolicy = 'no-referrer';
+    button.append(image);
+    button.classList.add('has-image');
+  } else {
+    const initials = String(name || 'L')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase() || 'L';
+    button.textContent = initials;
+    button.classList.remove('has-image');
+  }
+  const identity = name || email || 'your account';
+  button.setAttribute('aria-label', `Open settings for ${identity}`);
+  button.title = identity;
+};
 const waitForClerkSession = async ({ timeoutMs = 8000 } = {}) => {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -758,6 +791,7 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
     workflowState.running = false;
     return;
   }
+  renderAuthenticatedProfile(sessionData.user);
   const complete = Boolean(sessionData.user?.onboardingComplete && sessionData.user?.completedAt);
   const destination = sessionData.next || (
     !complete ? '/onboarding/company' :
