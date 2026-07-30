@@ -1,6 +1,8 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const http = require('node:http');
+const path = require('node:path');
 
 // Boot the real server on an ephemeral port. No Clerk session is provided, so
 // every authed API must reject; static/marketing routes must serve.
@@ -190,6 +192,19 @@ test('console shell includes section navigation without a stale governance badge
   assert.match(html, /data-auth-provider="google"/);
   assert.match(html, /data-auth-provider="github"/);
   assert.doesNotMatch(html, /nav-pill">NEW/);
+});
+
+test('Clerk loader starts from the server-pinned script URL', () => {
+  const loader = fs.readFileSync(path.join(__dirname, '..', 'clerk-loader.js'), 'utf8');
+  assert.match(loader, /script\.src = config\.clerkJsUrl/);
+  assert.doesNotMatch(loader, /clerkScriptUrls|clerkJsUrls|\[index\]/);
+});
+
+test('console profile avatar uses the authenticated Clerk image with an initials fallback', () => {
+  const client = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(client, /clerkUser\?\.imageUrl \|\| user\.avatarUrl/);
+  assert.match(client, /renderAuthenticatedProfile\(sessionData\.user\)/);
+  assert.match(client, /button\.classList\.add\('has-image'\)/);
 });
 
 test('config.js exposes only publishable configuration', async () => {

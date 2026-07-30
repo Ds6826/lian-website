@@ -46,7 +46,10 @@
     script.integrity = config.clerkJsIntegrity;
     script.dataset.clerkJsScript = 'true';
     script.dataset.clerkPublishableKey = config.clerkPublishableKey;
-    script.src = clerkScriptUrls[index];
+    // The server exposes one pinned Clerk build and its matching SRI hash.
+    // Loading that exact URL keeps authentication reproducible and avoids a
+    // second, undefined fallback list preventing Clerk from starting at all.
+    script.src = config.clerkJsUrl;
     script.onload = async () => {
       window.clearTimeout(loadTimeout);
       try {
