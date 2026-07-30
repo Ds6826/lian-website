@@ -12,7 +12,14 @@ const CONSOLE_KEY_LABEL = 'console-internal';
 const CONSOLE_KEY_SCOPES = ['read', 'write', 'admin'];
 const PLAYGROUND_AGENT = 'console-playground';
 
-const createLiansConsole = ({ apiUrl = '', adminSecret = '', clerk, log = () => {}, fetchImpl = fetch } = {}) => {
+const createLiansConsole = ({
+  apiUrl = '',
+  adminSecret = '',
+  clerk,
+  log = () => {},
+  fetchImpl = fetch,
+  requestTimeoutMs = 7_000,
+} = {}) => {
   const base = String(apiUrl || '').replace(/\/+$/, '');
   const configured = () => Boolean(base && adminSecret);
   const namespaceFor = (user) => `ns_${user.id}`;
@@ -20,11 +27,30 @@ const createLiansConsole = ({ apiUrl = '', adminSecret = '', clerk, log = () => 
   const keyCache = new Map(); // user.id -> secret
 
   const request = async (path, { method = 'GET', body, headers = {} } = {}) => {
-    const resp = await fetchImpl(`${base}${path}`, {
-      method,
-      headers: { ...headers, ...(body ? { 'content-type': 'application/json' } : {}) },
-      body: body ? JSON.stringify(body) : undefined,
+    const controller = new AbortController();
+    let timeout;
+    const timedOut = new Promise((_, reject) => {
+      timeout = setTimeout(() => {
+        controller.abort();
+        const error = new Error(`Lians API request timed out after ${requestTimeoutMs}ms`);
+        error.code = 'LIANS_UPSTREAM_TIMEOUT';
+        reject(error);
+      }, requestTimeoutMs);
     });
+    let resp;
+    try {
+      resp = await Promise.race([
+        fetchImpl(`${base}${path}`, {
+          method,
+          headers: { ...headers, ...(body ? { 'content-type': 'application/json' } : {}) },
+          body: body ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        }),
+        timedOut,
+      ]);
+    } finally {
+      clearTimeout(timeout);
+    }
     const text = await resp.text();
     let data = null; try { data = text ? JSON.parse(text) : null; } catch { /* non-JSON */ }
     if (!resp.ok) { const e = new Error((data && (data.detail || data.error)) || `Lians API ${resp.status}`); e.status = resp.status; throw e; }

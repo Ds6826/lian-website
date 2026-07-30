@@ -30,6 +30,7 @@ const runtime = {
 };
 const PERF_TOKEN_TTL_MS = 45000;
 const KEYS_CACHE_TTL_MS = 30000;
+const CLIENT_REQUEST_TIMEOUT_MS = 15_000;
 const perfLog = (event, metadata = {}) => console.info('[Lians perf]', {
   event,
   route: window.location.pathname,
@@ -94,6 +95,22 @@ const clerkAuthHeaders = async ({ fresh = false } = {}) => {
     return {};
   }
 };
+const fetchWithTimeout = async (url, options = {}, timeoutMs = CLIENT_REQUEST_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error('Request timed out. Please try again.');
+      timeoutError.code = 'LIANS_REQUEST_TIMEOUT';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 const authedFetch = async (url, options = {}) => {
   const startedAt = performance.now();
   const method = String(options.method || 'GET').toUpperCase();
@@ -104,7 +121,7 @@ const authedFetch = async (url, options = {}) => {
   });
   // Always try the cached token first - forcing skipCache contacts clerk.lians.ai which can fail.
   // Fall back to a fresh token only if the server actually rejects the cached one.
-  let response = await fetch(url, await buildRequest(false));
+  let response = await fetchWithTimeout(url, await buildRequest(false));
   if (response.status === 401) {
     console.info('[Lians auth] Retrying mutating request with a fresh Clerk token.', {
       url,
@@ -112,7 +129,7 @@ const authedFetch = async (url, options = {}) => {
       clerkLoaded: window.__liansClerkStatus?.state === 'ready',
       signedIn: Boolean(window.Clerk?.user || window.Clerk?.session),
     });
-    response = await fetch(url, await buildRequest(true));
+    response = await fetchWithTimeout(url, await buildRequest(true));
   }
   if (/\/api\/(session|onboarding|keys|demo)/.test(url)) {
     perfLog('api_request', {
@@ -667,17 +684,19 @@ const loadConsolePlan = async () => {
     const billingActions = document.querySelector('#console-billing-actions');
     if (billingActions) billingActions.innerHTML = plan === 'enterprise'
       ? '<a class="plan-cta-link" href="/design-partners">Contact us ↗</a>'
-      : `<button class="console-button" onclick="window.location.assign('/billing')">${plan === 'free' ? 'Choose a plan' : 'Change plan'} <span>→</span></button>`;
+      : `<a class="console-button" href="/billing">${plan === 'free' ? 'Choose a plan' : 'Change plan'} <span>→</span></a>`;
     // Top-tier users don't need the upgrade nudge in the header
     if (plan === 'enterprise') document.querySelector('.upgrade-button')?.setAttribute('hidden', '');
     renderFeatureTiers(plan);
     for (const [view, scope] of Object.entries(VIEW_SCOPE_REQ)) {
       if (scopes.includes(scope)) continue;
-      document.querySelector(`.nav-item[data-view="${view}"]`)?.classList.add('locked');
+      const [section, title] = viewMeta[view] || ['ACTIVITY', view];
+      const navItem = document.querySelector(`.nav-item[data-view="${view}"]`);
+      navItem?.classList.add('locked');
+      navItem?.setAttribute('title', `${title} requires an upgraded plan`);
       const wrap = document.querySelector(`#view-${view} .view-wrap`);
       if (wrap) {
-        const [section, title] = viewMeta[view] || ['ACTIVITY', view];
-        wrap.innerHTML = `<p class="console-eyebrow">${section}</p><h1>${title}</h1><div class="upgrade-prompt"><h3>Upgrade to unlock ${title}</h3><p>This feature is not available on your current plan.</p><button class="console-button" onclick="window.location.assign('/upgrade')">View upgrade options <span>→</span></button></div>`;
+        wrap.innerHTML = `<p class="console-eyebrow">${section}</p><h1>${title}</h1><div class="upgrade-prompt"><h3>Upgrade to unlock ${title}</h3><p>This feature is not available on your current plan.</p><a class="console-button" href="/upgrade">View upgrade options <span>→</span></a></div>`;
       }
     }
   } catch {}
@@ -1056,6 +1075,13 @@ document.querySelector('#run-recall')?.addEventListener('click', async (event) =
       answer.querySelector('small').textContent = `✓ ${result.audit}`;
       answer.hidden = false;
     }
+  } catch {
+    const host = document.querySelector('#playground-results');
+    if (answer) answer.hidden = true;
+    if (host) {
+      host.innerHTML = '<div class="pg-empty">Recall took too long or the memory service is unavailable. Please try again.</div>';
+      host.hidden = false;
+    }
   } finally {
     button.dataset.loading = 'false';
     button.disabled = false;
@@ -1247,14 +1273,34 @@ document.querySelector('#key-form').addEventListener('submit', async (event) => 
     }
   }
 });
-document.querySelector('#copy-key').addEventListener('click', async () => { await navigator.clipboard.writeText(document.querySelector('#new-key-secret').textContent); document.querySelector('#copy-key').textContent = 'Copied'; });
+const copyTextToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {}
+  const fallback = document.createElement('textarea');
+  fallback.value = text;
+  fallback.setAttribute('readonly', '');
+  fallback.style.position = 'fixed';
+  fallback.style.opacity = '0';
+  document.body.append(fallback);
+  fallback.select();
+  let copied = false;
+  try { copied = document.execCommand('copy'); } catch {}
+  fallback.remove();
+  return copied;
+};
+document.querySelector('#copy-key').addEventListener('click', async () => {
+  const copied = await copyTextToClipboard(document.querySelector('#new-key-secret').textContent);
+  document.querySelector('#copy-key').textContent = copied ? 'Copied' : 'Copy failed';
+});
 // Agent-ready integration prompt (Get started view): copy + show/hide.
 document.querySelectorAll('[data-copy-target]').forEach((btn) => {
   btn.addEventListener('click', async () => {
     const src = document.getElementById(btn.getAttribute('data-copy-target'));
     if (!src) return;
     let ok = false;
-    try { await navigator.clipboard.writeText(src.textContent.trim()); ok = true; } catch {}
+    ok = await copyTextToClipboard(src.textContent.trim());
     const orig = btn.getAttribute('data-label') || btn.textContent;
     btn.setAttribute('data-label', orig);
     btn.textContent = ok ? '✓ Copied' : 'Copy failed';
@@ -1345,16 +1391,16 @@ const renderFeatureTiers = (plan) => {
           included ? '<b class="ftier-have">Included</b>' : `<b class="ftier-need">${PLAN_NAMES[f.tier]}</b>`}
       </li>`;
     }).join('')}</ul>
-    ${curIdx < PLAN_ORDER.length - 1 ? '<button class="console-button" type="button" onclick="window.location.assign(\'/upgrade\')" style="width:max-content;margin-top:18px">Upgrade for more <span>→</span></button>' : ''}`;
+    ${curIdx < PLAN_ORDER.length - 1 ? '<a class="console-button" href="/upgrade" style="width:max-content;margin-top:18px">Upgrade for more <span>→</span></a>' : ''}`;
 };
 
 // Collaboration model prototype. Stored locally until the product API exposes
 // agent identities and policy-scoped memory spaces.
 const collaborationSeed = {
   agents: [
-    { id: 'research', name: 'Research Agent', handle: '@lians/research', framework: 'LangGraph', environment: 'Production', status: 'online', spaces: ['investment-committee', 'market-research'], lastSeen: 'Just now' },
-    { id: 'reviewer', name: 'Compliance Reviewer', handle: '@lians/compliance-reviewer', framework: 'OpenAI', environment: 'Production', status: 'online', spaces: ['investment-committee'], lastSeen: '2 min ago' },
-    { id: 'support', name: 'Support Copilot', handle: '@lians/support', framework: 'MCP', environment: 'Staging', status: 'idle', spaces: ['customer-context'], lastSeen: '18 min ago' }
+    { id: 'research', name: 'Research Agent', handle: '@lians/research', framework: 'LangGraph', environment: 'Production', status: 'online', permissions: ['read', 'write'], spaces: ['investment-committee', 'market-research'], lastSeen: 'Just now' },
+    { id: 'reviewer', name: 'Compliance Reviewer', handle: '@lians/compliance-reviewer', framework: 'OpenAI', environment: 'Production', status: 'online', permissions: ['read', 'review'], spaces: ['investment-committee'], lastSeen: '2 min ago' },
+    { id: 'support', name: 'Support Copilot', handle: '@lians/support', framework: 'MCP', environment: 'Staging', status: 'idle', permissions: ['read', 'write'], spaces: ['customer-context'], lastSeen: '18 min ago' }
   ],
   spaces: [
     { id: 'investment-committee', name: 'Investment Committee', handle: '@space/investment-committee', members: 2, memories: 1842, policy: 'Approval required', retention: '7 years' },
@@ -1376,28 +1422,46 @@ const loadCollaboration = () => {
   } catch { return structuredClone(collaborationSeed); }
 };
 let collaborationState = loadCollaboration();
+let expandedAgentId = null;
+let expandedSpaceId = null;
 const saveCollaboration = () => {
   try { localStorage.setItem('lians-collaboration', JSON.stringify(collaborationState)); } catch {}
 };
+const permissionOptions = [
+  ['read', 'Read memories'],
+  ['write', 'Write memories'],
+  ['review', 'Approve governed changes'],
+  ['export', 'Export evidence'],
+];
 const renderAgents = () => {
   const host = document.querySelector('#agent-registry');
   if (!host) return;
-  host.innerHTML = collaborationState.agents.map((agent) => `<article class="registry-card">
+  host.innerHTML = collaborationState.agents.map((agent) => {
+    const permissions = Array.isArray(agent.permissions) ? agent.permissions : ['read', 'write'];
+    const expanded = expandedAgentId === agent.id;
+    return `<article class="registry-card${expanded ? ' expanded' : ''}">
     <div class="registry-card-head"><span class="agent-mark">${escapeHtml(agent.name.slice(0, 2).toUpperCase())}</span><span class="status-dot ${agent.status}"></span></div>
     <h3>${escapeHtml(agent.name)}</h3><code>${escapeHtml(agent.handle)}</code>
     <dl><div><dt>Framework</dt><dd>${escapeHtml(agent.framework)}</dd></div><div><dt>Environment</dt><dd>${escapeHtml(agent.environment)}</dd></div><div><dt>Memory spaces</dt><dd>${agent.spaces.length}</dd></div><div><dt>Last activity</dt><dd>${escapeHtml(agent.lastSeen)}</dd></div></dl>
-    <button class="card-action" type="button" data-agent="${escapeHtml(agent.id)}">Manage permissions →</button>
-  </article>`).join('');
+    <button class="card-action" type="button" data-agent="${escapeHtml(agent.id)}" aria-expanded="${expanded}">${expanded ? 'Close permissions ↑' : 'Manage permissions →'}</button>
+    ${expanded ? `<div class="card-detail" data-agent-detail="${escapeHtml(agent.id)}"><p>Memory permissions</p>${permissionOptions.map(([value, label]) => `<label><input type="checkbox" data-agent-permission="${value}"${permissions.includes(value) ? ' checked' : ''}>${label}</label>`).join('')}</div>` : ''}
+  </article>`;
+  }).join('');
 };
 const renderSpaces = () => {
   const host = document.querySelector('#space-registry');
   if (!host) return;
-  host.innerHTML = collaborationState.spaces.map((space) => `<article class="space-card">
+  host.innerHTML = collaborationState.spaces.map((space) => {
+    const expanded = expandedSpaceId === space.id;
+    const members = collaborationState.agents.filter((agent) => agent.spaces.includes(space.id));
+    return `<article class="space-card${expanded ? ' expanded' : ''}">
     <div class="space-top"><span class="space-icon">◇</span><span class="policy-chip">${escapeHtml(space.policy)}</span></div>
     <h3>${escapeHtml(space.name)}</h3><code>${escapeHtml(space.handle)}</code>
-    <div class="space-metrics"><span><b>${space.members}</b> agents</span><span><b>${space.memories.toLocaleString()}</b> memories</span><span><b>${escapeHtml(space.retention)}</b> retention</span></div>
-    <button class="card-action" type="button" data-space="${escapeHtml(space.id)}">Open policy & access →</button>
-  </article>`).join('');
+    <div class="space-metrics"><span><b>${members.length}</b> agents</span><span><b>${space.memories.toLocaleString()}</b> memories</span><span><b>${escapeHtml(space.retention)}</b> retention</span></div>
+    <button class="card-action" type="button" data-space="${escapeHtml(space.id)}" aria-expanded="${expanded}">${expanded ? 'Close policy & access ↑' : 'Open policy & access →'}</button>
+    ${expanded ? `<div class="card-detail space-detail" data-space-detail="${escapeHtml(space.id)}"><label>Policy mode<select data-space-policy><option${space.policy === 'Monitor' ? ' selected' : ''}>Monitor</option><option${space.policy === 'Approval required' ? ' selected' : ''}>Approval required</option><option${space.policy === 'PII restricted' ? ' selected' : ''}>PII restricted</option></select></label><label>Retention<select data-space-retention><option${space.retention === '90 days' ? ' selected' : ''}>90 days</option><option${space.retention === '1 year' ? ' selected' : ''}>1 year</option><option${space.retention === '7 years' ? ' selected' : ''}>7 years</option><option${space.retention === 'Customer defined' ? ' selected' : ''}>Customer defined</option></select></label><p>Agents with access</p><div class="access-list">${members.length ? members.map((agent) => `<span>${escapeHtml(agent.handle)}</span>`).join('') : '<span>No agents assigned</span>'}</div></div>` : ''}
+  </article>`;
+  }).join('');
 };
 const renderTimeline = (filter = 'all') => {
   const host = document.querySelector('#activity-timeline');
@@ -1417,13 +1481,46 @@ document.querySelector('#activity-filters')?.addEventListener('click', (event) =
 });
 document.querySelector('#add-agent')?.addEventListener('click', () => {
   const count = collaborationState.agents.length + 1;
-  collaborationState.agents.push({ id: `agent-${Date.now()}`, name: `New Agent ${count}`, handle: `@lians/agent-${count}`, framework: 'Unconfigured', environment: 'Development', status: 'idle', spaces: [], lastSeen: 'Never' });
+  collaborationState.agents.push({ id: `agent-${Date.now()}`, name: `New Agent ${count}`, handle: `@lians/agent-${count}`, framework: 'Unconfigured', environment: 'Development', status: 'idle', permissions: ['read'], spaces: [], lastSeen: 'Never' });
   saveCollaboration(); renderAgents();
 });
 document.querySelector('#add-space')?.addEventListener('click', () => {
   const count = collaborationState.spaces.length + 1;
   collaborationState.spaces.push({ id: `space-${Date.now()}`, name: `New Memory Space ${count}`, handle: `@space/new-${count}`, members: 0, memories: 0, policy: 'Monitor', retention: 'Customer defined' });
   saveCollaboration(); renderSpaces();
+});
+document.querySelector('#agent-registry')?.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-agent]');
+  if (!button) return;
+  expandedAgentId = expandedAgentId === button.dataset.agent ? null : button.dataset.agent;
+  renderAgents();
+});
+document.querySelector('#agent-registry')?.addEventListener('change', (event) => {
+  const input = event.target.closest('[data-agent-permission]');
+  const detail = input?.closest('[data-agent-detail]');
+  if (!input || !detail) return;
+  const agent = collaborationState.agents.find((item) => item.id === detail.dataset.agentDetail);
+  if (!agent) return;
+  const permissions = new Set(Array.isArray(agent.permissions) ? agent.permissions : ['read', 'write']);
+  if (input.checked) permissions.add(input.dataset.agentPermission);
+  else permissions.delete(input.dataset.agentPermission);
+  agent.permissions = [...permissions];
+  saveCollaboration();
+});
+document.querySelector('#space-registry')?.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-space]');
+  if (!button) return;
+  expandedSpaceId = expandedSpaceId === button.dataset.space ? null : button.dataset.space;
+  renderSpaces();
+});
+document.querySelector('#space-registry')?.addEventListener('change', (event) => {
+  const detail = event.target.closest('[data-space-detail]');
+  const space = collaborationState.spaces.find((item) => item.id === detail?.dataset.spaceDetail);
+  if (!space) return;
+  if (event.target.matches('[data-space-policy]')) space.policy = event.target.value;
+  if (event.target.matches('[data-space-retention]')) space.retention = event.target.value;
+  saveCollaboration();
+  renderSpaces();
 });
 renderAgents();
 renderSpaces();

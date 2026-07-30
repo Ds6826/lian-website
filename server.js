@@ -59,8 +59,25 @@ const LIANS_ADMIN_SECRET = process.env.LIANS_ADMIN_SECRET || '';
 const liansConfigured = () => Boolean(LIANS_API_URL && LIANS_ADMIN_SECRET);
 // One namespace per user isolates each user's keys/memories in the backend.
 const liansNamespace = (user) => `ns_${user.id}`;
+const LIANS_UPSTREAM_TIMEOUT_MS = 7_000;
+const upstreamFetch = async (url, options = {}, timeoutMs = LIANS_UPSTREAM_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error(`Lians API request timed out after ${timeoutMs}ms`);
+      timeoutError.code = 'LIANS_UPSTREAM_TIMEOUT';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 const liansAdmin = async (apiPath, { method = 'GET', body } = {}) => {
-  const resp = await fetch(`${LIANS_API_URL}/v1/admin${apiPath}`, {
+  const resp = await upstreamFetch(`${LIANS_API_URL}/v1/admin${apiPath}`, {
     method,
     headers: { 'X-Admin-Secret': LIANS_ADMIN_SECRET, ...(body ? { 'content-type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,

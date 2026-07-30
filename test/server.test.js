@@ -207,6 +207,19 @@ test('console profile avatar uses the authenticated Clerk image with an initials
   assert.match(client, /button\.classList\.add\('has-image'\)/);
 });
 
+test('console controls use CSP-safe navigation and expose working detail actions', () => {
+  const client = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'app.css'), 'utf8');
+  assert.doesNotMatch(client, /onclick=/, 'inline event handlers are blocked by the production CSP');
+  assert.match(client, /<a class="console-button" href="\/billing">/);
+  assert.match(client, /<a class="console-button" href="\/upgrade"/);
+  assert.match(client, /data-agent-detail=/);
+  assert.match(client, /data-space-detail=/);
+  assert.match(client, /copyTextToClipboard/);
+  assert.match(client, /document\.execCommand\('copy'\)/);
+  assert.doesNotMatch(styles, /\.nav-item\.locked[^}]*pointer-events\s*:\s*none/);
+});
+
 test('config.js exposes only publishable configuration', async () => {
   const res = await get('/config.js');
   assert.equal(res.status, 200);
