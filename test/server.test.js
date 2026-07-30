@@ -220,6 +220,12 @@ test('console controls use CSP-safe navigation and expose working detail actions
   assert.doesNotMatch(styles, /\.nav-item\.locked[^}]*pointer-events\s*:\s*none/);
 });
 
+test('completed users can open the billing route instead of being redirected to the console', () => {
+  const client = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(client, /if \(route === '\/billing'\) \{\s*if \(!complete\) \{ window\.location\.assign\(destination\); return; \}\s*setBillingPage\(\);/);
+  assert.doesNotMatch(client, /if \(route === '\/billing'\) \{\s*if \(destination !== '\/billing'\)/);
+});
+
 test('config.js exposes only publishable configuration', async () => {
   const res = await get('/config.js');
   assert.equal(res.status, 200);
