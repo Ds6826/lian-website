@@ -88,6 +88,21 @@ test('dataRequest sends X-API-Key and re-mints once on a 401', async () => {
   assert.ok(fetchImpl.calls.some((c) => c.key === 'POST /v1/admin/api-keys'), 'expected a re-mint after 401');
 });
 
+test('data-plane requests fail closed instead of waiting forever', async () => {
+  const clerk = fakeClerk({ liansConsoleKey: 'agentmem_ok' });
+  const client = createLiansConsole({
+    apiUrl: 'https://backend.test',
+    adminSecret: 'admin-secret',
+    clerk,
+    requestTimeoutMs: 20,
+    fetchImpl: async () => new Promise(() => {}),
+  });
+  await assert.rejects(
+    client.playgroundRecall(USER, 'NVDA guidance'),
+    (error) => error.code === 'LIANS_UPSTREAM_TIMEOUT' && /timed out/.test(error.message),
+  );
+});
+
 test('governance aggregates both review queues', async () => {
   const { client } = build({
     metadata: { liansConsoleKey: 'agentmem_ok' },
