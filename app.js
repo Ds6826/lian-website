@@ -764,6 +764,12 @@ const runWorkflowGate = async (reason = 'clerk_ready') => {
   }
   if (route.startsWith('/console') && destination === '/console') {
     document.querySelector('#console-gate')?.classList.add('cleared');
+    if (sessionData.user?.adminAvailable && !document.querySelector('#admin-console-link')) {
+      const settings = document.querySelector('.nav-item[data-view="settings"]');
+      const link = document.createElement('a');
+      link.id = 'admin-console-link'; link.className = 'nav-item'; link.href = '/admin'; link.textContent = 'Admin Console';
+      settings?.before(link);
+    }
     loadConsolePlan();
     loadProjects();
     workflowState.running = false;

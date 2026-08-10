@@ -15,6 +15,14 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin.css",
+      "use": "@vercel/static"
+    },
+    {
       "src": "clerk-loader.js",
       "use": "@vercel/static"
     },

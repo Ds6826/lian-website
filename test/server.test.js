@@ -5,6 +5,7 @@ const http = require('node:http');
 // Boot the real server on an ephemeral port. No Clerk session is provided, so
 // every authed API must reject; static/marketing routes must serve.
 process.env.DATA_DIR = require('node:path').join(require('node:os').tmpdir(), `lians-web-test-${process.pid}`);
+process.env.ADMIN_CONSOLE_ENABLED = 'true';
 const app = require('../server');
 
 let server; let origin;
@@ -36,6 +37,14 @@ test('console data routes require authentication', async () => {
     const res = method === 'GET' ? await get(path) : await post(path, {});
     assert.equal(res.status, 401, `${method} ${path} must 401 without a session`);
   }
+});
+
+test('admin pages and APIs require authentication', async () => {
+  const page = await get('/admin');
+  assert.equal(page.status, 302);
+  assert.equal(page.headers.get('location'), '/login');
+  const api = await get('/api/admin/session');
+  assert.equal(api.status, 401);
 });
 
 test('legacy demo recall requires authentication too', async () => {

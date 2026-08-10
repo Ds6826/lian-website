@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { createPartnerApplicationService, validateApplication } = require('./partner-applications');
+const { createAdminStore } = require('./admin-store');
+const { createAdminApi } = require('./admin-api');
 
 const root = __dirname;
 const envFile = path.join(root, '.env');
@@ -38,6 +40,8 @@ const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
 const isProd = process.env.NODE_ENV === 'production';
 const partnerApplications = createPartnerApplicationService();
+const adminEnabled = () => String(process.env.ADMIN_CONSOLE_ENABLED || '').toLowerCase() === 'true';
+const adminStore = createAdminStore();
 
 // Error monitoring (Sentry). Only initialised when SENTRY_DSN is set, so local dev and
 // unconfigured deploys run without it. The DSN is safe to expose (it's also used client-side).
@@ -230,7 +234,12 @@ const userFor = async (req) => {
   if (!payload) return null;
   const clerkUserId = payload.userId;
   const store = readStore();
-  let user = store.users.find((u) => u.clerkUserId === clerkUserId);
+  let user = store.users.find((u) => u.clerkUserId === clerkUserId || u.providerUserId === clerkUserId);
+  if (user && !user.clerkUserId) {
+    user.clerkUserId = clerkUserId;
+    writeStore(store);
+    log('user_identity_normalized', req, user, { provider: 'clerk' });
+  }
   if (!user) {
     let clerkUser;
     try { clerkUser = await clerk.users.getUser(clerkUserId); } catch { return null; }
@@ -284,6 +293,10 @@ const userFor = async (req) => {
       }
     } catch (err) { log('onboarding_upgrade_check_failed', req, user, { error: err.message }); }
   }
+  if (adminEnabled() && adminStore.configured()) {
+    try { await adminStore.syncUser(user); }
+    catch (err) { log('admin_identity_sync_failed', req, user, { error: err.message }); }
+  }
   return user;
 };
 
@@ -301,6 +314,60 @@ const requireAuth = async (req, res) => { const user = await userFor(req); if (!
 const requireOnboarding = async (req, res) => { const user = await requireAuth(req, res); if (!user) return null; if (!hasCompletedOnboarding(user)) { log('console_access_denied', req, user, { next: firstIncomplete(user) }); redirect(res, `/onboarding/${firstIncomplete(user)}`); return null; } return user; };
 const apiAuth = async (req, res) => { const user = await userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } return user; };
 const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res); if (!user) return null; if (!hasCompletedOnboarding(user)) { json(res, 403, { error: 'Complete onboarding before accessing this resource.' }); return null; } return user; };
+
+const adminActorForUser = async (user) => {
+  if (!adminEnabled() || !adminStore.configured() || !user) return null;
+  await adminStore.syncUser(user);
+  const actor = await adminStore.getByClerkId(user.clerkUserId || user.providerUserId);
+  return actor?.accountStatus === 'ACTIVE' && actor.role !== 'MEMBER' ? actor : null;
+};
+const listAdminKeys = async ({ limit = 50, offset = 0 } = {}) => {
+  const users = [];
+  let userOffset = 0; let userTotal = 0;
+  do {
+    const page = await adminStore.listUsers({ limit: 100, offset: userOffset });
+    users.push(...page.users); userTotal = page.total; userOffset += page.users.length;
+  } while (userOffset < userTotal && userOffset < 1000);
+  const keys = [];
+  if (liansConfigured()) {
+    for (const owner of users) {
+      try {
+        const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(owner))}`);
+        for (const key of Array.isArray(list) ? list : []) {
+          if (key.label === CONSOLE_KEY_LABEL) continue;
+          keys.push({ ...liansKeyView(key), ownerUserId: owner.id, ownerName: owner.name, ownerEmail: owner.email, status: key.revoked_at ? 'REVOKED' : 'ACTIVE' });
+        }
+      } catch (err) { log('admin_keys_namespace_failed', null, owner, { status: err.status }); }
+    }
+  } else {
+    const store = readStore();
+    for (const key of store.apiKeys) {
+      if (key.label === CONSOLE_KEY_LABEL) continue;
+      const owner = users.find((u) => u.id === key.userId);
+      keys.push({ id: key.id, label: key.label, scopes: key.scopes || [], createdAt: key.createdAt, revokedAt: key.revokedAt || null, lastUsedAt: key.lastUsedAt || null, prefix: key.prefix, ownerUserId: key.userId, ownerName: owner?.name || '', ownerEmail: owner?.email || '', status: key.revokedAt ? 'REVOKED' : 'ACTIVE' });
+    }
+  }
+  keys.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  return { keys: keys.slice(offset, offset + limit), total: keys.length, limit, offset, available: true, userScanTruncated: userOffset < userTotal };
+};
+const revokeAdminKey = async (id) => {
+  const result = await listAdminKeys({ limit: 100, offset: 0 });
+  const target = result.keys.find((key) => key.id === id && key.status === 'ACTIVE');
+  if (!target) return null;
+  if (liansConfigured()) await liansAdmin(`/api-keys/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  else { const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === target.ownerUserId); if (!key) return null; key.revokedAt = new Date().toISOString(); writeStore(store); }
+  return target;
+};
+const adminSystemStatus = async () => {
+  const database = await adminStore.health().catch(() => ({ ok: false }));
+  let liansBackend = { status: liansConfigured() ? 'unavailable' : 'not_configured' };
+  if (liansConfigured()) {
+    try { const response = await fetch(`${LIANS_API_URL}/health`, { signal: AbortSignal.timeout(3000) }); liansBackend = { status: response.ok ? 'healthy' : 'unavailable', httpStatus: response.status }; }
+    catch { liansBackend = { status: 'unavailable' }; }
+  }
+  return { websiteApi: { status: 'healthy', build: APP_BUILD }, database: { status: database.ok ? 'healthy' : 'unavailable', latencyMs: database.latencyMs ?? null }, liansBackend };
+};
+const adminApi = createAdminApi({ enabled: adminEnabled, authenticate: userFor, store: adminStore, readBody, json, listKeys: listAdminKeys, revokeKey: revokeAdminKey, systemStatus: adminSystemStatus });
 
 // ── server ────────────────────────────────────────────────────────────────────
 
@@ -443,10 +510,19 @@ const app = async (req, res) => {
     }
 
     if (pathname === '/login' || pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
+    if (pathname === '/admin.html') return redirect(res, '/admin');
     if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) return serveFile(res, path.join(root, 'app.html'));
     if (pathname === '/billing') return serveFile(res, path.join(root, 'app.html'));
     if (pathname === '/upgrade') return serveFile(res, path.join(root, 'app.html'));
     if (pathname === '/console' || pathname.startsWith('/console/')) return serveFile(res, path.join(root, 'app.html'));
+    if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+      if (!adminEnabled()) return json(res, 404, { error: 'Not found.' });
+      const user = await requireAuth(req, res); if (!user) return;
+      if (!hasCompletedOnboarding(user)) return redirect(res, `/onboarding/${firstIncomplete(user)}`);
+      const actor = await adminActorForUser(user);
+      if (!actor) return redirect(res, '/console');
+      return serveFile(res, path.join(root, 'admin.html'));
+    }
 
     // Logout (Clerk handles the actual session; this just redirects)
     if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }
@@ -496,12 +572,15 @@ const app = async (req, res) => {
     if (pathname === '/api/session' && req.method === 'GET') {
       const user = await userFor(req);
       const complete = hasCompletedOnboarding(user);
+      const adminActor = complete ? await adminActorForUser(user).catch(() => null) : null;
       return json(res, 200, {
         authenticated: Boolean(user),
-        user: user && { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, onboardingComplete: complete, completedAt: completionTimestamp(user), billingPlan: user.billingPlan || null },
+        user: user && { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl, onboardingComplete: complete, completedAt: completionTimestamp(user), billingPlan: user.billingPlan || null, adminAvailable: Boolean(adminActor) },
         next: user ? (!complete ? `/onboarding/${firstIncomplete(user)}` : '/console') : '/login',
       });
     }
+
+    if (pathname.startsWith('/api/admin/')) { await adminApi.handle(req, res, url); return; }
 
     // Onboarding
     if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; const complete = hasCompletedOnboarding(user); return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: complete, nextStep: complete ? null : firstIncomplete(user) }); }
