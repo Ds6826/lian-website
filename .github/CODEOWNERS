@@ -5,6 +5,10 @@
 /fly.toml @Ds6826 @ebeirne
 /vercel.json @Ds6826 @ebeirne
 /server.js @Ds6826 @ebeirne
+/entitlements.js @Ds6826 @ebeirne
+/LICENSE @Ds6826 @ebeirne
+/PUBLIC_BOUNDARY.md @Ds6826 @ebeirne
+/scripts/check-public-boundary.js @Ds6826 @ebeirne
 /api/ @Ds6826 @ebeirne
 /clerk-loader.js @Ds6826 @ebeirne
 /app.js @Ds6826 @ebeirne

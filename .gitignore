@@ -6,5 +6,15 @@ lian-memory-governor/
 .vercel
 .env*
 redesign-screenshots/
+fundraising/
+outreach/
+customer-deliverables/
+partner-deliverables/
+*production*.log
+*incident*.log
+*.pem
+*.key
+*.p12
+*.pfx
 
 .mcp-registry-key.pem

@@ -252,15 +252,24 @@ const setWizard = async () => {
 };
 
 const BILLING_PLANS = [
-  { id: 'free', name: 'Free', price: '$0', period: '/ mo', tagline: 'Start building at no cost.', features: ['Memory writes', 'Memory recalls', 'Semantic search'], cta: 'Get started free' },
-  { id: 'starter', name: 'Starter', price: '$15', period: '/ mo', tagline: 'For growing projects.', features: ['Everything in Free', 'Domain adapters', 'Finance, healthcare, legal', 'Audit log'], cta: 'Choose Starter' },
-  { id: 'growth', name: 'Growth', price: '$69', period: '/ mo', tagline: 'For production workloads.', features: ['Everything in Starter', 'Conflict detection', 'Webhooks', 'Operational reports', 'Merkle audit chain'], cta: 'Choose Growth' },
-  { id: 'pro', name: 'Pro', price: '$199', period: '/ mo', tagline: 'For established production teams.', features: ['Everything in Growth', 'Backtest checks', 'Prometheus metrics', 'Priority product support'], cta: 'Choose Pro', highlight: true },
-  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', tagline: 'For deployment-bound controls.', features: ['Information barriers (RLS)', 'Customer-managed KMS', 'Air-gap mode', 'Security review & onboarding', 'SLA'], cta: 'Contact us', contact: true },
+  { id: 'free', name: 'Free', price: '$0', period: '/ mo', tagline: 'Build and test real memory.', features: ['10K writes and recalls', 'Point-in-time memory', 'API keys and playground'], cta: 'Get started free' },
+  { id: 'starter', name: 'Starter', price: '$15', period: '/ mo', tagline: 'Ship a serious individual project.', features: ['Everything in Free', 'Domain adapters', 'Audit history and lineage', '100K writes'], cta: 'Choose Starter' },
+  { id: 'growth', name: 'Growth', price: '$69', period: '/ mo', tagline: 'Operate agents with a team.', features: ['Everything in Starter', 'Governance review', 'Knowledge graph', 'Conflicts and webhooks'], cta: 'Choose Growth' },
+  { id: 'pro', name: 'Pro', price: '$199', period: '/ mo', tagline: 'Continuously improve production agents.', features: ['Everything in Growth', 'Adaptive recall and reflection', 'Backtest checks', 'Metrics and priority support'], cta: 'Choose Pro', highlight: true },
+  { id: 'enterprise', name: 'Enterprise', price: 'Custom', period: '', tagline: 'Own the deployment and control boundary.', features: ['SSO and governed access', 'Customer-managed KMS', 'Air-gap or private deployment', 'Security review and SLA'], cta: 'Contact us', contact: true },
 ];
 const PLAN_NAMES = { free: 'Free', starter: 'Starter', growth: 'Growth', pro: 'Pro', enterprise: 'Enterprise' };
 const PLAN_LIMITS = { free: { memories: '10K', recalls: '10K' }, starter: { memories: '100K', recalls: '50K' }, growth: { memories: '500K', recalls: '250K' }, pro: { memories: '2M', recalls: '1M' }, enterprise: { memories: 'Unlimited', recalls: 'Unlimited' } };
-const VIEW_SCOPE_REQ = { webhooks: 'webhooks', exports: 'compliance' };
+const VIEW_SCOPE_REQ = {
+  activity: 'audit',
+  agents: 'governance',
+  spaces: 'governance',
+  governance: 'governance',
+  entities: 'graph',
+  graph: 'graph',
+  webhooks: 'webhooks',
+  exports: 'compliance',
+};
 // Mount Clerk's maintained PricingTable (plans + full checkout drawer) into a node.
 // Returns true if mounted; false → caller falls back to the legacy custom flow.
 const mountClerkPricingTable = (node, redirectUrl) => {
@@ -1369,13 +1378,17 @@ const FEATURE_TIERS = [
   { name: 'Domain adapters (finance, healthcare, legal)', tier: 'starter' },
   { name: 'Audit log & memory lineage', tier: 'starter' },
   { name: 'Conflict detection', tier: 'growth' },
+  { name: 'Governance review queues', tier: 'growth' },
+  { name: 'Knowledge graph', tier: 'growth' },
   { name: 'Webhooks', tier: 'growth' },
   { name: 'Operational reports', tier: 'growth' },
   { name: 'Merkle audit chain', tier: 'growth' },
-  { name: 'Information barriers (RLS)', tier: 'enterprise' },
-  { name: 'Customer-managed encryption & erasure records', tier: 'enterprise' },
+  { name: 'Adaptive recall and experience learning', tier: 'pro' },
   { name: 'Backtest contamination check', tier: 'pro' },
   { name: 'Prometheus metrics', tier: 'pro' },
+  { name: 'Information barriers (RLS)', tier: 'enterprise' },
+  { name: 'Customer-managed encryption & erasure records', tier: 'enterprise' },
+  { name: 'SSO and governed organization access', tier: 'enterprise' },
   { name: 'Air-gap mode', tier: 'enterprise' },
   { name: 'Custom KMS (AWS / Azure / Vault)', tier: 'enterprise' },
 ];
