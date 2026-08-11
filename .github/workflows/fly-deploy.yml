@@ -20,7 +20,7 @@ jobs:
       group: website-production
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
       - name: Deploy reviewed main commit
         run: flyctl deploy --remote-only --strategy rolling --wait-timeout 10m --build-arg VCS_REF=${{ github.sha }}
