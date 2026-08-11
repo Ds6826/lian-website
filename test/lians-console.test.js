@@ -33,10 +33,10 @@ const fakeFetch = (routes) => {
   return impl;
 };
 
-const build = ({ routes = {}, metadata = {}, apiUrl = 'https://backend.test', adminSecret = 'admin-secret' } = {}) => {
+const build = ({ routes = {}, metadata = {}, apiUrl = 'https://backend.test', adminSecret = 'admin-secret', ...options } = {}) => {
   const clerk = fakeClerk(metadata);
   const fetchImpl = fakeFetch(routes);
-  const client = createLiansConsole({ apiUrl, adminSecret, clerk, fetchImpl });
+  const client = createLiansConsole({ apiUrl, adminSecret, clerk, fetchImpl, ...options });
   return { client, clerk, fetchImpl };
 };
 
@@ -60,6 +60,22 @@ test('consoleKeyFor mints once with the internal label/scopes and stores the sec
   const before = fetchImpl.calls.length;
   assert.equal(await client.consoleKeyFor(USER), 'agentmem_secret_1');
   assert.equal(fetchImpl.calls.length, before);
+});
+
+test('console key minting supports the namespace-bound provisioning broker', async () => {
+  const route = { 'POST /v1/provisioning/api-keys': { body: { id: 'key-id-2', key: 'agentmem_secret_2' } } };
+  const { client, fetchImpl } = build({
+    routes: route,
+    adminSecret: 'provisioning-secret',
+    managementPrefix: '/v1/provisioning',
+    managementHeader: 'X-Provisioning-Secret',
+    requireNamespaceHeader: true,
+  });
+  assert.equal(await client.consoleKeyFor(USER), 'agentmem_secret_2');
+  const mint = fetchImpl.calls[0];
+  assert.equal(mint.headers['X-Provisioning-Secret'], 'provisioning-secret');
+  assert.equal(mint.headers['X-Lians-Namespace'], 'ns_u-1');
+  assert.equal(mint.headers['X-Admin-Secret'], undefined);
 });
 
 test('consoleKeyFor reuses a key already stored in Clerk metadata', async () => {

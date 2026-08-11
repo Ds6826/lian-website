@@ -12,6 +12,7 @@
   --wrap: 1180px;
   --title: "Space Mono", "Courier New", monospace;
 }
+.form-trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
 
 * { box-sizing: border-box; }
 html { overflow-x: clip; scroll-behavior: smooth; }

@@ -63,6 +63,13 @@ if (demo) {
 
 const partnerForm = document.querySelector('#partner-application');
 if (partnerForm) {
+  if (!partnerForm.elements.namedItem('website')) {
+    const trap = document.createElement('label');
+    trap.className = 'form-trap';
+    trap.setAttribute('aria-hidden', 'true');
+    trap.innerHTML = 'Website<input name="website" tabindex="-1" autocomplete="off">';
+    partnerForm.prepend(trap);
+  }
   const status = document.querySelector('#partner-form-status');
   partnerForm.addEventListener('input', () => trackFunnel('partner_application_started'), { once: true });
   const params = new URLSearchParams(location.search);
@@ -82,7 +89,7 @@ if (partnerForm) {
       formData.delete('architecture_file');
       const body = Object.fromEntries(formData);
       if (file?.size) {
-        if (file.size > 700_000) throw new Error('Keep the optional upload under 700 KB.');
+        if (file.size > 180_000) throw new Error('Keep the optional upload under 180 KB.');
         body.architecture_file = { name: file.name, type: file.type, data_url: await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }) };
       }
       const response = await fetch('/api/partner-applications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });

@@ -199,10 +199,6 @@
       "use": "@vercel/static"
     },
     {
-      "src": "console-api.js",
-      "use": "@vercel/static"
-    },
-    {
       "src": "app.css",
       "use": "@vercel/static"
     },
@@ -269,9 +265,28 @@
     {
       "src": ".well-known/mcp-registry-auth",
       "use": "@vercel/static"
+    },
+    {
+      "src": ".well-known/security.txt",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/(.*)",
+      "continue": true,
+      "headers": {
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'sha256-oM3fK1wB/KZpRi+zI+8vJ+5IU+jYT4jY9m7pTRZLHCc=' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://js.stripe.com https://browser.sentry-cdn.com https://clerk.lians.ai https://*.clerk.accounts.dev; worker-src 'self' blob:; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://img.clerk.com; connect-src 'self' https://api.github.com https://challenges.cloudflare.com https://api.stripe.com https://*.ingest.us.sentry.io https://clerk.lians.ai https://accounts.lians.ai https://*.clerk.accounts.dev https://*.clerk.com; frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://m.stripe.network https://clerk.lians.ai https://accounts.lians.ai https://*.clerk.accounts.dev; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-Permitted-Cross-Domain-Policies": "none"
+      }
+    },
     {
       "src": "/(memory-governor|records|solutions(?:/.*)?)",
       "status": 308,

@@ -15,6 +15,19 @@ if (fs.existsSync(envFile)) fs.readFileSync(envFile, 'utf8').split(/\r?\n/).forE
 const port = Number(process.env.PORT || 8000);
 const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
 const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? path.join('/tmp', 'lian-data') : path.join(root, 'data'));
+const DEFAULT_BODY_LIMIT = 64 * 1024;
+const PARTNER_BODY_LIMIT = 320 * 1024;
+const WEBHOOK_BODY_LIMIT = 64 * 1024;
+const PUBLIC_FILES = new Set([
+  'app.css', 'app.js', 'clerk-loader.js', 'favicon.ico', 'favicon.png', 'favicon.svg',
+  'governor.css', 'governor.js', 'lattice.js', 'lians.css', 'lians.js',
+  'lians-player.js', 'lians-visuals.css', 'lians-visuals.js', 'marketing.css',
+  'marketing.js', 'pages.css', 'script.js', 'sentry-init.js', 'styles.css',
+  'logo-blue.png', 'logo-white.png', 'og-card.png', 'og-evidence-layer.png',
+  'e84ab31f649b47bc8df03b9ccce11884.txt', 'feed.xml', 'llms.txt', 'robots.txt',
+  'sitemap.xml', '.well-known/mcp-registry-auth', '.well-known/security.txt',
+  'fundraising/Lians-Investor-Deck.pdf',
+]);
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 
 const TIER_SCOPES = {
@@ -56,7 +69,11 @@ if (process.env.SENTRY_DSN) {
 // endpoints fall back to locally-generated placeholder keys.
 const LIANS_API_URL = (process.env.LIANS_API_URL || '').replace(/\/+$/, '');
 const LIANS_ADMIN_SECRET = process.env.LIANS_ADMIN_SECRET || '';
-const liansConfigured = () => Boolean(LIANS_API_URL && LIANS_ADMIN_SECRET);
+const LIANS_PROVISIONING_SECRET = process.env.LIANS_PROVISIONING_SECRET || '';
+const LIANS_MANAGEMENT_SECRET = LIANS_PROVISIONING_SECRET || LIANS_ADMIN_SECRET;
+const LIANS_MANAGEMENT_PREFIX = LIANS_PROVISIONING_SECRET ? '/v1/provisioning' : '/v1/admin';
+const LIANS_MANAGEMENT_HEADER = LIANS_PROVISIONING_SECRET ? 'X-Provisioning-Secret' : 'X-Admin-Secret';
+const liansConfigured = () => Boolean(LIANS_API_URL && LIANS_MANAGEMENT_SECRET);
 // One namespace per user isolates each user's keys/memories in the backend.
 const liansNamespace = (user) => `ns_${user.id}`;
 const LIANS_UPSTREAM_TIMEOUT_MS = 7_000;
@@ -76,10 +93,10 @@ const upstreamFetch = async (url, options = {}, timeoutMs = LIANS_UPSTREAM_TIMEO
     clearTimeout(timeout);
   }
 };
-const liansAdmin = async (apiPath, { method = 'GET', body } = {}) => {
-  const resp = await upstreamFetch(`${LIANS_API_URL}/v1/admin${apiPath}`, {
+const liansAdmin = async (apiPath, { method = 'GET', body, namespace } = {}) => {
+  const resp = await upstreamFetch(`${LIANS_API_URL}${LIANS_MANAGEMENT_PREFIX}${apiPath}`, {
     method,
-    headers: { 'X-Admin-Secret': LIANS_ADMIN_SECRET, ...(body ? { 'content-type': 'application/json' } : {}) },
+    headers: { [LIANS_MANAGEMENT_HEADER]: LIANS_MANAGEMENT_SECRET, ...(namespace && LIANS_PROVISIONING_SECRET ? { 'X-Lians-Namespace': namespace } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await resp.text();
@@ -95,7 +112,10 @@ const liansKeyView = (k) => ({ id: k.id, label: k.label || 'Key', scopes: k.scop
 const { createLiansConsole, CONSOLE_KEY_LABEL } = require('./lians-console');
 const liansConsole = createLiansConsole({
   apiUrl: LIANS_API_URL,
-  adminSecret: LIANS_ADMIN_SECRET,
+  adminSecret: LIANS_MANAGEMENT_SECRET,
+  managementPrefix: LIANS_MANAGEMENT_PREFIX,
+  managementHeader: LIANS_MANAGEMENT_HEADER,
+  requireNamespaceHeader: Boolean(LIANS_PROVISIONING_SECRET),
   clerk,
   log: (event, metadata) => console.log(JSON.stringify({ timestamp: new Date().toISOString(), event, ...metadata })),
 });
@@ -124,8 +144,11 @@ const clerkUiIntegrity = 'sha384-Mz4gSLIJGLEGyOMhHJvNzGZKESnK3Db1ocMHfD4jYKU0lvY
 const SEC_HEADERS = {
   'x-content-type-options': 'nosniff',
   'x-frame-options': 'DENY',
+  'x-permitted-cross-domain-policies': 'none',
   'referrer-policy': 'strict-origin-when-cross-origin',
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  'cross-origin-opener-policy': 'same-origin',
+  'cross-origin-resource-policy': 'same-origin',
   ...(isProd ? { 'strict-transport-security': 'max-age=31536000; includeSubDomains; preload' } : {}),
   'content-security-policy': [
     "default-src 'self'",
@@ -136,15 +159,19 @@ const SEC_HEADERS = {
     // Clerk JS spawns a blob: Web Worker internally for secure session/billing processing.
     // Without an explicit worker-src, script-src is used as fallback and blocks blob: workers.
     "worker-src 'self' blob:",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "style-src 'self' https://fonts.googleapis.com",
+    // Interactive charts set bounded presentation values from trusted, same-origin scripts.
+    // Keep attribute styles separate so stylesheet blocks and injected <style> tags remain denied.
+    "style-src-attr 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https:",
+    "img-src 'self' data: https://img.clerk.com",
     // api.github.com: live star-count badge on the homepage hero.
     `connect-src 'self' https://api.github.com https://challenges.cloudflare.com https://api.stripe.com https://*.ingest.us.sentry.io${clerkOrigin ? ` ${clerkOrigin} https://*.clerk.accounts.dev https://*.clerk.com` : ''}`,
     // hooks.stripe.com + m.stripe.network: Stripe 3-D Secure challenge and fraud-signal frames.
     `frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://m.stripe.network${clerkOrigin ? ` ${clerkOrigin}` : ''}`,
+    "frame-ancestors 'none'",
     "object-src 'none'",
-    "base-uri 'self'",
+    "base-uri 'none'",
     "form-action 'self'",
   ].join('; '),
 };
@@ -166,9 +193,18 @@ if (redisRestUrl && redisRestToken) {
     console.warn('[Lians] distributed rate limiter unavailable:', error.message);
   }
 }
-const rateLimit = async (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
-  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
-  const key = `${bucket}:${ip}`;
+const clientIp = (req) => {
+  const platformProxy = Boolean(process.env.VERCEL || process.env.FLY_APP_NAME || process.env.TRUST_PROXY_HEADERS === 'true');
+  if (process.env.FLY_APP_NAME && req.headers['fly-client-ip']) return String(req.headers['fly-client-ip']).trim();
+  if (process.env.VERCEL && req.headers['x-vercel-forwarded-for']) return String(req.headers['x-vercel-forwarded-for']).split(',')[0].trim();
+  if (platformProxy && req.headers['cf-connecting-ip']) return String(req.headers['cf-connecting-ip']).trim();
+  if (platformProxy && req.headers['x-forwarded-for']) return String(req.headers['x-forwarded-for']).split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+};
+const rateLimit = async (req, res, { max = 60, windowMs = 60_000, bucket = 'api', identity = '' } = {}) => {
+  const subject = identity || clientIp(req);
+  const subjectHash = crypto.createHash('sha256').update(subject).digest('hex').slice(0, 32);
+  const key = `${bucket}:${subjectHash}`;
   const now = Date.now();
   if (rateLimitRedis) {
     try {
@@ -211,7 +247,7 @@ const readStore = () => controlStore.read();
 const writeStore = (store) => controlStore.write(store);
 const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 // Helpers use res.setHeader so security headers set at request start are preserved
-const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.writeHead(status); res.end(JSON.stringify(body)); };
+const json = (res, status, body) => { res.setHeader('content-type', 'application/json; charset=utf-8'); res.setHeader('cache-control', 'no-store'); res.writeHead(status); res.end(JSON.stringify(body)); };
 const healthPage = ({ build, environment, authConfigured }) => `<!doctype html>
 <html lang="en">
   <head>
@@ -244,20 +280,88 @@ const healthPage = ({ build, environment, authConfigured }) => `<!doctype html>
     </main>
   </body>
 </html>`;
-const readBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Invalid JSON')); } }); });
-const readRawBody = (req) => new Promise((resolve, reject) => { let body = ''; req.on('data', (chunk) => { body += chunk; if (body.length > 1_000_000) req.destroy(); }); req.on('end', () => resolve(body)); req.on('error', reject); });
+class RequestError extends Error {
+  constructor(status, message) { super(message); this.status = status; }
+}
+const readRawBody = (req, { maxBytes = DEFAULT_BODY_LIMIT } = {}) => new Promise((resolve, reject) => {
+  const declaredLength = Number(req.headers['content-length'] || 0);
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    reject(new RequestError(413, 'Request body is too large.'));
+    req.resume();
+    return;
+  }
+  const chunks = [];
+  let total = 0;
+  let settled = false;
+  const cleanup = () => {
+    req.off('data', onData);
+    req.off('end', onEnd);
+    req.off('error', onError);
+    req.off('aborted', onAborted);
+  };
+  const fail = (error) => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    req.resume();
+    reject(error);
+  };
+  const onData = (chunk) => {
+    total += chunk.length;
+    if (total > maxBytes) return fail(new RequestError(413, 'Request body is too large.'));
+    chunks.push(Buffer.from(chunk));
+  };
+  const onEnd = () => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    resolve(Buffer.concat(chunks).toString('utf8'));
+  };
+  const onError = (error) => fail(error);
+  const onAborted = () => fail(new RequestError(400, 'Request body was interrupted.'));
+  req.on('data', onData);
+  req.on('end', onEnd);
+  req.on('error', onError);
+  req.on('aborted', onAborted);
+});
+const readBody = async (req, options) => {
+  const raw = await readRawBody(req, options);
+  if (!raw) return {};
+  try { return JSON.parse(raw); }
+  catch { throw new RequestError(400, 'Invalid JSON.'); }
+};
 const cookies = (req) => Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map((part) => { const [key, ...value] = part.trim().split('='); return [key, decodeURIComponent(value.join('='))]; }));
 const redirect = (res, location, status = 302) => { res.setHeader('location', location); res.writeHead(status); res.end(); };
-const serveFile = (res, filename) => { const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8' }; fs.readFile(filename, (error, content) => { if (error) { res.writeHead(404); res.end('Not found'); return; } res.setHeader('content-type', types[path.extname(filename)] || 'application/octet-stream'); res.writeHead(200); res.end(content); }); };
+const serveFile = (req, res, filename) => {
+  const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.ico': 'image/x-icon', '.png': 'image/png', '.svg': 'image/svg+xml', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.pdf': 'application/pdf' };
+  fs.readFile(filename, (error, content) => {
+    if (error) { res.writeHead(404); res.end('Not found'); return; }
+    const extension = path.extname(filename).toLowerCase();
+    res.setHeader('content-type', types[extension] || 'application/octet-stream');
+    res.setHeader('cache-control', extension === '.html' ? 'no-cache, no-store, must-revalidate' : 'public, max-age=0, must-revalidate');
+    res.writeHead(200);
+    if (req.method !== 'HEAD') res.end(content); else res.end();
+  });
+};
+const servePublicFile = (req, res, relative) => {
+  const normalized = String(relative).replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!PUBLIC_FILES.has(normalized)) return json(res, 404, { error: 'Not found.' });
+  return serveFile(req, res, path.join(root, ...normalized.split('/')));
+};
 const allowedApiOrigins = (req) => {
-  const proto = (req.headers['x-forwarded-proto'] || (req.headers.host?.startsWith('localhost') ? 'http' : 'https')).split(',')[0].trim();
-  const host = req.headers.host || '';
-  const origins = new Set([baseUrl, `${proto}://${host}`]);
+  const origins = new Set();
+  for (const configuredOrigin of [baseUrl, ...(process.env.CORS_ORIGINS || '').split(',')]) {
+    try { origins.add(new URL(configuredOrigin.trim()).origin); } catch {}
+  }
   try {
     const configured = new URL(baseUrl);
     if (configured.hostname === 'lians.ai') origins.add(`${configured.protocol}//www.lians.ai`);
     if (configured.hostname === 'www.lians.ai') origins.add(`${configured.protocol}//lians.ai`);
   } catch {}
+  if (!isProd) {
+    const host = req.headers.host || '';
+    if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) origins.add(`http://${host}`);
+  }
   return origins;
 };
 
@@ -297,8 +401,7 @@ const verifyClerkToken = async (req) => {
   // Path 3: Cookie-based auth. Authorization header is stripped so the SDK
   // uses __session/__client_uat cookies without re-attempting Bearer.
   try {
-    const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
-    const host = req.headers.host || 'localhost';
+    const requestOrigin = isProd ? new URL(baseUrl).origin : `${(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim()}://${req.headers.host || 'localhost'}`;
     const headers = new Headers();
     for (const [k, v] of Object.entries(req.headers)) {
       if (k.toLowerCase() === 'authorization') continue;
@@ -306,7 +409,7 @@ const verifyClerkToken = async (req) => {
       else if (Array.isArray(v)) v.forEach(item => headers.append(k, item));
     }
     const state = await clerk.authenticateRequest(
-      new Request(`${proto}://${host}${req.url}`, { headers })
+      new Request(`${requestOrigin}${req.url}`, { headers })
     );
     if (!state.isSignedIn) return null;
     const auth = state.toAuth();
@@ -418,11 +521,13 @@ const app = async (req, res) => {
     ) {
       await controlStore.hydrate();
     }
-    // Clerk webhook - must be before CORS/rate-limit (server-to-server, no origin header)
+    // Clerk webhook is server-to-server, so it skips browser-origin checks. It still
+    // gets a dedicated flood limit before body buffering and signature verification.
     if (pathname === '/api/webhooks/clerk' && req.method === 'POST') {
+      if (!await rateLimit(req, res, { max: 120, windowMs: 60_000, bucket: 'clerk-webhook' })) return;
       const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
       if (!webhookSecret) return json(res, 500, { error: 'Webhook not configured.' });
-      const rawBody = await readRawBody(req);
+      const rawBody = await readRawBody(req, { maxBytes: WEBHOOK_BODY_LIMIT });
       const { Webhook } = require('svix');
       let event;
       try {
@@ -463,12 +568,13 @@ const app = async (req, res) => {
           const liansUserId = clerkUser.privateMetadata?.liansUserId;
           if (liansConfigured() && liansUserId) {
             const namespace = `ns_${liansUserId}`;
-            const keys = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`);
+            const keys = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`, { namespace });
             for (const key of Array.isArray(keys) ? keys : []) {
               if (key.label !== CONSOLE_KEY_LABEL) {
                 await liansAdmin(`/api-keys/${encodeURIComponent(key.id)}`, {
                   method: 'PATCH',
                   body: { scopes },
+                  namespace,
                 });
               }
             }
@@ -591,19 +697,19 @@ const app = async (req, res) => {
       '/blog/memory-lifecycle': 'blog-memory-lifecycle.html',
       '/blog/eu-ai-act-article-12': 'blog-eu-ai-act-article-12.html',
     };
-    if (pathname === '/privacy') return serveFile(res, path.join(root, 'privacy.html'));
-    if (pathname === '/terms') return serveFile(res, path.join(root, 'terms.html'));
-    if (CONTENT_PAGES[pathname]) return serveFile(res, path.join(root, 'marketing.html'));
+    if (pathname === '/privacy') return serveFile(req, res, path.join(root, 'privacy.html'));
+    if (pathname === '/terms') return serveFile(req, res, path.join(root, 'terms.html'));
+    if (CONTENT_PAGES[pathname]) return serveFile(req, res, path.join(root, 'marketing.html'));
     if (pathname.endsWith('.html')) {
       const pretty = Object.entries(CONTENT_PAGES).find(([, file]) => `/${file}` === pathname)?.[0];
       if (pretty) return redirect(res, pretty);
     }
 
-    if (pathname === '/login' || pathname === '/sso-callback') return serveFile(res, path.join(root, 'app.html'));
-    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) return serveFile(res, path.join(root, 'app.html'));
-    if (pathname === '/billing') return serveFile(res, path.join(root, 'app.html'));
-    if (pathname === '/upgrade') return serveFile(res, path.join(root, 'app.html'));
-    if (pathname === '/console' || pathname.startsWith('/console/')) return serveFile(res, path.join(root, 'app.html'));
+    if (pathname === '/login' || pathname === '/sso-callback') return serveFile(req, res, path.join(root, 'app.html'));
+    if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) return serveFile(req, res, path.join(root, 'app.html'));
+    if (pathname === '/billing') return serveFile(req, res, path.join(root, 'app.html'));
+    if (pathname === '/upgrade') return serveFile(req, res, path.join(root, 'app.html'));
+    if (pathname === '/console' || pathname.startsWith('/console/')) return serveFile(req, res, path.join(root, 'app.html'));
 
     // Logout (Clerk handles the actual session; this just redirects)
     if (pathname === '/logout' && req.method === 'POST') { return redirect(res, '/login'); }
@@ -611,10 +717,15 @@ const app = async (req, res) => {
     // ── JSON API ──────────────────────────────────────────────────────────────
 
     if (pathname === '/api/partner-applications' && req.method === 'POST') {
-      if (!await rateLimit(req, res, { max: 8, windowMs: 60 * 60_000, bucket: 'partner-applications' })) return;
-      const body = await readBody(req);
+      if (!await rateLimit(req, res, { max: 5, windowMs: 24 * 60 * 60_000, bucket: 'partner-applications' })) return;
+      const body = await readBody(req, { maxBytes: PARTNER_BODY_LIMIT });
+      // Hidden-field submissions are automated. Return a neutral success without
+      // storing data or sending mail so the field does not become an oracle.
+      if (String(body.website || '').trim()) return json(res, 202, { ok: true });
       const validation = validateApplication(body);
       if (!validation.ok) return json(res, 400, { error: validation.error, missing: validation.missing });
+      const recipientIdentity = `partner-recipient:${sha256(String(body.work_email).trim().toLowerCase())}`;
+      if (!await rateLimit(req, res, { max: 2, windowMs: 24 * 60 * 60_000, bucket: 'partner-confirmation', identity: recipientIdentity })) return;
       if (!partnerApplications.configured()) {
         log('partner_application_unconfigured', req, null, { company: body.company });
         return json(res, 503, { error: 'Applications are temporarily unavailable. Please email sales@lians.ai.' });
@@ -640,24 +751,16 @@ const app = async (req, res) => {
     }
 
     if (pathname === '/api/health' && req.method === 'GET') {
-      const health = {
-        ok: true,
-        build: APP_BUILD,
-        environment: process.env.VERCEL ? 'vercel' : (process.env.NODE_ENV || 'local'),
-        clerkPublishableKeyConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY),
-        clerkSecretKeyConfigured: Boolean(process.env.CLERK_SECRET_KEY),
-        controlStore: controlStore.status(),
-        workflow: 'login->onboarding->console',
-      };
+      const health = { ok: true, engineConfigured: liansConfigured() };
       const wantsHtml = /\btext\/html\b/i.test(req.headers.accept || '') && url.searchParams.get('format') !== 'json';
       if (wantsHtml) {
         res.setHeader('vary', 'accept');
         res.setHeader('content-type', 'text/html; charset=utf-8');
         res.writeHead(200);
         res.end(healthPage({
-          build: health.build,
-          environment: health.environment,
-          authConfigured: health.clerkPublishableKeyConfigured && health.clerkSecretKeyConfigured,
+          build: APP_BUILD,
+          environment: process.env.VERCEL ? 'vercel' : (process.env.NODE_ENV || 'local'),
+          authConfigured: Boolean(process.env.CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY),
         }));
         return;
       }
@@ -721,7 +824,8 @@ const app = async (req, res) => {
       const user = await apiOnboarding(req, res); if (!user) return;
       if (liansConfigured()) {
         try {
-          const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
+          const namespace = liansNamespace(user);
+          const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`, { namespace });
           // The console-internal key is server infrastructure, not a user key - never list it.
           const keys = (Array.isArray(list) ? list : []).filter((k) => !k.revoked_at && k.label !== CONSOLE_KEY_LABEL).map(liansKeyView);
           return json(res, 200, { keys, freshKey: null });
@@ -762,7 +866,8 @@ const app = async (req, res) => {
         try {
           const tier = user.billingPlan || 'free';
           const scopes = TIER_SCOPES[tier] || TIER_SCOPES.free;
-          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace: liansNamespace(user), scopes, label: cleanLabel } });
+          const namespace = liansNamespace(user);
+          const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace, scopes, label: cleanLabel }, namespace });
           log('api_key_created', req, user, { keyId: created.id, tier });
           return json(res, 201, { key: { ...liansKeyView(created), prefix: `${String(created.key).slice(0, 16)}…` }, rawKey: created.key });
         } catch (err) { log('lians_key_create_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to create key via the Lians API. Please try again.' }); }
@@ -773,9 +878,10 @@ const app = async (req, res) => {
       const id = pathname.split('/')[3];
       if (liansConfigured()) {
         try {
-          const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
+          const namespace = liansNamespace(user);
+          const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`, { namespace });
           if (!(Array.isArray(owned) && owned.find((k) => k.id === id && k.label !== CONSOLE_KEY_LABEL))) return json(res, 404, { error: 'Key not found.' });
-          const rotated = await liansAdmin(`/api-keys/${encodeURIComponent(id)}/rotate`, { method: 'POST' });
+          const rotated = await liansAdmin(`/api-keys/${encodeURIComponent(id)}/rotate`, { method: 'POST', namespace });
           log('api_key_rotated', req, user, { oldId: id, newId: rotated.id });
           return json(res, 200, { key: { ...liansKeyView(rotated), prefix: `${String(rotated.key).slice(0, 16)}…` }, rawKey: rotated.key });
         } catch (err) { log('lians_key_rotate_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to rotate key. Please try again.' }); }
@@ -797,9 +903,10 @@ const app = async (req, res) => {
     if (pathname.startsWith('/api/keys/') && req.method === 'DELETE') { const user = await apiOnboarding(req, res); if (!user) return; const id = pathname.split('/').pop();
       if (liansConfigured()) {
         try {
-          const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(user))}`);
+          const namespace = liansNamespace(user);
+          const owned = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(namespace)}`, { namespace });
           if (!(Array.isArray(owned) && owned.find((k) => k.id === id && k.label !== CONSOLE_KEY_LABEL))) return json(res, 404, { error: 'Key not found.' });
-          await liansAdmin(`/api-keys/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          await liansAdmin(`/api-keys/${encodeURIComponent(id)}`, { method: 'DELETE', namespace });
           log('api_key_deleted', req, user, { keyId: id });
           return json(res, 200, { ok: true });
         } catch (err) { log('lians_key_delete_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to delete key. Please try again.' }); }
@@ -1042,7 +1149,8 @@ const app = async (req, res) => {
       const limits = TIER_USAGE_LIMITS[plan] || TIER_USAGE_LIMITS.free;
       if (!liansConfigured()) return json(res, 200, { configured: false, plan, limits, writes: 0, recalls: 0 });
       try {
-        const usage = await liansAdmin(`/usage/${encodeURIComponent(liansNamespace(user))}`);
+        const namespace = liansNamespace(user);
+        const usage = await liansAdmin(`/usage/${encodeURIComponent(namespace)}`, { namespace });
         return json(res, 200, { configured: true, plan, limits, writes: usage.writes || 0, recalls: usage.recalls || 0, periodStart: usage.period_start || null });
       } catch (err) {
         log('usage_fetch_failed', req, user, { error: err.message, status: err.status });
@@ -1068,15 +1176,23 @@ const app = async (req, res) => {
       }
     }
 
-    // Static files
-    const relative = pathname === '/' ? 'marketing.html' : pathname.replace(/^\//, '');
-    const file = path.resolve(root, relative);
-    if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
-    return serveFile(res, file);
+    // Only explicitly public browser assets may be read from disk. Server source,
+    // configuration, dependency manifests, tests, data, and dotfiles never enter
+    // this path even when they are present in the deployment image.
+    if (!['GET', 'HEAD'].includes(req.method)) {
+      res.setHeader('allow', 'GET, HEAD');
+      return json(res, 405, { error: 'Method not allowed.' });
+    }
+    if (pathname === '/') return serveFile(req, res, path.join(root, 'marketing.html'));
+    let relative;
+    try { relative = decodeURIComponent(pathname).replace(/^\//, ''); }
+    catch { return json(res, 400, { error: 'Invalid path.' }); }
+    return servePublicFile(req, res, relative);
   } catch (error) {
-    log('server_error', req, null, { message: error.message, stack: error.stack });
-    if (Sentry) { Sentry.captureException(error); try { await Sentry.flush(2000); } catch {} }
-    return json(res, 500, { error: 'Unexpected server error.' });
+    const statusCode = Number(error.status) || 500;
+    log(statusCode >= 500 ? 'server_error' : 'request_rejected', req, null, { message: error.message, status: statusCode, ...(statusCode >= 500 ? { stack: error.stack } : {}) });
+    if (statusCode >= 500 && Sentry) { Sentry.captureException(error); try { await Sentry.flush(2000); } catch {} }
+    return json(res, statusCode, { error: statusCode >= 500 ? 'Unexpected server error.' : error.message });
   } finally {
     await controlStore.flush();
   }

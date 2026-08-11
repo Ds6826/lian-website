@@ -15,6 +15,9 @@ const PLAYGROUND_AGENT = 'console-playground';
 const createLiansConsole = ({
   apiUrl = '',
   adminSecret = '',
+  managementPrefix = '/v1/admin',
+  managementHeader = 'X-Admin-Secret',
+  requireNamespaceHeader = false,
   clerk,
   log = () => {},
   fetchImpl = fetch,
@@ -56,12 +59,19 @@ const createLiansConsole = ({
     if (!resp.ok) { const e = new Error((data && (data.detail || data.error)) || `Lians API ${resp.status}`); e.status = resp.status; throw e; }
     return data;
   };
-  const adminRequest = (path, opts = {}) => request(`/v1/admin${path}`, { ...opts, headers: { 'X-Admin-Secret': adminSecret } });
+  const adminRequest = (path, opts = {}) => request(`${managementPrefix}${path}`, {
+    ...opts,
+    headers: {
+      [managementHeader]: adminSecret,
+      ...(requireNamespaceHeader && opts.namespace ? { 'X-Lians-Namespace': opts.namespace } : {}),
+    },
+  });
 
   const mintConsoleKey = async (user, priorMetadata = {}) => {
     const created = await adminRequest('/api-keys', {
       method: 'POST',
       body: { namespace: namespaceFor(user), scopes: CONSOLE_KEY_SCOPES, label: CONSOLE_KEY_LABEL },
+      namespace: namespaceFor(user),
     });
     try {
       await clerk.users.updateUserMetadata(user.clerkUserId, {

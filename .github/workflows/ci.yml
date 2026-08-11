@@ -20,6 +20,24 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm audit --omit=dev --audit-level=moderate
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Run regression suite
+        run: npm test
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+
+  container:
+    name: Hardened production container
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build production image
+        run: docker build --build-arg VCS_REF=${{ github.sha }} --tag lians-website:test .
+      - name: Verify non-root runtime and excluded files
+        run: |
+          test "$(docker image inspect lians-website:test --format '{{.Config.User}}')" = "10001:10001"
+          docker run --rm lians-website:test test ! -e /app/.env
+          docker run --rm lians-website:test test ! -e /app/.git
+          docker run --rm lians-website:test test ! -e /app/test

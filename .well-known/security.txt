@@ -1,0 +1,5 @@
+Contact: mailto:security@lians.ai
+Canonical: https://www.lians.ai/.well-known/security.txt
+Policy: https://www.lians.ai/security
+Preferred-Languages: en
+Expires: 2027-08-11T23:59:59Z

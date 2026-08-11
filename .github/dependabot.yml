@@ -17,3 +17,12 @@ updates:
     groups:
       website:
         patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      website-container:
+        patterns: ["*"]

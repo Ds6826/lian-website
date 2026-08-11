@@ -29,6 +29,16 @@ test('partner application validation rejects an invalid email', () => {
   assert.equal(validateApplication({ ...valid, work_email: 'not-an-email' }).error, 'Enter a valid work email.');
 });
 
+test('partner application validation rejects unsafe URLs and invented options', () => {
+  assert.equal(validateApplication({ ...valid, company_website: 'javascript:alert(1)' }).error, 'Enter a valid company website.');
+  assert.equal(validateApplication({ ...valid, current_stage: 'Anything' }).error, 'Choose one of the available application options.');
+});
+
+test('partner application validation restricts uploads by type and encoded size', () => {
+  assert.equal(validateApplication({ ...valid, architecture_file: { name: 'payload.svg', type: 'image/svg+xml', data_url: 'data:image/svg+xml;base64,PHN2Zz4=' } }).error, 'The optional upload type is not supported.');
+  assert.equal(validateApplication({ ...valid, architecture_file: { name: 'notes.txt', type: 'text/plain', data_url: `data:text/plain;base64,${'eA=='.repeat(70_000)}` } }).error, 'The optional upload is too large.');
+});
+
 test('high-fit logic only books implementation-ready applicants', () => {
   assert.equal(highFitApplication(valid), true);
   assert.equal(highFitApplication({ ...valid, current_stage: 'Prototype' }), false);

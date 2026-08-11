@@ -264,3 +264,4 @@ html{overflow-x:hidden}
 .architecture-core{border-color:var(--lime);background:rgba(65,105,225,.1)}
 .architecture-arrow{align-self:center;color:var(--blue-bright);font:500 24px var(--mono)}
 @media(max-width:680px){.architecture-map{grid-template-columns:1fr;gap:10px}.architecture-arrow{justify-self:center;transform:rotate(90deg)}.architecture-node{min-height:0}}
+.form-trap{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}

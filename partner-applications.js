@@ -4,13 +4,33 @@ const nodemailer = require('nodemailer');
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
 const requiredFields = ['work_email', 'company', 'role', 'company_website', 'agent_workflow', 'changing_facts', 'audit_requirement', 'current_stage', 'preferred_track', 'deployment_requirement'];
+const allowedStages = new Set(['Prototype', 'Pilot', 'Production']);
+const allowedTracks = new Set(['Implementation', 'Evaluation', 'Unsure']);
+const allowedDeployments = new Set(['Cloud', 'Private cloud', 'Self-hosted', 'Air-gapped']);
+const allowedUploadTypes = new Set(['application/pdf', 'text/plain', 'text/markdown', 'image/png', 'image/jpeg']);
+const allowedUploadExtensions = new Set(['.pdf', '.txt', '.md', '.png', '.jpg', '.jpeg']);
+const MAX_UPLOAD_JSON_BYTES = 256 * 1024;
+
+const validHttpUrl = (value) => {
+  try { return ['http:', 'https:'].includes(new URL(value).protocol); }
+  catch { return false; }
+};
 
 const validateApplication = (body) => {
   const missing = requiredFields.filter((key) => !String(body?.[key] || '').trim());
   if (missing.length) return { error: 'Complete every required field.', missing };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.work_email)) return { error: 'Enter a valid work email.' };
-  if (Object.entries(body).some(([key, value]) => key !== 'architecture_file' && String(value).length > 10_000)) return { error: 'One or more fields are too long.' };
-  if (body.architecture_file && JSON.stringify(body.architecture_file).length > 950_000) return { error: 'The optional upload is too large.' };
+  if (!validHttpUrl(body.company_website)) return { error: 'Enter a valid company website.' };
+  if (!allowedStages.has(body.current_stage) || !allowedTracks.has(body.preferred_track) || !allowedDeployments.has(body.deployment_requirement)) return { error: 'Choose one of the available application options.' };
+  if (Object.entries(body).some(([key, value]) => !['architecture_file', 'website'].includes(key) && String(value).length > 5_000)) return { error: 'One or more fields are too long.' };
+  if (body.architecture_file) {
+    const upload = body.architecture_file;
+    const extension = require('node:path').extname(String(upload.name || '')).toLowerCase();
+    const uploadJson = JSON.stringify(upload);
+    if (Buffer.byteLength(uploadJson, 'utf8') > MAX_UPLOAD_JSON_BYTES) return { error: 'The optional upload is too large.' };
+    if (!allowedUploadExtensions.has(extension) || !allowedUploadTypes.has(String(upload.type || '').toLowerCase())) return { error: 'The optional upload type is not supported.' };
+    if (!String(upload.data_url || '').startsWith(`data:${String(upload.type).toLowerCase()};base64,`)) return { error: 'The optional upload is invalid.' };
+  }
   return { ok: true };
 };
 
