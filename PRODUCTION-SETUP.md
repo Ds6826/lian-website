@@ -3,7 +3,8 @@
 ## Internal Admin Console - cofounder-owned rollout
 
 The Admin Console is disabled unless `ADMIN_CONSOLE_ENABLED=true`. Before enabling it,
-review and run `migrations/002_admin_identity_rbac.sql`, verify the identity backfill,
+review and run `migrations/002_admin_identity_rbac.sql` followed by
+`migrations/003_admin_operations_v2.sql`, then verify the identity backfill,
 and assign the first OWNER using a stable Clerk user ID. The local command is
 `LIANS_OWNER_CLERK_USER_ID=user_... npm run bootstrap:admin`; it also requires
 `DATABASE_URL` and `CLERK_SECRET_KEY` and never prints their values. Start with the feature flag disabled,

@@ -23,6 +23,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "admin-v2.css",
+      "use": "@vercel/static"
+    },
+    {
       "src": "clerk-loader.js",
       "use": "@vercel/static"
     },

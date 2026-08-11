@@ -135,6 +135,7 @@ const SEC_HEADERS = {
 // ── rate limiting ─────────────────────────────────────────────────────────────
 
 const rateLimits = new Map();
+const userRateLimits = new Map();
 const rateLimit = (req, res, { max = 60, windowMs = 60_000, bucket = 'api' } = {}) => {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
   const key = `${bucket}:${ip}`;
@@ -312,7 +313,19 @@ const nextStep = (step) => ({ company: 'role', role: 'use-case', 'use-case': 'to
 
 const requireAuth = async (req, res) => { const user = await userFor(req); if (!user) { log('redirect_guard', req, null, { reason: 'unauthenticated' }); redirect(res, '/login'); return null; } return user; };
 const requireOnboarding = async (req, res) => { const user = await requireAuth(req, res); if (!user) return null; if (!hasCompletedOnboarding(user)) { log('console_access_denied', req, user, { next: firstIncomplete(user) }); redirect(res, `/onboarding/${firstIncomplete(user)}`); return null; } return user; };
-const apiAuth = async (req, res) => { const user = await userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } return user; };
+const enforceConfiguredUserLimit = async (req, res, user) => {
+  if (!adminEnabled() || !adminStore.configured()) return true;
+  const durable = await adminStore.getByClerkId(user.clerkUserId || user.providerUserId);
+  if (durable?.accountStatus === 'DISABLED') { json(res, 403, { error: 'Account disabled.' }); return false; }
+  const control = durable ? await adminStore.activeRateLimit(durable.id) : null;
+  if (!control) return true;
+  const now = Date.now(); let entry = userRateLimits.get(durable.id);
+  if (!entry || now >= entry.resetAt || entry.controlId !== control.id) entry = { count: 0, resetAt: now + 60_000, controlId: control.id };
+  entry.count += 1; userRateLimits.set(durable.id, entry);
+  if (entry.count > control.value) { res.setHeader('retry-after', Math.ceil((entry.resetAt-now)/1000)); json(res, 429, { error: 'Account request limit exceeded.' }); return false; }
+  return true;
+};
+const apiAuth = async (req, res) => { const user = await userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } req._liansUserId = user.id; if (!(await enforceConfiguredUserLimit(req,res,user))) return null; return user; };
 const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res); if (!user) return null; if (!hasCompletedOnboarding(user)) { json(res, 403, { error: 'Complete onboarding before accessing this resource.' }); return null; } return user; };
 
 const adminActorForUser = async (user) => {
@@ -335,7 +348,7 @@ const listAdminKeys = async ({ limit = 50, offset = 0 } = {}) => {
         const list = await liansAdmin(`/api-keys?namespace=${encodeURIComponent(liansNamespace(owner))}`);
         for (const key of Array.isArray(list) ? list : []) {
           if (key.label === CONSOLE_KEY_LABEL) continue;
-          keys.push({ ...liansKeyView(key), ownerUserId: owner.id, ownerName: owner.name, ownerEmail: owner.email, status: key.revoked_at ? 'REVOKED' : 'ACTIVE' });
+          keys.push({ ...liansKeyView(key), ownerUserId: owner.id, ownerName: owner.name, ownerEmail: owner.email, namespace: liansNamespace(owner), status: key.revoked_at ? 'REVOKED' : 'ACTIVE', internal: false, requestCount: null, throttleState: 'unavailable' });
         }
       } catch (err) { log('admin_keys_namespace_failed', null, owner, { status: err.status }); }
     }
@@ -344,7 +357,7 @@ const listAdminKeys = async ({ limit = 50, offset = 0 } = {}) => {
     for (const key of store.apiKeys) {
       if (key.label === CONSOLE_KEY_LABEL) continue;
       const owner = users.find((u) => u.id === key.userId);
-      keys.push({ id: key.id, label: key.label, scopes: key.scopes || [], createdAt: key.createdAt, revokedAt: key.revokedAt || null, lastUsedAt: key.lastUsedAt || null, prefix: key.prefix, ownerUserId: key.userId, ownerName: owner?.name || '', ownerEmail: owner?.email || '', status: key.revokedAt ? 'REVOKED' : 'ACTIVE' });
+      keys.push({ id: key.id, label: key.label, scopes: key.scopes || [], createdAt: key.createdAt, revokedAt: key.revokedAt || null, lastUsedAt: key.lastUsedAt || null, prefix: key.prefix, ownerUserId: key.userId, ownerName: owner?.name || '', ownerEmail: owner?.email || '', namespace: owner ? liansNamespace(owner) : null, status: key.revokedAt ? 'REVOKED' : 'ACTIVE', internal: false, requestCount: null, throttleState: 'unavailable' });
     }
   }
   keys.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -358,16 +371,31 @@ const revokeAdminKey = async (id) => {
   else { const store = readStore(); const key = store.apiKeys.find((item) => item.id === id && item.userId === target.ownerUserId); if (!key) return null; key.revokedAt = new Date().toISOString(); writeStore(store); }
   return target;
 };
-const adminSystemStatus = async () => {
+const adminSystemStatus = async (actor) => {
   const database = await adminStore.health().catch(() => ({ ok: false }));
+  let clerkHealth = { status: 'unavailable' };
+  try { await clerk.users.getUser(actor.clerkUserId); clerkHealth = { status: 'healthy' }; } catch {}
   let liansBackend = { status: liansConfigured() ? 'unavailable' : 'not_configured' };
   if (liansConfigured()) {
     try { const response = await fetch(`${LIANS_API_URL}/health`, { signal: AbortSignal.timeout(3000) }); liansBackend = { status: response.ok ? 'healthy' : 'unavailable', httpStatus: response.status }; }
     catch { liansBackend = { status: 'unavailable' }; }
   }
-  return { websiteApi: { status: 'healthy', build: APP_BUILD }, database: { status: database.ok ? 'healthy' : 'unavailable', latencyMs: database.latencyMs ?? null }, liansBackend };
+  const recent = await adminStore.usage({ since: new Date(Date.now()-86400000).toISOString() }).catch(()=>null);
+  return { websiteApi: { status: 'healthy', build: APP_BUILD, recentErrorRate: recent?.api_calls ? Number((recent.failed_requests/recent.api_calls).toFixed(4)) : null }, database: { status: database.ok ? 'healthy' : 'unavailable', latencyMs: database.latencyMs ?? null }, clerk: clerkHealth, liansBackend };
 };
-const adminApi = createAdminApi({ enabled: adminEnabled, authenticate: userFor, store: adminStore, readBody, json, listKeys: listAdminKeys, revokeKey: revokeAdminKey, systemStatus: adminSystemStatus });
+const adminEnvironmentStatus = async () => ({
+  clerk: { status: process.env.CLERK_SECRET_KEY && process.env.CLERK_PUBLISHABLE_KEY ? 'configured' : 'missing', required: true },
+  database: { status: process.env.DATABASE_URL ? 'configured' : 'missing', required: true },
+  liansBackend: { status: liansConfigured() ? 'configured' : 'missing', required: true },
+  sentry: { status: process.env.SENTRY_DSN ? 'configured' : 'optional', required: false },
+  email: { status: process.env.SMTP_USER && process.env.SMTP_PASSWORD ? 'configured' : 'optional', required: false },
+  clerkWebhooks: { status: process.env.CLERK_WEBHOOK_SECRET ? 'configured' : 'optional', required: false },
+  objectStorage: { status: process.env.S3_BUCKET || process.env.OBJECT_STORAGE_BUCKET ? 'configured' : 'optional', required: false },
+  grafana: { status: process.env.GRAFANA_URL ? 'configured' : 'optional', required: false },
+  openTelemetry: { status: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? 'configured' : 'optional', required: false },
+});
+const adminBuildInfo = async () => ({ build: APP_BUILD, commitSha: process.env.VERCEL_GIT_COMMIT_SHA || process.env.GIT_COMMIT_SHA || null, branch: process.env.VERCEL_GIT_COMMIT_REF || process.env.GIT_BRANCH || null, environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'local', adminConsoleEnabled: adminEnabled(), schemaVersion: '003', buildTimestamp: process.env.BUILD_TIMESTAMP || null, liansBackendConfigured: liansConfigured() });
+const adminApi = createAdminApi({ enabled: adminEnabled, authenticate: userFor, store: adminStore, readBody, json, listKeys: listAdminKeys, revokeKey: revokeAdminKey, systemStatus: adminSystemStatus, environmentStatus: adminEnvironmentStatus, buildInfo: adminBuildInfo });
 
 // ── server ────────────────────────────────────────────────────────────────────
 
@@ -384,6 +412,17 @@ const app = async (req, res) => {
   }
 
   const url = new URL(req.url, baseUrl); const { pathname } = url;
+  const requestStartedAt = Date.now();
+  req._requestId = String(req.headers['x-request-id'] || crypto.randomUUID()).slice(0, 128);
+  res.setHeader('x-request-id', req._requestId);
+  if (pathname.startsWith('/api/')) res.once('finish', () => {
+    if (!adminEnabled() || !adminStore.configured()) return;
+    const statusCode = res.statusCode;
+    const category = statusCode === 401 || statusCode === 403 ? 'AUTHORIZATION' : statusCode === 429 ? 'RATE_LIMIT' : statusCode >= 500 ? 'SERVER' : statusCode >= 400 ? 'VALIDATION' : 'SUCCESS';
+    const eventType = pathname === '/api/console/playground/write' ? 'memory_write' : pathname === '/api/console/playground/recall' || pathname === '/api/demo/recall' ? 'recall' : 'api_request';
+    const route = pathname.replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/ig, ':id').replace(/(\/api\/(?:keys|admin\/api-keys)\/)[^/]+/,'$1:id').slice(0,200);
+    adminStore.recordOperationalEvent({ requestId: req._requestId, route, method: req.method, statusCode, category, eventType, userId: req._liansUserId || null, retryable: statusCode === 429 || statusCode >= 500, message: statusCode >= 400 ? `${category} response` : '', durationMs: Date.now()-requestStartedAt }).catch((err) => log('operational_event_write_failed', req, null, { error: err.message }));
+  });
   try {
     // Clerk webhook - must be before CORS/rate-limit (server-to-server, no origin header)
     if (pathname === '/api/webhooks/clerk' && req.method === 'POST') {
@@ -581,6 +620,17 @@ const app = async (req, res) => {
     }
 
     if (pathname.startsWith('/api/admin/')) { await adminApi.handle(req, res, url); return; }
+
+    if (pathname === '/api/features' && req.method === 'GET') {
+      const user = await apiAuth(req,res); if(!user)return;
+      if (!adminEnabled() || !adminStore.configured()) return json(res,200,{features:{}});
+      const durable = await adminStore.getByClerkId(user.clerkUserId || user.providerUserId);
+      if (!durable) return json(res,200,{features:{}});
+      const internal = durable && durable.accountStatus === 'ACTIVE' && durable.role !== 'MEMBER';
+      const flags = await adminStore.listFlags(); const features = {};
+      for (const flag of flags) if (!flag.internalOnly || internal) features[flag.key] = await adminStore.evaluateFlag(durable.id,flag.key,internal);
+      return json(res,200,{features});
+    }
 
     // Onboarding
     if (pathname === '/api/onboarding' && req.method === 'GET') { const user = await apiAuth(req, res); if (!user) return; const complete = hasCompletedOnboarding(user); return json(res, 200, { answers: readStore().onboarding[user.id] || {}, onboardingComplete: complete, nextStep: complete ? null : firstIncomplete(user) }); }

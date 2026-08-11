@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { ROLES, PERMISSIONS, hasPermission, canManageTarget } = require('../admin-auth');
+const { ROLES, PERMISSIONS, hasPermission, canManageTarget, resolveFeatureFlag } = require('../admin-auth');
 
 const actor = (role, id = 'a') => ({ id, role, accountStatus: 'ACTIVE' });
 test('role permissions follow least privilege', () => {
@@ -11,6 +11,11 @@ test('role permissions follow least privilege', () => {
   assert.equal(hasPermission(ROLES.DEVELOPER, PERMISSIONS.SYSTEM_READ), true);
   assert.equal(hasPermission(ROLES.DEVELOPER, PERMISSIONS.API_KEY_REVOKE), false);
   assert.equal(hasPermission(ROLES.MEMBER, PERMISSIONS.AUDIT_READ), false);
+});
+test('feature flags are resolved server-side with internal-only protection',()=>{
+  assert.equal(resolveFeatureFlag({globalEnabled:true,internalOnly:true,overrideEnabled:true},false),false);
+  assert.equal(resolveFeatureFlag({globalEnabled:false,internalOnly:false,overrideEnabled:true},false),true);
+  assert.equal(resolveFeatureFlag({globalEnabled:true,internalOnly:false,overrideEnabled:false},true),false);
 });
 test('target rules prevent self-promotion and protect owners', () => {
   assert.equal(canManageTarget({ actor: actor(ROLES.OWNER), target: actor(ROLES.MEMBER, 'a'), operation: 'role', nextRole: ROLES.ADMIN }), false);
