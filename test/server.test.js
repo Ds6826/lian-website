@@ -70,6 +70,7 @@ test('console data routes require authentication', async () => {
 
 test('paid console capabilities are guarded by server-verified entitlements', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(source, /pathname\.startsWith\('\/api\/console\/context'\)[\s\S]*return 'context'/);
   assert.match(source, /pathname\.startsWith\('\/api\/console\/experiences'\)[\s\S]*return 'learning'/);
   assert.match(source, /pathname === '\/api\/console\/governance'[\s\S]*return 'governance'/);
   assert.match(source, /const requiredScope = consoleScopeForPath\(pathname\);[\s\S]*requireHostedScope\(req, res, user, requiredScope\)/);

@@ -6,10 +6,10 @@ const PLAN_ORDER = ['free', 'starter', 'growth', 'pro', 'enterprise'];
 // the API keys provisioned for a Lians namespace. The Community server remains
 // self-hostable; these entitlements govern Lians-operated services.
 const TIER_SCOPES = Object.freeze({
-  free: Object.freeze(['read', 'write']),
-  starter: Object.freeze(['read', 'write', 'adapters', 'audit']),
+  free: Object.freeze(['read', 'write', 'context']),
+  starter: Object.freeze(['read', 'write', 'context', 'adapters', 'audit']),
   growth: Object.freeze([
-    'read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks',
+    'read', 'write', 'context', 'adapters', 'audit', 'conflicts', 'webhooks',
     'compliance', 'graph', 'governance',
   ]),
   pro: Object.freeze([

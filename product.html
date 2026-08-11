@@ -59,7 +59,7 @@
           <div class="prose">
             <p class="block-label">Recall pipeline</p>
             <h3>Hybrid search, validity-gated.</h3>
-            <p>Keyword and semantic scores are blended, adjusted by materiality-weighted recency decay, then validity-gated, so superseded versions never reach the model. If embeddings go down, recall degrades to lexical-only and says so on every result, never silently.</p>
+            <p>Keyword and semantic scores are blended, adjusted by materiality-weighted recency decay, then validity-gated, so superseded versions never reach the model. One context call packs only the relevant memories into a token budget, and token reduction is included in the Free tier. If embeddings go down, recall degrades to lexical-only and says so on every result, never silently.</p>
             <p>Result: <strong>0 stale facts</strong> in top-5 recall, 100% supersession accuracy. <a class="tlink" href="/compare">See the eval →</a></p>
           </div>
         </div>

@@ -252,7 +252,7 @@ const setWizard = async () => {
 };
 
 const BILLING_PLANS = [
-  { id: 'free', name: 'Free', price: '$0', period: '/ mo', tagline: 'Build and test real memory.', features: ['10K writes and recalls', 'Point-in-time memory', 'API keys and playground'], cta: 'Get started free' },
+  { id: 'free', name: 'Free', price: '$0', period: '/ mo', tagline: 'Remember more. Send fewer tokens.', features: ['Token-reduced context for your model', '10K writes and recalls', 'Point-in-time memory', 'API keys and playground'], cta: 'Get started free' },
   { id: 'starter', name: 'Starter', price: '$15', period: '/ mo', tagline: 'Ship a serious individual project.', features: ['Everything in Free', 'Domain adapters', 'Audit history and lineage', '100K writes'], cta: 'Choose Starter' },
   { id: 'growth', name: 'Growth', price: '$69', period: '/ mo', tagline: 'Operate agents with a team.', features: ['Everything in Starter', 'Governance review', 'Knowledge graph', 'Conflicts and webhooks'], cta: 'Choose Growth' },
   { id: 'pro', name: 'Pro', price: '$199', period: '/ mo', tagline: 'Continuously improve production agents.', features: ['Everything in Growth', 'Adaptive recall and reflection', 'Backtest checks', 'Metrics and priority support'], cta: 'Choose Pro', highlight: true },

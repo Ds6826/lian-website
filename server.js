@@ -521,10 +521,10 @@ const hostedEntitlementsOrFree = async (req, user) => {
   }
 };
 const consoleScopeForPath = (pathname) => {
+  if (pathname.startsWith('/api/console/context')) return 'context';
   if (
     pathname.startsWith('/api/console/experiences') ||
     pathname.startsWith('/api/console/adaptive-recall') ||
-    pathname.startsWith('/api/console/context') ||
     pathname.startsWith('/api/console/reflections')
   ) return 'learning';
   if (

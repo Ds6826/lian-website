@@ -11,14 +11,21 @@ const {
 
 test('unknown provider plans fail closed to the free tier', () => {
   assert.equal(canonicalPlan('unexpected-premium'), 'free');
-  assert.deepEqual(scopesForPlan('unexpected-premium'), ['read', 'write']);
+  assert.deepEqual(scopesForPlan('unexpected-premium'), ['read', 'write', 'context']);
 });
 
 test('paid scopes have a stable minimum plan', () => {
+  assert.equal(minimumPlanForScope('context'), 'free');
   assert.equal(minimumPlanForScope('audit'), 'starter');
   assert.equal(minimumPlanForScope('governance'), 'growth');
   assert.equal(minimumPlanForScope('learning'), 'pro');
   assert.equal(minimumPlanForScope('sso'), 'enterprise');
+});
+
+test('token-reduced context remains available through every plan', () => {
+  for (const plan of ['free', 'starter', 'growth', 'pro', 'enterprise']) {
+    assert.ok(scopesForPlan(plan).includes('context'), `${plan} must include context`);
+  }
 });
 
 test('verification is cached and concurrent requests share one provider call', async () => {
