@@ -24,6 +24,8 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Run regression suite
         run: npm test
+      - name: Enforce public repository boundary
+        run: npm run check:public-boundary
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=moderate
 

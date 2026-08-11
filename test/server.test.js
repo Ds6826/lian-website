@@ -68,6 +68,16 @@ test('console data routes require authentication', async () => {
   }
 });
 
+test('paid console capabilities are guarded by server-verified entitlements', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'server.js'), 'utf8');
+  assert.match(source, /pathname\.startsWith\('\/api\/console\/context'\)[\s\S]*return 'context'/);
+  assert.match(source, /pathname\.startsWith\('\/api\/console\/experiences'\)[\s\S]*return 'learning'/);
+  assert.match(source, /pathname === '\/api\/console\/governance'[\s\S]*return 'governance'/);
+  assert.match(source, /const requiredScope = consoleScopeForPath\(pathname\);[\s\S]*requireHostedScope\(req, res, user, requiredScope\)/);
+  assert.match(source, /code: 'PLAN_UPGRADE_REQUIRED'/);
+  assert.match(source, /code: 'ENTITLEMENT_VERIFICATION_UNAVAILABLE'/);
+});
+
 test('legacy demo recall requires authentication too', async () => {
   const res = await post('/api/demo/recall');
   assert.equal(res.status, 401);

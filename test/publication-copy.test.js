@@ -79,6 +79,16 @@ test("benchmark copy distinguishes evidence retrieval from answer accuracy", () 
   assert.match(client, /Inspect benchmark source/);
 });
 
+test("Free-tier copy makes token reduction explicit", () => {
+  const marketing = read("marketing.js");
+  const consoleApp = read("app.js");
+
+  assert.match(marketing, /Remember more\. Send fewer tokens\./);
+  assert.match(marketing, /Token-reduced context for your model/);
+  assert.match(marketing, /Token reduction is included in Free\./);
+  assert.match(consoleApp, /Token-reduced context for your model/);
+});
+
 test("public copy does not imply vendor endorsement or a closed cohort", () => {
   const copy = `${read("marketing.html")}\n${read("marketing.js")}`;
 

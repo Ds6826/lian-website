@@ -6,6 +6,12 @@ const { createClerkClient, verifyToken } = require('@clerk/backend');
 const { createPartnerApplicationService, validateApplication } = require('./partner-applications');
 const { createControlStore } = require('./control-store');
 const { getUserBillingSubscription } = require('./clerk-billing');
+const {
+  TIER_SCOPES,
+  TIER_USAGE_LIMITS,
+  createEntitlementVerifier,
+  minimumPlanForScope,
+} = require('./entitlements');
 const { parseBearerToken } = require('./security-utils');
 
 const root = __dirname;
@@ -28,29 +34,14 @@ const PUBLIC_FILES = new Set([
   'logo-blue.png', 'logo-white.png', 'og-card.png', 'og-evidence-layer.png',
   'e84ab31f649b47bc8df03b9ccce11884.txt', 'feed.xml', 'llms.txt', 'robots.txt',
   'sitemap.xml', '.well-known/mcp-registry-auth', '.well-known/security.txt',
-  'fundraising/Lians-Investor-Deck.pdf',
 ]);
 const requiredSteps = ['company', 'role', 'use-case', 'tools', 'memory-needs'];
 
-const TIER_SCOPES = {
-  free:       ['read', 'write'],
-  starter:    ['read', 'write', 'adapters', 'audit'],
-  growth:     ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance'],
-  pro:        ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance', 'barriers', 'hipaa', 'erasure', 'backtest', 'metrics'],
-  enterprise: ['read', 'write', 'adapters', 'audit', 'conflicts', 'webhooks', 'compliance', 'barriers', 'hipaa', 'erasure', 'backtest', 'metrics', 'airgap', 'kms'],
-};
 const validSteps = [...requiredSteps, 'context'];
-// Monthly metered allowances per tier (writes = add + supersede; null = unlimited).
-const TIER_USAGE_LIMITS = {
-  free:       { writes: 10_000,    recalls: 10_000 },
-  starter:    { writes: 100_000,   recalls: 50_000 },
-  growth:     { writes: 500_000,   recalls: 250_000 },
-  pro:        { writes: 2_000_000, recalls: 1_000_000 },
-  enterprise: { writes: null,      recalls: null },
-};
 const APP_BUILD = process.env.VERCEL_GIT_COMMIT_SHA || 'local-workflow-postauth-20260625-v3';
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY || '', publishableKey: process.env.CLERK_PUBLISHABLE_KEY || '' });
+const entitlementVerifier = createEntitlementVerifier({ getSubscription: getUserBillingSubscription });
 const isProd = process.env.NODE_ENV === 'production';
 const partnerApplications = createPartnerApplicationService();
 
@@ -498,6 +489,51 @@ const requireAuth = async (req, res) => { const user = await userFor(req); if (!
 const requireOnboarding = async (req, res) => { const user = await requireAuth(req, res); if (!user) return null; if (!hasCompletedOnboarding(user)) { log('console_access_denied', req, user, { next: firstIncomplete(user) }); redirect(res, `/onboarding/${firstIncomplete(user)}`); return null; } return user; };
 const apiAuth = async (req, res) => { const user = await userFor(req); if (!user) { json(res, 401, { error: 'Authentication required.' }); return null; } return user; };
 const apiOnboarding = async (req, res) => { const user = await apiAuth(req, res); if (!user) return null; if (!hasCompletedOnboarding(user)) { json(res, 403, { error: 'Complete onboarding before accessing this resource.' }); return null; } return user; };
+const requireHostedScope = async (req, res, user, scope) => {
+  try {
+    const entitlements = await entitlementVerifier.verify(user.clerkUserId);
+    if (entitlements.scopes.includes(scope)) return entitlements;
+    const requiredPlan = minimumPlanForScope(scope);
+    json(res, 402, {
+      error: `This hosted feature requires the ${requiredPlan} plan or higher.`,
+      code: 'PLAN_UPGRADE_REQUIRED',
+      feature: scope,
+      currentPlan: entitlements.plan,
+      requiredPlan,
+      upgrade: '/upgrade',
+    });
+    return null;
+  } catch (err) {
+    log('entitlement_verification_failed', req, user, { feature: scope, error: err.message, code: err.code });
+    json(res, 503, {
+      error: 'We could not verify your plan. No paid access was granted; please retry.',
+      code: 'ENTITLEMENT_VERIFICATION_UNAVAILABLE',
+    });
+    return null;
+  }
+};
+const hostedEntitlementsOrFree = async (req, user) => {
+  try {
+    return await entitlementVerifier.verify(user.clerkUserId);
+  } catch (err) {
+    log('entitlement_fallback_to_free', req, user, { error: err.message, code: err.code });
+    return { plan: 'free', providerFeatures: [], scopes: TIER_SCOPES.free };
+  }
+};
+const consoleScopeForPath = (pathname) => {
+  if (pathname.startsWith('/api/console/context')) return 'context';
+  if (
+    pathname.startsWith('/api/console/experiences') ||
+    pathname.startsWith('/api/console/adaptive-recall') ||
+    pathname.startsWith('/api/console/reflections')
+  ) return 'learning';
+  if (
+    pathname === '/api/console/governance' ||
+    pathname.startsWith('/api/console/supersessions/') ||
+    pathname.startsWith('/api/console/admissions/')
+  ) return 'governance';
+  return null;
+};
 
 // ── server ────────────────────────────────────────────────────────────────────
 
@@ -818,8 +854,8 @@ const app = async (req, res) => {
     }
     if (pathname.startsWith('/api/onboarding/') && pathname !== '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const step = pathname.split('/').pop(); if (!validSteps.includes(step)) return json(res, 404, { error: 'Unknown onboarding step.' }); const expected = firstIncomplete(user); if (step !== expected) return json(res, 409, { error: `Complete ${expected} first.`, next: `/onboarding/${expected}` }); const body = await readBody(req); const value = step === 'context' ? String(body.value || '') : String(body.value || '').trim(); if (requiredSteps.includes(step) && !value) return json(res, 400, { error: 'Choose an option to continue.' }); const store = readStore(); store.onboarding[user.id] = { ...(store.onboarding[user.id] || {}), [step]: value, updatedAt: new Date().toISOString() }; writeStore(store); const next = nextStep(step); log('onboarding_step_saved', req, user, { step, next }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingAnswers: { ...store.onboarding[user.id] } } }); } catch (err) { log('clerk_answers_backup_failed', req, user, { error: err.message }); } return json(res, 200, { next: `/onboarding/${next}` }); }
     if (pathname === '/api/onboarding/complete' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; const missing = firstIncomplete(user); if (missing !== 'review') return json(res, 409, { error: 'Required onboarding steps are incomplete.', next: `/onboarding/${missing}` }); const store = readStore(); const answers = store.onboarding[user.id] || {}; if (!requiredSteps.every((step) => answers[step])) return json(res, 409, { error: 'Required onboarding steps are incomplete.' }); const target = store.users.find((item) => item.id === user.id); target.onboardingComplete = true; const completedAt = new Date().toISOString(); target.onboardingCompletedAt = completedAt; store.onboarding[user.id] = { ...answers, completedAt }; writeStore(store); log('onboarding_completed', req, target); let synced = false; for (let attempt = 0; attempt < 4 && !synced; attempt++) { if (attempt > 0) await new Promise((r2) => setTimeout(r2, 1500 * attempt)); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, onboardingComplete: true, onboardingCompletedAt: completedAt, onboardingAnswers: store.onboarding[user.id] } }); synced = true; } catch (err) { log('clerk_complete_sync_failed', req, user, { error: err.message, status: err.status, attempt }); } } log('clerk_complete_sync_result', req, user, { synced }); return json(res, 200, { next: '/console' }); }
-    if (pathname === '/api/billing/select' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding before selecting a plan.' }); const body = await readBody(req); const plan = String(body.plan || '').toLowerCase(); if (!['free', 'starter', 'growth', 'pro', 'enterprise'].includes(plan)) return json(res, 400, { error: 'Invalid plan.' }); if (plan !== 'free') { try { const subscription = await getUserBillingSubscription(user.clerkUserId); if (subscription.plan === 'free') return json(res, 403, { error: 'No active paid subscription found. Please complete checkout.' }); if (subscription.plan !== plan) return json(res, 409, { error: `Your active subscription is ${subscription.plan}. Refresh billing to continue.`, plan: subscription.plan }); } catch (err) { log('billing_select_verify_warning', req, user, { error: err.message, code: err.code, plan }); return json(res, 503, { error: 'Unable to verify subscription status. Please try again.' }); } } const store = readStore(); const target = store.users.find((item) => item.id === user.id); target.billingPlan = plan; target.billingSelectedAt = new Date().toISOString(); writeStore(store); log('billing_plan_selected', req, target, { plan }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: plan, billingSelectedAt: target.billingSelectedAt } }); } catch (err) { log('billing_metadata_sync_failed', req, user, { error: err.message }); } return json(res, 200, { next: '/console', plan }); }
-    if (pathname === '/api/billing/sync' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding first.' }); try { const subscription = await getUserBillingSubscription(user.clerkUserId); const planSlug = subscription.plan; if (!planSlug || planSlug === 'free') return json(res, 402, { error: 'No active paid subscription found. Please complete checkout.' }); const store = readStore(); const target = store.users.find((item) => item.id === user.id); if (target) { target.billingPlan = planSlug; target.billingUpdatedAt = new Date().toISOString(); writeStore(store); } try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: planSlug } }); } catch (err) { log('billing_sync_metadata_failed', req, user, { error: err.message }); } log('billing_synced', req, user, { plan: planSlug }); return json(res, 200, { plan: planSlug, next: '/console' }); } catch (err) { log('billing_sync_failed', req, user, { error: err.message, code: err.code }); return json(res, 502, { error: 'Unable to sync billing status. Please refresh and try again.' }); } }
+    if (pathname === '/api/billing/select' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding before selecting a plan.' }); const body = await readBody(req); const plan = String(body.plan || '').toLowerCase(); if (!['free', 'starter', 'growth', 'pro', 'enterprise'].includes(plan)) return json(res, 400, { error: 'Invalid plan.' }); if (plan !== 'free') { try { const subscription = await getUserBillingSubscription(user.clerkUserId); if (subscription.plan === 'free') return json(res, 403, { error: 'No active paid subscription found. Please complete checkout.' }); if (subscription.plan !== plan) return json(res, 409, { error: `Your active subscription is ${subscription.plan}. Refresh billing to continue.`, plan: subscription.plan }); } catch (err) { log('billing_select_verify_warning', req, user, { error: err.message, code: err.code, plan }); return json(res, 503, { error: 'Unable to verify subscription status. Please try again.' }); } } const store = readStore(); const target = store.users.find((item) => item.id === user.id); target.billingPlan = plan; target.billingSelectedAt = new Date().toISOString(); writeStore(store); log('billing_plan_selected', req, target, { plan }); try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: plan, billingSelectedAt: target.billingSelectedAt } }); } catch (err) { log('billing_metadata_sync_failed', req, user, { error: err.message }); } entitlementVerifier.invalidate(user.clerkUserId); return json(res, 200, { next: '/console', plan }); }
+    if (pathname === '/api/billing/sync' && req.method === 'POST') { const user = await apiAuth(req, res); if (!user) return; if (!hasCompletedOnboarding(user)) return json(res, 403, { error: 'Complete onboarding first.' }); try { const subscription = await getUserBillingSubscription(user.clerkUserId); const planSlug = subscription.plan; if (!planSlug || planSlug === 'free') return json(res, 402, { error: 'No active paid subscription found. Please complete checkout.' }); const store = readStore(); const target = store.users.find((item) => item.id === user.id); if (target) { target.billingPlan = planSlug; target.billingUpdatedAt = new Date().toISOString(); writeStore(store); } try { const cu = await clerk.users.getUser(user.clerkUserId); await clerk.users.updateUserMetadata(user.clerkUserId, { privateMetadata: { ...cu.privateMetadata, billingPlan: planSlug } }); } catch (err) { log('billing_sync_metadata_failed', req, user, { error: err.message }); } entitlementVerifier.invalidate(user.clerkUserId); log('billing_synced', req, user, { plan: planSlug }); return json(res, 200, { plan: planSlug, next: '/console' }); } catch (err) { log('billing_sync_failed', req, user, { error: err.message, code: err.code }); return json(res, 502, { error: 'Unable to sync billing status. Please refresh and try again.' }); } }
 
     // API keys
     if (pathname === '/api/keys' && req.method === 'GET') {
@@ -863,17 +899,18 @@ const app = async (req, res) => {
       return json(res, 200, { keys, freshKey });
     }
     if (pathname === '/api/keys' && req.method === 'POST') { const user = await apiOnboarding(req, res); if (!user) return; const { label, environment = 'live' } = await readBody(req); const cleanLabel = String(label || '').trim(); if (!cleanLabel) return json(res, 400, { error: 'A key label is required.' }); if (cleanLabel.length > 80 || /[\u0000-\u001f\u007f]/.test(cleanLabel)) return json(res, 400, { error: 'Key labels must be 80 printable characters or fewer.' });
+      const entitlements = await hostedEntitlementsOrFree(req, user);
       if (liansConfigured()) {
         try {
-          const tier = user.billingPlan || 'free';
-          const scopes = TIER_SCOPES[tier] || TIER_SCOPES.free;
+          const tier = entitlements.plan;
+          const scopes = entitlements.scopes;
           const namespace = liansNamespace(user);
           const created = await liansAdmin('/api-keys', { method: 'POST', body: { namespace, scopes, label: cleanLabel }, namespace });
           log('api_key_created', req, user, { keyId: created.id, tier });
           return json(res, 201, { key: { ...liansKeyView(created), prefix: `${String(created.key).slice(0, 16)}…` }, rawKey: created.key });
         } catch (err) { log('lians_key_create_failed', req, user, { error: err.message, status: err.status }); return json(res, 502, { error: 'Unable to create key via the Lians API. Please try again.' }); }
       }
-      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: cleanLabel, prefix: `${rawKey.slice(0, 18)}…`, scopes: TIER_SCOPES[user.billingPlan || 'free'] || TIER_SCOPES.free, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); log('api_key_created', req, user, { prefix: key.prefix, environment }); return json(res, 201, { key, rawKey }); }
+      const rawKey = `lian_${environment === 'test' ? 'test' : 'live'}_${crypto.randomBytes(32).toString('hex')}`; const key = { id: crypto.randomUUID(), userId: user.id, label: cleanLabel, prefix: `${rawKey.slice(0, 18)}…`, scopes: entitlements.scopes, createdAt: new Date().toISOString(), lastUsedAt: null, revokedAt: null }; const store = readStore(); store.apiKeys.unshift(key); writeStore(store); log('api_key_created', req, user, { prefix: key.prefix, environment, tier: entitlements.plan }); return json(res, 201, { key, rawKey }); }
     if (pathname.match(/^\/api\/keys\/[^/]+\/rotate$/) && req.method === 'POST') {
       const user = await apiOnboarding(req, res); if (!user) return;
       const id = pathname.split('/')[3];
@@ -975,6 +1012,8 @@ const app = async (req, res) => {
     // All backed by a per-user, server-held API key on the user's own namespace.
     if (pathname.startsWith('/api/console/')) {
       const user = await apiOnboarding(req, res); if (!user) return;
+      const requiredScope = consoleScopeForPath(pathname);
+      if (requiredScope && !(await requireHostedScope(req, res, user, requiredScope))) return;
       const isLearningRoute = pathname.startsWith('/api/console/experiences') ||
         pathname.startsWith('/api/console/adaptive-recall') ||
         pathname.startsWith('/api/console/context') ||
@@ -1165,11 +1204,13 @@ const app = async (req, res) => {
     if (pathname === '/api/billing' && req.method === 'GET') {
       const user = await apiAuth(req, res); if (!user) return;
       try {
-        const subscription = await getUserBillingSubscription(user.clerkUserId);
-        const planSlug = subscription.plan;
-        const features = subscription.features;
-        const scopes = TIER_SCOPES[planSlug] || TIER_SCOPES.free;
-        return json(res, 200, { plan: planSlug, features, scopes, email: user.email });
+        const entitlements = await entitlementVerifier.verify(user.clerkUserId);
+        return json(res, 200, {
+          plan: entitlements.plan,
+          features: entitlements.providerFeatures,
+          scopes: entitlements.scopes,
+          email: user.email,
+        });
       } catch (err) {
         log('clerk_billing_fetch_failed', req, user, { error: err.message });
         return json(res, 200, { plan: 'free', features: [], scopes: TIER_SCOPES.free, email: user.email });

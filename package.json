@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test \"test/*.test.js\"",
+    "check:public-boundary": "node scripts/check-public-boundary.js",
     "benchmark:light": "node benchmarks/lightweight-learning.js",
     "benchmark:locomo": "node benchmarks/locomo-context.js"
   },
