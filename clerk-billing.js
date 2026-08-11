@@ -3,6 +3,7 @@
 const CLERK_API_URL = 'https://api.clerk.com/v1';
 const CLERK_API_VERSION = '2026-05-12';
 const CLERK_BILLING_TIMEOUT_MS = 7000;
+const LIANS_PLANS = new Set(['free', 'starter', 'growth', 'pro', 'enterprise']);
 
 class ClerkBillingError extends Error {
   constructor(message, { status = 502, code = 'CLERK_BILLING_ERROR' } = {}) {
@@ -14,6 +15,13 @@ class ClerkBillingError extends Error {
 }
 
 const arrayFrom = (value) => (Array.isArray(value) ? value : []);
+
+const canonicalPlanSlug = (value) => {
+  if (typeof value !== 'string') return 'free';
+  const normalized = value.trim().toLowerCase().replace(/_/g, '-');
+  const candidate = normalized.endsWith('-user') ? normalized.slice(0, -5) : normalized;
+  return LIANS_PLANS.has(candidate) ? candidate : 'free';
+};
 
 const normalizeSubscription = (subscription) => {
   const payload = subscription?.data && !Array.isArray(subscription.data) ? subscription.data : subscription;
@@ -30,8 +38,10 @@ const normalizeSubscription = (subscription) => {
     .map((feature) => feature?.slug || feature?.key)
     .filter((feature) => typeof feature === 'string' && feature.length > 0);
 
+  const providerPlan = typeof plan?.slug === 'string' ? plan.slug : null;
   return {
-    plan: plan?.slug || 'free',
+    plan: canonicalPlanSlug(providerPlan),
+    providerPlan,
     features: [...new Set(features)],
     status: payload?.status || null,
   };
@@ -85,6 +95,7 @@ const getUserBillingSubscription = async (userId, {
 module.exports = {
   CLERK_API_VERSION,
   ClerkBillingError,
+  canonicalPlanSlug,
   getUserBillingSubscription,
   normalizeSubscription,
 };
