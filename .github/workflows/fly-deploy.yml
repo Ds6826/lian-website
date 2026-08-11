@@ -10,11 +10,19 @@ permissions:
 jobs:
   deploy:
     name: Deploy app
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    concurrency: deploy-group    # optional: ensure only one action runs at a time
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://www.lians.ai
+    concurrency:
+      group: website-production
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
-      - run: flyctl deploy --remote-only
+      - name: Deploy reviewed main commit
+        run: flyctl deploy --remote-only --strategy rolling --wait-timeout 10m --build-arg VCS_REF=${{ github.sha }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

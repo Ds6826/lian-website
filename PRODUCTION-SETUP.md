@@ -58,20 +58,22 @@ Clerk `privateMetadata`* so it survives. But the JSON file lives in `/tmp`, whic
 
 ---
 
-## 4. Real API keys - ✅ DONE / live usage - ⚠️ pending a backend endpoint
+## 4. Real API keys and usage - ✅ DONE
 
 **Backend:** deployed on Render at `https://agentmem-api.onrender.com` (Postgres + Redis +
-all migrations). `LIANS_API_URL` and `LIANS_ADMIN_SECRET` are set in Vercel (Production).
+all migrations). Set `LIANS_API_URL` and `LIANS_PROVISIONING_SECRET` in the website
+environment. Keep `LIANS_ADMIN_SECRET` off the public website once the provisioning
+credential is enabled, then rotate the old admin secret.
 
-**Done:** the console now provisions **real API keys** against the backend admin API
-(`/v1/admin/api-keys`, `X-Admin-Secret`) - create / list / rotate / delete, one namespace
+**Done:** the console provisions **real API keys** through the least-privilege broker
+(`/v1/provisioning/api-keys`, `X-Provisioning-Secret`) - create / list / rotate / delete,
+one namespace
 per user (`ns_<userId>`), scopes derived from the user's tier. Verified end-to-end: a
 minted key authenticates on `/v1/*` with `X-API-Key`.
 
-**Still pending - live usage numbers:** the backend has no per-namespace usage-count
-endpoint (only `/v1/admin/billing/{ns}` = Stripe mapping). So the console's usage figures
-aren't live yet. To finish this we need a backend endpoint that returns write/recall counts
-per namespace (a small addition to the Lians server), then I wire the console to it.
+Live usage numbers use the same namespace-bound provisioning surface. Every management
+request also carries `X-Lians-Namespace`; the backend returns 404 when a key ID belongs to
+a different namespace.
 
 **Cold start:** on Render Starter the API can spin down when idle; the first request may
 take a few seconds. Add a keep-warm ping later if needed.

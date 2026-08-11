@@ -1,6 +1,13 @@
 * @Ds6826 @ebeirne
 
 /.github/ @Ds6826 @ebeirne
+/Dockerfile @Ds6826 @ebeirne
+/fly.toml @Ds6826 @ebeirne
+/vercel.json @Ds6826 @ebeirne
 /server.js @Ds6826 @ebeirne
+/api/ @Ds6826 @ebeirne
 /clerk-loader.js @Ds6826 @ebeirne
 /app.js @Ds6826 @ebeirne
+/control-store.js @Ds6826 @ebeirne
+/lians-console.js @Ds6826 @ebeirne
+/partner-applications.js @Ds6826 @ebeirne

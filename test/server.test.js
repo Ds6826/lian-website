@@ -19,6 +19,7 @@ after(() => new Promise((resolve) => server.close(resolve)));
 
 const get = (path, headers = {}) => fetch(`${origin}${path}`, { headers, redirect: 'manual' });
 const post = (path, body, headers = {}) => fetch(`${origin}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body || {}), redirect: 'manual' });
+const postRaw = (path, body, headers = {}) => fetch(`${origin}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body, redirect: 'manual', signal: AbortSignal.timeout(2_000) });
 
 test('GET /api/health reports ok', async () => {
   const res = await get('/api/health');
@@ -77,6 +78,18 @@ test('partner applications validate before checking production integrations', as
   assert.equal(invalid.status, 400);
   const data = await invalid.json();
   assert.match(data.error, /required field/i);
+});
+
+test('oversized request bodies fail deterministically without hanging the worker', async () => {
+  const res = await postRaw('/api/partner-applications', JSON.stringify({ padding: 'x'.repeat(321 * 1024) }));
+  assert.equal(res.status, 413);
+  assert.match((await res.json()).error, /too large/i);
+});
+
+test('partner application honeypot does not store data or send mail', async () => {
+  const res = await post('/api/partner-applications', { website: 'https://bot.example' });
+  assert.equal(res.status, 202);
+  assert.deepEqual(await res.json(), { ok: true });
 });
 
 test('cross-origin API requests are blocked', async () => {
@@ -240,7 +253,36 @@ test('config.js exposes only publishable configuration', async () => {
 test('security headers are set on every response', async () => {
   const res = await get('/');
   assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
-  assert.match(res.headers.get('content-security-policy') || '', /default-src 'self'/);
+  const csp = res.headers.get('content-security-policy') || '';
+  assert.match(csp, /default-src 'self'/);
+  assert.match(csp, /frame-ancestors 'none'/);
+  assert.match(csp, /img-src 'self' data: https:\/\/img\.clerk\.com/);
+  assert.doesNotMatch(csp, /style-src 'self' 'unsafe-inline'/);
+});
+
+test('external browser scripts are version-pinned and integrity-checked', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'app.html'), 'utf8');
+  const sentry = shell.match(/<script[^>]+browser\.sentry-cdn\.com[^>]+>/)?.[0] || '';
+  assert.match(sentry, /\/8\.55\.2\/bundle\.min\.js/);
+  assert.match(sentry, /integrity="sha384-[A-Za-z0-9+/=]+"/);
+  assert.match(sentry, /crossorigin="anonymous"/);
+});
+
+test('only explicitly public files can be served from the repository root', async () => {
+  for (const path of ['/server.js', '/package.json', '/api/server.js', '/data/lian-console.json', '/.env', '/test/server.test.js']) {
+    const res = await get(path);
+    assert.equal(res.status, 404, `${path} must not be public`);
+  }
+  for (const path of ['/marketing.css', '/logo-blue.png', '/.well-known/security.txt']) {
+    const res = await get(path);
+    assert.equal(res.status, 200, `${path} should remain public`);
+  }
+});
+
+test('static assets reject state-changing methods', async () => {
+  const res = await post('/marketing.css', {});
+  assert.equal(res.status, 405);
+  assert.equal(res.headers.get('allow'), 'GET, HEAD');
 });
 
 test('distributed rate limiting accepts Vercel KV environment aliases', () => {
